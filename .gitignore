@@ -1,1 +1,7 @@
 CMakeLists.txt.user
+CMakeCache.txt
+armv4vm_autogen
+tu_autogen
+tu
+libarmv4vm.a
+cmake_install.cmake

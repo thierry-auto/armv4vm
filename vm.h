@@ -61,8 +61,9 @@ class VirtualMachine
 
 #ifdef QT_CORE_LIB
     friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
+    friend class TestVm;
 #endif
-    // friend TestQueue;
+
 
     enum Error {
 

@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 extern unsigned char uart_base;
-  unsigned char * UART0_ADDR = (unsigned char*) &uart_base;
+unsigned char *      UART0_ADDR = (unsigned char *)&uart_base;
 
 enum {
     UART_FR_RXFE = 0x10,
@@ -13,11 +13,9 @@ enum {
 };
 
 #define UART_DR(baseaddr) (*(unsigned int *)(baseaddr))
-#define UART_FR(baseaddr) (*(((unsigned int *)(baseaddr))+6))
+#define UART_FR(baseaddr) (*(((unsigned int *)(baseaddr)) + 6))
 
-int _close(int file) {
-    return -1;
-}
+int _close(int file) { return -1; }
 
 int _fstat(int file, struct stat *st) {
 
@@ -25,27 +23,19 @@ int _fstat(int file, struct stat *st) {
     return 0;
 }
 
-int _isatty(int file) {
+int _isatty(int file) { return 1; }
 
-    return 1;
-}
+int _lseek(int file, int ptr, int dir) { return 0; }
 
-int _lseek(int file, int ptr, int dir) {
-
-    return 0;
-                                       }
-
-int _open(const char *name, int flags, int mode) {
-
-    return -1;
-}
+int _open(const char *name, int flags, int mode) { return -1; }
 
 int _read(int file, char *ptr, int len) {
 
     int todo;
     if (len == 0)
         return 0;
-    while (UART_FR(UART0_ADDR) & UART_FR_RXFE);
+    while (UART_FR(UART0_ADDR) & UART_FR_RXFE)
+        ;
     *ptr++ = UART_DR(UART0_ADDR);
     for (todo = 1; todo < len; todo++) {
         if (UART_FR(UART0_ADDR) & UART_FR_RXFE) {
@@ -62,7 +52,7 @@ caddr_t _sbrk(int incr) {
 
     extern char ld_heap_low; /* Defined by the linker */
     extern char ld_heap_top; /* Defined by the linker */
-    char *prev_heap_end;
+    char *      prev_heap_end;
 
     if (ld_heap_end == 0) {
         ld_heap_end = &ld_heap_low;
@@ -77,7 +67,7 @@ caddr_t _sbrk(int incr) {
 
     ld_heap_end += incr;
 
-    return (caddr_t) prev_heap_end;
+    return (caddr_t)prev_heap_end;
 }
 
 int _write(int file, char *ptr, int len) {
@@ -89,25 +79,19 @@ int _write(int file, char *ptr, int len) {
     return len;
 }
 
-
 int _kill(int pid, int sig) {
 
-    (void) pid;
-    (void) sig;
+    (void)pid;
+    (void)sig;
     return -1;
 }
 
 int __exidx_start;
 int __exidx_end;
 
-int _getpid(void) {
+int _getpid(void) { return 1; }
 
-    return 1;
-}
-
-void _exit() {
-
-}
+void _exit() {}
 
 #ifdef __cplusplus
 }

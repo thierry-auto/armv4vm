@@ -15,12 +15,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include <QObject>
 #include <QtTest>
 
-#include "vm.h"
 #include "config.h"
+#include "vm.h"
 
 struct VmProperties vmProperties;
 
@@ -562,7 +561,7 @@ void TestVm::testSTR() {
 }
 
 void TestVm::testPUSH() {
-    //uint8_t ram[128] = {0};
+    // uint8_t ram[128] = {0};
 
     VirtualMachine vm(&vmProperties, this);
     vm.init();
@@ -714,8 +713,8 @@ void TestVm::testLDRB() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5f10002); // ldrb r0, [r1, #2]!
-    seti(vm.m_ram + 4, 0xe5e1000c);  // strb r0, [r1, #12]!
+    seti(vm.m_ram, 0xe5f10002);     // ldrb r0, [r1, #2]!
+    seti(vm.m_ram + 4, 0xe5e1000c); // strb r0, [r1, #12]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -739,8 +738,8 @@ void TestVm::testLDRB2() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5f10001); // ldrb r0, [r1, #1]!
-    seti(vm.m_ram + 4, 0xe5e1000b);  // strb r0, [r1, #11]!
+    seti(vm.m_ram, 0xe5f10001);     // ldrb r0, [r1, #1]!
+    seti(vm.m_ram + 4, 0xe5e1000b); // strb r0, [r1, #11]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -790,8 +789,8 @@ void TestVm::testLDRB4() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5f10003);      // ldrb r0, [r1, #3]!
-    seti(vm.m_ram + 4, 0xe5e1000d);  // strb r0, [r1, #13]!
+    seti(vm.m_ram, 0xe5f10003);     // ldrb r0, [r1, #3]!
+    seti(vm.m_ram + 4, 0xe5e1000d); // strb r0, [r1, #13]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -815,8 +814,8 @@ void TestVm::testLDRB5() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe4110004);      // ldr r0, [r1], #-4
-    seti(vm.m_ram + 4, 0xe4010018);  // str r0, [r1], #-24
+    seti(vm.m_ram, 0xe4110004);     // ldr r0, [r1], #-4
+    seti(vm.m_ram + 4, 0xe4010018); // str r0, [r1], #-24
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -854,8 +853,8 @@ void TestVm::testLDR3() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5b10000);      // ldr r0, [r1, #0]!
-    seti(vm.m_ram + 4, 0xe5a1000c);  // str r0, [r1, #12]!
+    seti(vm.m_ram, 0xe5b10000);     // ldr r0, [r1, #0]!
+    seti(vm.m_ram + 4, 0xe5a1000c); // str r0, [r1, #12]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -873,7 +872,6 @@ void TestVm::testLDR3() {
     QVERIFY(vm.m_registers[1] == 0x0000010c);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x10c) == 0x11223344);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR4() {
@@ -881,8 +879,8 @@ void TestVm::testLDR4() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5310004);      // ldr r0, [r1, #-4]!
-    seti(vm.m_ram + 4, 0xe5210018);  // str r0, [r1, #-24]!
+    seti(vm.m_ram, 0xe5310004);     // ldr r0, [r1, #-4]!
+    seti(vm.m_ram + 4, 0xe5210018); // str r0, [r1, #-24]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000104;
@@ -900,7 +898,6 @@ void TestVm::testLDR4() {
     QVERIFY(vm.m_registers[1] == 0x000000e8);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0xe8) == 0x11223344);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR5() {
@@ -908,8 +905,8 @@ void TestVm::testLDR5() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe4910004);      // ldr r0, [r1], #4
-    seti(vm.m_ram + 4, 0xe4010018);  // str r0, [r1], #-24
+    seti(vm.m_ram, 0xe4910004);     // ldr r0, [r1], #4
+    seti(vm.m_ram + 4, 0xe4010018); // str r0, [r1], #-24
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -927,7 +924,6 @@ void TestVm::testLDR5() {
     QVERIFY(vm.m_registers[1] == 0x000000ec);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x11223344);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR6() {
@@ -935,8 +931,8 @@ void TestVm::testLDR6() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe4910000);      // ldr r0, [r1], #0
-    seti(vm.m_ram + 4, 0xe4010001);  // str r0, [r1], #-24! -> str r0, [r1], #-1
+    seti(vm.m_ram, 0xe4910000);     // ldr r0, [r1], #0
+    seti(vm.m_ram + 4, 0xe4010001); // str r0, [r1], #-24! -> str r0, [r1], #-1
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -962,7 +958,7 @@ void TestVm::testLDR7() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe491f000);      // ldr r15, [r1], #0
+    seti(vm.m_ram, 0xe491f000); // ldr r15, [r1], #0
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -975,7 +971,6 @@ void TestVm::testLDR7() {
     QVERIFY(vm.m_registers[1] == 0x00000100);
     QVERIFY(vm.m_registers[15] == 0x11223344);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR8() {
@@ -983,7 +978,7 @@ void TestVm::testLDR8() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe6910002);      // ldr r0, [r1], r2
+    seti(vm.m_ram, 0xe6910002); // ldr r0, [r1], r2
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -997,7 +992,6 @@ void TestVm::testLDR8() {
     QVERIFY(vm.m_registers[1] == 0x00000104);
     QVERIFY(vm.m_registers[2] == 0x00000004);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR9() {
@@ -1005,7 +999,7 @@ void TestVm::testLDR9() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe7b10002);      // ldr r0, [r1, r2]!
+    seti(vm.m_ram, 0xe7b10002); // ldr r0, [r1, r2]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -1019,7 +1013,6 @@ void TestVm::testLDR9() {
     QVERIFY(vm.m_registers[1] == 0x00000104);
     QVERIFY(vm.m_registers[2] == 0x00000004);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR10() {
@@ -1027,7 +1020,7 @@ void TestVm::testLDR10() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe7f10002);      // ldrb r0, [r1, r2]!
+    seti(vm.m_ram, 0xe7f10002); // ldrb r0, [r1, r2]!
 
     vm.m_registers[0] = 0x00000000;
     vm.m_registers[1] = 0x00000100;
@@ -1041,7 +1034,6 @@ void TestVm::testLDR10() {
     QVERIFY(vm.m_registers[1] == 0x00000104);
     QVERIFY(vm.m_registers[2] == 0x00000004);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR11() {
@@ -1049,7 +1041,7 @@ void TestVm::testLDR11() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe7e10002);      // strb r0, [r1, r2]!
+    seti(vm.m_ram, 0xe7e10002); // strb r0, [r1, r2]!
 
     vm.m_registers[0] = 0x99aabbcc;
     vm.m_registers[1] = 0x00000100;
@@ -1064,7 +1056,6 @@ void TestVm::testLDR11() {
     QVERIFY(vm.m_registers[2] == 0x00000004);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x556677cc);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR12() {
@@ -1072,7 +1063,7 @@ void TestVm::testLDR12() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe58f0000);      // str r0, [r15]
+    seti(vm.m_ram, 0xe58f0000); // str r0, [r15]
 
     vm.m_registers[0] = 0x99aabbcc;
 
@@ -1081,7 +1072,6 @@ void TestVm::testLDR12() {
     QVERIFY(vm.m_registers[0] == 0x99aabbcc);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x8) == 0x99aabbcc);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR13() {
@@ -1089,9 +1079,9 @@ void TestVm::testLDR13() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5cf0000);      // strb r0, [r15]
-    seti(vm.m_ram+4, 0x11223344);
-    seti(vm.m_ram+8, 0x55667788);
+    seti(vm.m_ram, 0xe5cf0000); // strb r0, [r15]
+    seti(vm.m_ram + 4, 0x11223344);
+    seti(vm.m_ram + 8, 0x55667788);
     vm.m_registers[0] = 0x99aabbcc;
 
     vm.run(1);
@@ -1099,7 +1089,6 @@ void TestVm::testLDR13() {
     QVERIFY(vm.m_registers[0] == 0x99aabbcc);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x8) == 0x556677cc);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR14() {
@@ -1107,12 +1096,12 @@ void TestVm::testLDR14() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe5c10000);      // strb r0, [r1]
-    seti(vm.m_ram+4, 0x11223344);
-    seti(vm.m_ram+8, 0x55667788);
+    seti(vm.m_ram, 0xe5c10000); // strb r0, [r1]
+    seti(vm.m_ram + 4, 0x11223344);
+    seti(vm.m_ram + 8, 0x55667788);
     vm.m_registers[0] = 0x99aabbee;
     vm.m_registers[1] = 0x00000100;
-    seti(vm.m_ram+0x100, 0xaabbccdd);
+    seti(vm.m_ram + 0x100, 0xaabbccdd);
 
     vm.run(1);
 
@@ -1121,7 +1110,6 @@ void TestVm::testLDR14() {
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x8) == 0x55667788);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0xaabbccee);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDR15() {
@@ -1129,7 +1117,7 @@ void TestVm::testLDR15() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe7f10002);      // ldrb r0, [r1]
+    seti(vm.m_ram, 0xe7f10002); // ldrb r0, [r1]
 
     vm.m_registers[0] = 0xdeadbeaf;
     vm.m_registers[1] = 0x00000100;
@@ -1141,7 +1129,6 @@ void TestVm::testLDR15() {
     QVERIFY(vm.m_registers[1] == 0x00000100);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x11223344);
     QVERIFY(vm.m_cpsr == 0x00000000);
-
 }
 
 void TestVm::testLDMFD() {
@@ -1293,23 +1280,22 @@ void TestVm::testProgram1() {
 
     QString binPath(getBinPath());
 
-    vmProperties.m_memsize = 1024*1024*24; // 24 Mio
-    vmProperties.m_bin = binPath + "/test_compile/game.bin";
-    unsigned char * mem = nullptr;
+    vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
+    vmProperties.m_bin     = binPath + "/test_compile/game.bin";
+    unsigned char *mem     = nullptr;
 
     VirtualMachine vm(&vmProperties, this);
     mem = vm.init();
     vm.load();
 
-    while(true) {
+    while (true) {
 
         vm.run(1);
-        if(*(mem + 0x00C00000) != 0) {
+        if (*(mem + 0x00C00000) != 0) {
             qDebug() << (char)*(mem + 0x00C00000);
             *(mem + 0x00C00000) = 0;
         }
     }
-
 }
 
 QTEST_MAIN(TestVm)

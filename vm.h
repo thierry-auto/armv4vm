@@ -81,7 +81,6 @@ class VirtualMachine
     friend class TestVm;
 #endif
 
-
     enum Error {
 
         E_LOAD_FAILED,

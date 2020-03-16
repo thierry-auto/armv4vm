@@ -30,26 +30,17 @@
 
 #ifndef QT_CORE_LIB
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
-{                                                                                                                  \
-    std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
-    assert(0);                                                                                                     \
+    {                                                                                                                  \
+        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+        assert(0);                                                                                                     \
     }
 #endif
 
-static inline uint32_t getSigned24(const uint32_t i) {
+static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
 
-    return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF);
-}
+static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
 
-static inline uint32_t getSigned16(const uint32_t i) {
-
-    return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF);
-}
-
-static inline uint32_t getSigned8(const uint32_t i) {
-
-    return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF);
-}
+static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
@@ -130,7 +121,7 @@ uint64_t VirtualMachine::load() {
 #endif
 
 static uint32_t stage1 = 0;
-void VirtualMachine::run(const uint32_t nbMaxIteration) {
+void            VirtualMachine::run(const uint32_t nbMaxIteration) {
 
 #ifdef DEBUG
     static long long debugHook = 0;
@@ -603,7 +594,7 @@ void VirtualMachine::multiplyEval() {
 
         // Multiply accumulate
         m_registers[instruction.rd] =
-                m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
+            m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
     } else {
 
         // Multiply
@@ -887,7 +878,7 @@ void VirtualMachine::branchEval() {
     }
 
     // Signed + Signed = Signed, Unsigned + Signed = Unsigned..
-    (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset)<<2) + 4; // et pas + 8
+    (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
 }
 
 void VirtualMachine::blockDataTransferEval() {
@@ -1186,7 +1177,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset - m_registers[instruction.rm];
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1195,7 +1186,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1300,7 +1291,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1309,7 +1300,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);

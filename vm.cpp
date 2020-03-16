@@ -576,8 +576,6 @@ void VirtualMachine::multiplyEval() {
         uint32_t condition : 4;
     } instruction;
 
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
-
     if (false == testCondition(m_workingInstruction))
         return;
 

@@ -1213,9 +1213,6 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
 
     static uint32_t offset;
 
-#define setSignedHalf(i) ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF)
-#define setSignedByte(i) ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF)
-
     if (false == testCondition(m_workingInstruction))
         return;
 
@@ -1240,9 +1237,9 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = setSignedHalf(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = setSignedByte(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
             } else {
                 if (instruction.h)
                     m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
@@ -1259,9 +1256,9 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = setSignedHalf(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = setSignedByte(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
             } else {
                 if (instruction.h)
                     m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;

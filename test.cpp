@@ -15,10 +15,12 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
+
 #include <QObject>
 #include <QtTest>
 
 #include "vm.h"
+#include "config.h"
 
 struct VmProperties vmProperties;
 
@@ -101,6 +103,8 @@ class TestVm : public QObject {
     void testPUSH();
     void testSTR2();
     void testLDR2();
+
+    void testProgram1();
 };
 
 void TestVm::testMOV() {
@@ -1285,7 +1289,28 @@ void TestVm::testSTR2() {
     QVERIFY(vm.m_registers[1] == 0x00000084);
 }
 
+void TestVm::testProgram1() {
 
+    QString binPath(getBinPath());
+
+    vmProperties.m_memsize = 1024*1024*24; // 24 Mio
+    vmProperties.m_bin = binPath + "/test_compile/game.bin";
+    unsigned char * mem = nullptr;
+
+    VirtualMachine vm(&vmProperties, this);
+    mem = vm.init();
+    vm.load();
+
+    while(true) {
+
+        vm.run(1);
+        if(*(mem + 0x00C00000) != 0) {
+            qDebug() << (char)*(mem + 0x00C00000);
+            *(mem + 0x00C00000) = 0;
+        }
+    }
+
+}
 
 QTEST_MAIN(TestVm)
 #include "test.moc"

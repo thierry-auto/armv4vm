@@ -9,11 +9,50 @@ Please send your feedback, bug reports, feature requests.
 
 ## Requirements
 
-Optional but recommended to run unit tests, have Qt5.
+Qt5 is optional but recommended to run unit tests.
+
+## Usage
+
+Instantiate a VmProperties class and initialize there. The size of the memory is given in bytes.
+
+```cpp
+struct VmProperties vmProperties;
+
+vmProperties.m_memsize = 1024 * 1024 * 24; // 24 MiB
+vmProperties.m_bin = "/path/to/your/binaryFile";
+```
+
+Instantiate a VirtualMachine class with your VmProperties structure.
+
+```cpp
+VirtualMachine vm (& vmProperties);
+```
+
+Define an unsigned char pointer. It will be valued by the memory address of the virtual machine.
+
+```cpp
+uint8_t * mem = nullptr;
+```
+
+Initialize your vm and load the binary.
+
+```cpp
+mem = vm.init ();
+vm.load ();
+```
+
+Finally, launch the virtual machine.
+
+```cpp
+vm.run (5000); // 5000 arm instructions will be executed.
+```
+
+Exchange information between your virtual machine and your host through a dedicated memory space and however it suits you. (uart, queue, etc.)
+This space is located at address 0x00C00000 and is 0x00100000 bytes long. These arbitrary values are set during the generation of the binary. (cf. game.ld). Take a look at the unit tests `testProgram1()`. It's really basic but you will find inspiration.
 
 ## Contributions
 
-Making a debugger usable would be an awesome stuff ! Any helps around this or other will be appreciate.
+Making a debugger (gdb or homemade) usable would be an awesome stuff ! Any helps around this or other will be appreciate.
 
 ## Reference
 

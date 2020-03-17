@@ -54,6 +54,17 @@ This space is located at address 0x00C00000 and is 0x00100000 bytes long. These 
 
 Making a debugger (gdb or homemade) usable would be an awesome stuff ! Any helps around this or other will be appreciate.
 
+## Todo
+
+Obviously a lot of things ;)
+
+Some ideas among many others :
+- Implementing the thumb mode would be a good thing to reduce memory usage.
+- Positioning the Qt signals `started`, `finished`, `suspended`, `crashed`, etc. would facilitate integration into a Qt application.
+- Write speed tests.
+- Setting valgrind
+- ...
+
 ## Reference
 
 ARM Instruction Set ARM7TDMI-S Data Sheet

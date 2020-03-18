@@ -93,6 +93,10 @@ int _getpid(void) { return 1; }
 
 void _exit() {}
 
+extern "C" void __sync_synchronize() {}
+void *          __dso_handle = (void *)NULL;
+
+
 #ifdef __cplusplus
 }
 #endif

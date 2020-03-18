@@ -3,8 +3,6 @@
 #include <iostream>
 #include <string>
 
-extern "C" void __sync_synchronize() {}
-void *          __dso_handle = (void *)NULL;
 
 void interrupt() { asm("swi 0"); }
 
@@ -35,6 +33,7 @@ int main() {
     free(memA);
     free(memC);
     free(memD);
+
 
     return EXIT_SUCCESS;
 }

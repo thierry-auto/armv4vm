@@ -1,17 +1,17 @@
 //    Copyright (c) 2020, thierry vic
-
+//
 //    This file is part of armv4vm.
-
+//
 //    armv4vm is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-
+//
 //    armv4vm is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-
+//
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -104,6 +104,7 @@ class TestVm : public QObject {
     void testLDR2();
 
     void testProgram1();
+    void testProgramPrimeN();
 };
 
 void TestVm::testMOV() {
@@ -1279,7 +1280,7 @@ void TestVm::testSTR2() {
 void TestVm::testProgram1() {
 
     QString binPath(getBinPath());
-
+    int compteur  = 0;
     vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
     vmProperties.m_bin     = binPath + "/test_compile/game.bin";
     unsigned char *mem     = nullptr;
@@ -1288,7 +1289,7 @@ void TestVm::testProgram1() {
     mem = vm.init();
     vm.load();
 
-    while (true) {
+    while (++compteur < 10000) {
 
         vm.run(1);
         if (*(mem + 0x00C00000) != 0) {
@@ -1297,6 +1298,27 @@ void TestVm::testProgram1() {
         }
     }
 }
+
+void TestVm::testProgramPrimeN() {
+
+    QString binPath(getBinPath());
+
+    vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
+    vmProperties.m_bin     = binPath + "/test_compile/primeN.bin";
+    uint8_t * mem  = nullptr;
+    uint8_t * uart = nullptr;
+
+    VirtualMachine vm(&vmProperties, this);
+    mem = vm.init();
+    vm.load();
+    uart = mem + 0x00C00000;
+
+
+    vm.run(200000);
+    QVERIFY(*(uint32_t*)(uart) == 2999);
+    QVERIFY(*(uint32_t*)(uart) == 2999);
+}
+
 
 QTEST_MAIN(TestVm)
 #include "test.moc"

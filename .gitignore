@@ -6,7 +6,6 @@ tu
 libarmv4vm.a
 cmake_install.cmake
 *.o
-*.bin
 *.elf
 *.OLD
 CMakeFiles/

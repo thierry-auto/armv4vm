@@ -1,6 +1,5 @@
 ﻿
 #CCPATH=<path_to_your_toolchain>
-CCPATH=/home/th/armv4vm-cc/arm-unknown-eabi/
 
 CC=$(CCPATH)bin/arm-unknown-eabi-gcc
 CXX=$(CCPATH)bin/arm-unknown-eabi-g++
@@ -12,10 +11,10 @@ OPTIONSC=$(OPTIONS) -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-c
 OPTIONSCXX=$(OPTIONS) -std=c++17 -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
 LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9.2.0/ -lstdc++
 
-all:game.bin primeN.bin
+all:hello.bin primeN.bin
 
-main.o:main.cpp
-	$(CXX) $(OPTIONSCXX) -c main.cpp -o main.o
+mainHello.o:mainHello.cpp
+	$(CXX) $(OPTIONSCXX) -c mainHello.cpp -o mainHello.o
 
 syscalls.o:syscalls.cpp
 	$(CC) $(OPTIONSCXX) -c syscalls.cpp -o syscalls.o
@@ -23,10 +22,10 @@ syscalls.o:syscalls.cpp
 startup.o:startup.s
 	$(CC) $(OPTIONSC) -c startup.s -o startup.o
 
-game.elf: game.ld main.o startup.o syscalls.o
-	$(LD) $(LDFLAGS) -T armv4vm.ld main.o startup.o syscalls.o -lstdc++ -lc -lgcc -o $@
+hello.elf:mainHello.o startup.o syscalls.o
+	$(LD) $(LDFLAGS) -T armv4vm.ld mainHello.o startup.o syscalls.o -lstdc++ -lc -lgcc -o $@
 
-game.bin:game.elf
+hello.bin:hello.elf
 	$(OBJCOPY) -O binary $< $@
 
 mainPrimeN.o:mainPrimeN.cpp
@@ -38,7 +37,6 @@ primeN.elf: armv4vm.ld mainPrimeN.o startup.o syscalls.o
 primeN.bin:primeN.elf
 	$(OBJCOPY) -O binary $< $@
 
-
 clean:
-	rm -rf main.o startup.o syscalls.o game.elf game.bin mainPrimeN.o mainPrimeN.elf mainPrimeN.bin *~
+	rm -rf mainHello.o startup.o syscalls.o hello.elf hello.bin mainPrimeN.o primeN.elf primeN.bin *~
 

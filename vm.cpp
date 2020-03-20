@@ -30,9 +30,9 @@
 
 #ifndef QT_CORE_LIB
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
-    {                                                                                                                  \
-        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
-        assert(0);                                                                                                     \
+{                                                                                                                  \
+    std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+    assert(0);                                                                                                     \
     }
 #endif
 
@@ -43,6 +43,7 @@ static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) 
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
+
 
 VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
 
@@ -121,23 +122,68 @@ uint64_t VirtualMachine::load() {
 #endif
 
 static uint32_t stage1 = 0;
-void            VirtualMachine::run(const uint32_t nbMaxIteration) {
+VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
+
+    VirtualMachine::Interrupt result = Undefined;
+    int setJumpResult = 0;
 
 #ifdef DEBUG
     static long long debugHook = 0;
 #endif
     m_running = true;
+    memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
 
-    for (uint32_t i = 0; i < nbMaxIteration;) {
+    setJumpResult = setjmp(m_runInterruptLongJump);
 
-        stage1 = fetch();
-        decode(stage1);
-        evaluate(i);
+    switch(setJumpResult) {
+
+    case 0:
+        if(nbMaxIteration != 0) {
+
+            for (uint32_t i = 0; i < nbMaxIteration; i++) {
+
+                stage1 = fetch();
+                decode(stage1);
+                evaluate();
 #ifdef DEBUG
-        debugHook++;
+                debugHook++;
 #endif
+            }
+        }
+        else {
+            while(true) {
+
+                stage1 = fetch();
+                decode(stage1);
+                evaluate();
+#ifdef DEBUG
+                debugHook++;
+#endif
+            }
+        }
+        break;
+
+    case 1:
+        result = Resume;
+        break;
+
+    case 2:
+        result = Stop;
+        break;
+
+    case 3:
+        result = Suspend;
+        break;
+
+    case 4:
+    default:
+        result = Undefined;
+        break;
     }
+
+    return result;
 }
+
 
 uint32_t VirtualMachine::fetch() {
 
@@ -238,9 +284,9 @@ void VirtualMachine::decode(const uint32_t instruction) {
     }
 }
 
-void VirtualMachine::evaluate(uint32_t &i) {
+void VirtualMachine::evaluate(/*uint32_t &i*/) {
 
-    i++;
+    //i++;
 
     switch (m_instructionSetFormat) {
 
@@ -269,7 +315,7 @@ void VirtualMachine::evaluate(uint32_t &i) {
         break;
 
     case halfword_data_transfer_immediate_off:
-        halfwordDataTransferImmediateOff();
+        halfwordDataTransferImmediateOffEval();
         break;
 
     case branch:
@@ -281,7 +327,7 @@ void VirtualMachine::evaluate(uint32_t &i) {
         break;
 
     case software_interrupt:
-        i = INT_MAX;
+        softwareInterruptEval();
         break;
 
     default:
@@ -594,7 +640,7 @@ void VirtualMachine::multiplyEval() {
 
         // Multiply accumulate
         m_registers[instruction.rd] =
-            m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
+                m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
     } else {
 
         // Multiply
@@ -1177,7 +1223,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset - m_registers[instruction.rm];
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1186,7 +1232,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1198,7 +1244,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
     }
 }
 
-void VirtualMachine::halfwordDataTransferImmediateOff() {
+void VirtualMachine::halfwordDataTransferImmediateOffEval() {
 
     struct HalfWordDataTransferImmediateOffset {
 
@@ -1291,7 +1337,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1300,7 +1346,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
@@ -1310,6 +1356,23 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
             m_registers[instruction.rn] = offset;
         }
     }
+}
+
+void VirtualMachine::softwareInterruptEval() {
+
+    struct SoftwareInterrupt {
+
+        uint32_t comment : 24;
+        uint32_t : 4;
+        uint32_t condition : 4;
+    } instruction;
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    instruction = cast<SoftwareInterrupt>(m_workingInstruction);
+
+    longjmp(m_runInterruptLongJump, instruction.comment);
 }
 
 bool VirtualMachine::testCondition(const uint32_t instruction) const {

@@ -17,6 +17,7 @@
 
 #include <QObject>
 #include <QtTest>
+#include <iostream>
 
 #include "config.h"
 #include "vm.h"
@@ -37,7 +38,7 @@ class TestVm : public QObject {
 
   private slots:
 
-    void testMOV();
+    void test_MOV_R0_D45();
     void testASRS();
     void testASRS2();
     void testASRS3();
@@ -103,15 +104,16 @@ class TestVm : public QObject {
     void testSTR2();
     void testLDR2();
 
-    void testProgram1();
+    void testProgramHello();
     void testProgramPrimeN();
 };
 
-void TestVm::testMOV() {
+void TestVm::test_MOV_R0_D45() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
     seti(vm.m_ram, 0xe3a0002d); // mov r0, #45
+    seti(vm.m_ram, 0xef000003); // mov r0, #45
 
     vm.run(1);
 
@@ -1277,44 +1279,69 @@ void TestVm::testSTR2() {
     QVERIFY(vm.m_registers[1] == 0x00000084);
 }
 
-void TestVm::testProgram1() {
+void TestVm::testProgramHello() {
 
     QString binPath(getBinPath());
-    int compteur  = 0;
+    QString data;
+
     vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
-    vmProperties.m_bin     = binPath + "/test_compile/game.bin";
+    vmProperties.m_bin     = binPath + "/test_compile/hello.bin";
     unsigned char *mem     = nullptr;
+    bool running = true;
 
     VirtualMachine vm(&vmProperties, this);
     mem = vm.init();
     vm.load();
 
-    while (++compteur < 10000) {
+    while (running) {
 
-        vm.run(1);
-        if (*(mem + 0x00C00000) != 0) {
-            qDebug() << (char)*(mem + 0x00C00000);
-            *(mem + 0x00C00000) = 0;
+        switch(vm.run()) {
+
+        case VirtualMachine::Resume:
+            break;
+
+        case VirtualMachine::Stop:
+            running = false;
+            break;
+
+        case VirtualMachine::Suspend:
+            data += (char)*(mem + 0x00C00000);
+
+        default:
+            break;
         }
     }
+
+    QVERIFY(data == "hello world\n");
 }
 
 void TestVm::testProgramPrimeN() {
 
     QString binPath(getBinPath());
-
     vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
     vmProperties.m_bin     = binPath + "/test_compile/primeN.bin";
     uint8_t * mem  = nullptr;
     uint8_t * uart = nullptr;
+    bool running = true;
 
     VirtualMachine vm(&vmProperties, this);
     mem = vm.init();
     vm.load();
     uart = mem + 0x00C00000;
 
+    while (running) {
 
-    vm.run(200000);
+        switch(vm.run()) {
+
+        case VirtualMachine::Stop:
+            running = false;
+            break;
+
+        default:
+            break;
+        }
+    }
+
     QVERIFY(*(uint32_t*)(uart) == 2999);
     QVERIFY(*(uint32_t*)(uart) == 2999);
 }

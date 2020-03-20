@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <csetjmp>
+
 #ifdef QT_CORE_LIB
 #include <QObject>
 #include <QTextStream>
@@ -68,12 +70,20 @@ class VirtualMachine
 #endif
     ~VirtualMachine();
 
+    enum Interrupt : int {
+
+        Resume    = 1,
+        Stop      = 2,
+        Suspend   = 3,
+        Undefined = 4,
+    };
+
     uint8_t *       init();
     void            test();
     void            loadTest();
     uint64_t        load();
     const uint32_t *getRegisters() const;
-    void            run(const uint32_t nbMaxIteration = 4096);
+    Interrupt       run(const uint32_t nbMaxIteration = 0);
     uint32_t        getCPSR() const;
 
 #ifdef QT_CORE_LIB
@@ -85,7 +95,6 @@ class VirtualMachine
 
         E_LOAD_FAILED,
         E_UNDEFINED
-
     };
 
 #ifdef QT_CORE_LIB
@@ -97,6 +106,8 @@ class VirtualMachine
     void crashed();
 #endif
 
+
+
   private:
     struct VmProperties *m_vmProperties;
     uint8_t *            m_ram;
@@ -104,7 +115,7 @@ class VirtualMachine
 
     inline uint32_t fetch();
     inline void     decode(const uint32_t);
-    inline void     evaluate(uint32_t &);
+    inline void     evaluate(/*uint32_t &*/);
 
     void execute();
     void print();
@@ -117,7 +128,8 @@ class VirtualMachine
     void branchEval();
     void blockDataTransferEval();
     void halfwordDataTransferRegisterOffEval();
-    void halfwordDataTransferImmediateOff();
+    void halfwordDataTransferImmediateOffEval();
+    void softwareInterruptEval();
 
     inline uint32_t rotate(const uint32_t operand2) const;
     inline uint32_t shift(const uint32_t operand2, uint32_t &carry) const;
@@ -162,6 +174,7 @@ class VirtualMachine
 
     uint32_t m_workingInstruction;
     bool     m_running;
+    jmp_buf  m_runInterruptLongJump;
 
     static const uint32_t NEGATE_FLAG     = 0x80000000;
     static const uint32_t ZERO_FLAG       = 0x40000000;

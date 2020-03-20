@@ -3,9 +3,6 @@
 #include <iostream>
 #include <string>
 
-
-void interrupt() { asm("swi 0"); }
-
 int main() {
 
     uint8_t *memA = (uint8_t *)malloc(64);
@@ -22,18 +19,14 @@ int main() {
     uint8_t *memD = (uint8_t *)malloc(16);
     memset(memD, 0xdd, 16);
 
-    std::string         s("hello world");
+    std::string s("hello world");
     std::ios_base::Init ss;
 
-    for (int i = 0; i < 256; i++) {
-
-        std::cout << s;
-    }
+    std::cout << s << std::endl;
 
     free(memA);
     free(memC);
     free(memD);
-
 
     return EXIT_SUCCESS;
 }

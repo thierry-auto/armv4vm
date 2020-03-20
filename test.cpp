@@ -103,6 +103,9 @@ class TestVm : public QObject {
     void testPUSH();
     void testSTR2();
     void testLDR2();
+    void testMUL1();
+
+    void testCONDPM();
 
     void testProgramHello();
     void testProgramPrimeN();
@@ -851,6 +854,18 @@ void TestVm::testLDR2() {
     QVERIFY(vm.m_registers[0] == 0x11223344);
 }
 
+void TestVm::testMUL1() {
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe0020190); // ldr r0, [r1]
+    vm.m_registers[0] = 0xffffff0f;
+    vm.m_registers[1] = 0x00000002;
+
+    vm.run(1);
+    QVERIFY(vm.m_registers[2] == 0xfffffe1e);
+}
+
 void TestVm::testLDR3() {
 
     VirtualMachine vm(&vmProperties, this);
@@ -1278,6 +1293,27 @@ void TestVm::testSTR2() {
     QVERIFY(vm.m_registers[0] == 0x11223344);
     QVERIFY(vm.m_registers[1] == 0x00000084);
 }
+
+void TestVm::testCONDPM() {
+
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe0902001); // adds r2, r0, r1
+    seti(vm.m_ram+4, 0x50823001); // addpl r3, r2, r1
+    vm.m_registers[0] = 0xFFFFFF0F;
+    vm.m_registers[1] = 0x00000002;
+    vm.m_cpsr = 0x00000000;
+
+    vm.run(2);
+
+    QVERIFY(vm.m_registers[0] == 0xFFFFFF0F);
+    QVERIFY(vm.m_registers[1] == 0x00000002);
+    QVERIFY(vm.m_registers[2] == 0xffffff11);
+    QVERIFY(vm.m_registers[3] == 0x00000000);
+    QVERIFY(vm.m_cpsr == 0x80000000);
+}
+
 
 void TestVm::testProgramHello() {
 

@@ -30,9 +30,9 @@
 
 #ifndef QT_CORE_LIB
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
-    {                                                                                                                  \
-        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
-        assert(0);                                                                                                     \
+{                                                                                                                  \
+    std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+    assert(0);                                                                                                     \
     }
 #endif
 
@@ -188,52 +188,67 @@ void VirtualMachine::decode(const uint32_t instruction) {
     if ((instruction & MASK_BRANCH_AND_EXCHANGE) == BRANCH_AND_EXCHANGE) {
 
         m_instructionSetFormat = branch_and_exchange;
-    } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
+    }
+    else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
-    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
-
-        m_instructionSetFormat = halfword_data_transfer_register_off;
-    } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
+    }
+    else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
-    } else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
+    }
+    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
+
+        m_instructionSetFormat = halfword_data_transfer_register_off;
+    }
+    else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
 
         m_instructionSetFormat = multiply_long;
-    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
+    }
+    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_immediate_off;
-    } else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
-
-        m_instructionSetFormat = data_processing;
-    } else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
-
-        m_instructionSetFormat = single_data_transfer;
-    } else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
-
-        m_instructionSetFormat = undefined;
-    } else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
-
-        m_instructionSetFormat = block_data_transfer;
-    } else if ((instruction & MASK_BRANCH) == BRANCH) {
-
-        m_instructionSetFormat = branch;
-    } else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
-
-        m_instructionSetFormat = coprocessor_data_transfer;
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
+    }
+    else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
 
         m_instructionSetFormat = coprocessor_data_operation;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
+    }
+    else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_register_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
+    }
+    else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
 
         m_instructionSetFormat = software_interrupt;
-    } else {
+    }
+    else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
+
+        m_instructionSetFormat = undefined;
+    }
+    else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
+
+        m_instructionSetFormat = block_data_transfer;
+    }
+    else if ((instruction & MASK_BRANCH) == BRANCH) {
+
+        m_instructionSetFormat = branch;
+    }
+    else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
+
+        m_instructionSetFormat = coprocessor_data_transfer;
+        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+    }
+    else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
+
+        m_instructionSetFormat = data_processing;
+    }
+    else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
+
+        m_instructionSetFormat = single_data_transfer;
+    }
+    else {
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
@@ -594,7 +609,7 @@ void VirtualMachine::multiplyEval() {
 
         // Multiply accumulate
         m_registers[instruction.rd] =
-            m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
+                m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
     } else {
 
         // Multiply
@@ -1177,7 +1192,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset - m_registers[instruction.rm];
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1186,7 +1201,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1291,7 +1306,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1300,7 +1315,7 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);

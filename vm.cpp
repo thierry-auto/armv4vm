@@ -380,7 +380,7 @@ void VirtualMachine::dataProcessingEval() {
     overflow         = false;
 
     // § 4.5.5
-    operand1 = m_registers[instruction.rn];
+    operand1 = m_registers[instruction.rn] + (instruction.rn != 15 ? 0 : 4);
     operand2 = instruction.immediate ? rotate(instruction.operand2) : shift(instruction.operand2, carryFromShifter);
 
     switch (instruction.opcode) {
@@ -642,8 +642,6 @@ void VirtualMachine::multiplyLongEval() {
     } instruction;
 
     static uint64_t result = 0;
-
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
 
     if (false == testCondition(m_workingInstruction))
         return;

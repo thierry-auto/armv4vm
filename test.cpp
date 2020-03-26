@@ -98,6 +98,8 @@ class TestVm : public QObject {
     void testSTMEA();
     void testSTMFA2();
     void testSTMED();
+    void testSTM1();
+    void testSTM2();
     void testSTR();
     void testPUSH();
     void testSTR2();
@@ -1274,6 +1276,56 @@ void TestVm::testSTR2() {
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x84) == 0x11223344);
     QVERIFY(vm.m_registers[0] == 0x11223344);
     QVERIFY(vm.m_registers[1] == 0x00000084);
+}
+
+void TestVm::testSTM1() {
+
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe8a30034); // stm	r3!,{r2,r4,r5}
+
+    vm.m_registers[2]  = 0x00000022;
+    vm.m_registers[3]  = 0x00000100;
+    vm.m_registers[4]  = 0x00004444;
+    vm.m_registers[5]  = 0x00055555;
+    vm.m_registers[6]  = 0x00666666;
+
+    vm.run(1);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00000022);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x00004444);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x108) == 0x00055555);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x10c) == 0x00000000);
+    QVERIFY(vm.m_registers[2] == 0x00000022);
+    QVERIFY(vm.m_registers[3] == 0x0000010c);
+    QVERIFY(vm.m_registers[4] == 0x00004444);
+    QVERIFY(vm.m_registers[5] == 0x00055555);
+    QVERIFY(vm.m_registers[6] == 0x00666666);
+}
+
+void TestVm::testSTM2() {
+
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe8a30038); // stm	r3!,{r3,r4,r5}
+
+    vm.m_registers[2]  = 0x00000022;
+    vm.m_registers[3]  = 0x00000100;
+    vm.m_registers[4]  = 0x00004444;
+    vm.m_registers[5]  = 0x00055555;
+    vm.m_registers[6]  = 0x00666666;
+
+    vm.run(1);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00000100);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x00004444);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x108) == 0x00055555);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x10c) == 0x00000000);
+    QVERIFY(vm.m_registers[2] == 0x00000022);
+    QVERIFY(vm.m_registers[3] == 0x0000010c);
+    QVERIFY(vm.m_registers[4] == 0x00004444);
+    QVERIFY(vm.m_registers[5] == 0x00055555);
+    QVERIFY(vm.m_registers[6] == 0x00666666);
 }
 
 void TestVm::testProgram1() {

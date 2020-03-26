@@ -1073,22 +1073,7 @@ void VirtualMachine::blockDataTransferEval() {
         // 4.11.6
         if (instruction.w) {
 
-            if ((1 << instruction.rn) & instruction.registerList) {
-
-                // On vérifie que le registre de base n'est pas le premier de la
-                // liste..
-                if ((0xFFFF > (16 - instruction.rn)) & instruction.registerList) {
-
-                    // Ce n'est donc pas le premier, on met à jour le registre
-                    // de base.
-                    m_registers[instruction.rn] = offset;
-                } else {
-                    qt_assert(__FUNCTION__, __FILE__, __LINE__);
-                }
-            } else {
-
-                m_registers[instruction.rn] = offset;
-            }
+            m_registers[instruction.rn] = offset;
         }
     }
 

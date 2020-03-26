@@ -118,7 +118,6 @@ void TestVm::testMOV() {
     vm.init();
 
     seti(vm.m_ram, 0xe3a0002d); // mov r0, #45
-    seti(vm.m_ram, 0xef000003); // mov r0, #45
 
     vm.run(1);
 

@@ -159,7 +159,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     static const uint32_t HALFWORD_DATA_TRANSFER_REGISTER_OFF  = 0x00000090;
     static const uint32_t HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF = 0x00400090;
     static const uint32_t SINGLE_DATA_TRANSFER                 = 0x04000000;
-    static const uint32_t UNDEFINED                            = 0x05000010;
+    static const uint32_t UNDEFINED                            = 0x06000010;
     static const uint32_t BLOCK_DATA_TRANSFER                  = 0x08000000;
     static const uint32_t BRANCH                               = 0x0A000000;
     static const uint32_t COPROCESSOR_DATA_TRANSFER            = 0x0C000000;
@@ -175,7 +175,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     static const uint32_t MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF  = 0x0E400F90;
     static const uint32_t MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF = 0x0E400090;
     static const uint32_t MASK_SINGLE_DATA_TRANSFER                 = 0x0C000000;
-    static const uint32_t MASK_UNDEFINED                            = 0x0F000010;
+    static const uint32_t MASK_UNDEFINED                            = 0x0E000010;
     static const uint32_t MASK_BLOCK_DATA_TRANSFER                  = 0x0E000000;
     static const uint32_t MASK_BRANCH                               = 0x0E000000;
     static const uint32_t MASK_COPROCESSOR_DATA_TRANSFER            = 0x0E000000;

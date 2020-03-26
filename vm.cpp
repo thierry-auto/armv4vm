@@ -205,7 +205,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     static const uint32_t HALFWORD_DATA_TRANSFER_REGISTER_OFF  = 0x00000090;
     static const uint32_t HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF = 0x00400090;
     static const uint32_t SINGLE_DATA_TRANSFER                 = 0x04000000;
-    static const uint32_t UNDEFINED                            = 0x05000010;
+    static const uint32_t UNDEFINED                            = 0x06000010;
     static const uint32_t BLOCK_DATA_TRANSFER                  = 0x08000000;
     static const uint32_t BRANCH                               = 0x0A000000;
     static const uint32_t COPROCESSOR_DATA_TRANSFER            = 0x0C000000;
@@ -221,7 +221,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     static const uint32_t MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF  = 0x0E400F90;
     static const uint32_t MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF = 0x0E400090;
     static const uint32_t MASK_SINGLE_DATA_TRANSFER                 = 0x0C000000;
-    static const uint32_t MASK_UNDEFINED                            = 0x0F000010;
+    static const uint32_t MASK_UNDEFINED                            = 0x0E000010;
     static const uint32_t MASK_BLOCK_DATA_TRANSFER                  = 0x0E000000;
     static const uint32_t MASK_BRANCH                               = 0x0E000000;
     static const uint32_t MASK_COPROCESSOR_DATA_TRANSFER            = 0x0E000000;
@@ -234,52 +234,67 @@ void VirtualMachine::decode(const uint32_t instruction) {
     if ((instruction & MASK_BRANCH_AND_EXCHANGE) == BRANCH_AND_EXCHANGE) {
 
         m_instructionSetFormat = branch_and_exchange;
-    } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
+    }
+    else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
-    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
-
-        m_instructionSetFormat = halfword_data_transfer_register_off;
-    } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
+    }
+    else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
-    } else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
+    }
+    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
+
+        m_instructionSetFormat = halfword_data_transfer_register_off;
+    }
+    else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
 
         m_instructionSetFormat = multiply_long;
-    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
+    }
+    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_immediate_off;
-    } else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
-
-        m_instructionSetFormat = data_processing;
-    } else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
-
-        m_instructionSetFormat = single_data_transfer;
-    } else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
-
-        m_instructionSetFormat = undefined;
-    } else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
-
-        m_instructionSetFormat = block_data_transfer;
-    } else if ((instruction & MASK_BRANCH) == BRANCH) {
-
-        m_instructionSetFormat = branch;
-    } else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
-
-        m_instructionSetFormat = coprocessor_data_transfer;
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
+    }
+    else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
 
         m_instructionSetFormat = coprocessor_data_operation;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
+    }
+    else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_register_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    } else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
+    }
+    else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
 
         m_instructionSetFormat = software_interrupt;
-    } else {
+    }
+    else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
+
+        m_instructionSetFormat = undefined;
+    }
+    else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
+
+        m_instructionSetFormat = block_data_transfer;
+    }
+    else if ((instruction & MASK_BRANCH) == BRANCH) {
+
+        m_instructionSetFormat = branch;
+    }
+    else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
+
+        m_instructionSetFormat = coprocessor_data_transfer;
+        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+    }
+    else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
+
+        m_instructionSetFormat = data_processing;
+    }
+    else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
+
+        m_instructionSetFormat = single_data_transfer;
+    }
+    else {
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
@@ -1104,22 +1119,7 @@ void VirtualMachine::blockDataTransferEval() {
         // 4.11.6
         if (instruction.w) {
 
-            if ((1 << instruction.rn) & instruction.registerList) {
-
-                // On vérifie que le registre de base n'est pas le premier de la
-                // liste..
-                if ((0xFFFF > (16 - instruction.rn)) & instruction.registerList) {
-
-                    // Ce n'est donc pas le premier, on met à jour le registre
-                    // de base.
-                    m_registers[instruction.rn] = offset;
-                } else {
-                    qt_assert(__FUNCTION__, __FILE__, __LINE__);
-                }
-            } else {
-
-                m_registers[instruction.rn] = offset;
-            }
+            m_registers[instruction.rn] = offset;
         }
     }
 

@@ -9,18 +9,9 @@ Please send your feedback, bug reports, feature requests.
 
 ## Requirements
 
-
-
-
 + Qt5 is optional but recommended to run unit tests.
-+ A cross toolchain. I recommend [crosstool-NG][cng] generator. A .config template to his generation is available. A minimal set of options is mandatory (among others) :
-    * ARCH_SUPPORTS_EITHER_ENDIAN = y
-    * ARCH_SUPPORTS_WITH_FLOAT = y
-    * ARCH_FLOAT_SW = y
-    
-    It is important that you turn off space optimization. Otherwise, crosstool-NG will generate a `strlen` function in thumb mode. It seems to be a newlib issue.
-    
-    * LIBC_NEWLIB_ENABLE_TARGET_OPTSPACE = n
++ A cross toolchain. Do not use crosstoll-ng for a while. I didn't find the config to generate a suitable toolchain.
+In the meantime, follow the instructions in the toolchain.txt file.
 
 ## Usage
 

@@ -30,9 +30,9 @@
 
 #ifndef QT_CORE_LIB
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
-{                                                                                                                  \
-    std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
-    assert(0);                                                                                                     \
+    {                                                                                                                  \
+        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+        assert(0);                                                                                                     \
     }
 #endif
 
@@ -43,7 +43,6 @@ static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) 
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
-
 
 VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
 
@@ -93,7 +92,7 @@ uint64_t VirtualMachine::load() {
         programSize = ds.readRawData(reinterpret_cast<char *>(m_ram), program.size());
     } else {
 
-        m_error     = E_LOAD_FAILED;
+        m_error = E_LOAD_FAILED;
         programSize = -1;
     }
 
@@ -121,11 +120,11 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
-static uint32_t stage1 = 0;
+static uint32_t           stage1 = 0;
 VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
-    VirtualMachine::Interrupt result = Undefined;
-    int setJumpResult = 0;
+    VirtualMachine::Interrupt result        = Undefined;
+    int                       setJumpResult = 0;
 
 #ifdef DEBUG
     static long long debugHook = 0;
@@ -135,10 +134,10 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
     setJumpResult = setjmp(m_runInterruptLongJump);
 
-    switch(setJumpResult) {
+    switch (setJumpResult) {
 
     case 0:
-        if(nbMaxIteration != 0) {
+        if (nbMaxIteration != 0) {
 
             for (uint32_t i = 0; i < nbMaxIteration; i++) {
 
@@ -149,9 +148,8 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
                 debugHook++;
 #endif
             }
-        }
-        else {
-            while(true) {
+        } else {
+            while (true) {
 
                 stage1 = fetch();
                 decode(stage1);
@@ -183,7 +181,6 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
     return result;
 }
-
 
 uint32_t VirtualMachine::fetch() {
 
@@ -234,74 +231,57 @@ void VirtualMachine::decode(const uint32_t instruction) {
     if ((instruction & MASK_BRANCH_AND_EXCHANGE) == BRANCH_AND_EXCHANGE) {
 
         m_instructionSetFormat = branch_and_exchange;
-    }
-    else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
+    } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
-    }
-    else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
+    } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
-    }
-    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
+    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_register_off;
-    }
-    else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
+    } else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
 
         m_instructionSetFormat = multiply_long;
-    }
-    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
+    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_immediate_off;
-    }
-    else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
+    } else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
 
         m_instructionSetFormat = coprocessor_data_operation;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
+    } else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_register_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
+    } else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
 
         m_instructionSetFormat = software_interrupt;
-    }
-    else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
+    } else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
 
         m_instructionSetFormat = undefined;
-    }
-    else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
+    } else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
 
         m_instructionSetFormat = block_data_transfer;
-    }
-    else if ((instruction & MASK_BRANCH) == BRANCH) {
+    } else if ((instruction & MASK_BRANCH) == BRANCH) {
 
         m_instructionSetFormat = branch;
-    }
-    else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
+    } else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_data_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
+    } else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
 
         m_instructionSetFormat = data_processing;
-    }
-    else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
+    } else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
 
         m_instructionSetFormat = single_data_transfer;
-    }
-    else {
+    } else {
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
 
-void VirtualMachine::evaluate(/*uint32_t &i*/) {
-
-    //i++;
+void VirtualMachine::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -396,18 +376,20 @@ void VirtualMachine::dataProcessingEval() {
         MVN = 0xF
     };
 
+    // clang-format off
     static struct DataProcessing {
 
-        uint32_t operand2 : 12;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t s : 1;
-        uint32_t opcode : 4;
-        uint32_t immediate : 1;
-        uint32_t : 2;
-        uint32_t condition : 4;
+        uint32_t operand2  : 12;
+        uint32_t rd        :  4;
+        uint32_t rn        :  4;
+        uint32_t s         :  1;
+        uint32_t opcode    :  4;
+        uint32_t immediate :  1;
+        uint32_t           :  2;
+        uint32_t condition :  4;
 
     } instruction;
+    // clang-format on
 
     // DataProcessing instruction;
     static uint32_t operand1         = 0;
@@ -632,18 +614,21 @@ void VirtualMachine::dataProcessingEval() {
 
 void VirtualMachine::multiplyEval() {
 
+    // clang-format off
     struct Multiply {
 
-        uint32_t rm : 4;
-        uint32_t : 4;
-        uint32_t rs : 4;
-        uint32_t rn : 4;
-        uint32_t rd : 4;
-        uint32_t s : 1;
-        uint32_t a : 1;
-        uint32_t : 6;
+        uint32_t rm        : 4;
+        uint32_t           : 4;
+        uint32_t rs        : 4;
+        uint32_t rn        : 4;
+        uint32_t rd        : 4;
+        uint32_t s         : 1;
+        uint32_t a         : 1;
+        uint32_t           : 6;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -655,7 +640,7 @@ void VirtualMachine::multiplyEval() {
 
         // Multiply accumulate
         m_registers[instruction.rd] =
-                m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
+            m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
     } else {
 
         // Multiply
@@ -673,19 +658,22 @@ void VirtualMachine::multiplyEval() {
 
 void VirtualMachine::multiplyLongEval() {
 
+    // clang-format off
     static struct MultiplyLong {
 
-        uint32_t rm : 4;
-        uint32_t : 4;
-        uint32_t rs : 4;
-        uint32_t rdlo : 4;
-        uint32_t rdhi : 4;
-        uint32_t s : 1;
-        uint32_t a : 1;
-        uint32_t u : 1;
-        uint32_t : 5;
+        uint32_t rm        : 4;
+        uint32_t           : 4;
+        uint32_t rs        : 4;
+        uint32_t rdlo      : 4;
+        uint32_t rdhi      : 4;
+        uint32_t s         : 1;
+        uint32_t a         : 1;
+        uint32_t u         : 1;
+        uint32_t           : 5;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint64_t result = 0;
 
@@ -720,21 +708,23 @@ void VirtualMachine::multiplyLongEval() {
 
 void VirtualMachine::singleDataTranferEval() {
 
+    // clang-format off
     static struct SingleDataTranfer {
 
-        uint32_t offset : 12;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t load : 1;
-        uint32_t w : 1;
-        uint32_t b : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t immediate : 1;
-        uint32_t : 2;
-        uint32_t condition : 4;
+        uint32_t offset    : 12;
+        uint32_t rd        :  4;
+        uint32_t rn        :  4;
+        uint32_t load      :  1;
+        uint32_t w         :  1;
+        uint32_t b         :  1;
+        uint32_t u         :  1;
+        uint32_t p         :  1;
+        uint32_t immediate :  1;
+        uint32_t           :  2;
+        uint32_t condition :  4;
 
     } instruction;
+    // clang-format on
 
     static uint32_t offset = 0;
     static uint32_t carry  = 0;
@@ -898,12 +888,15 @@ void VirtualMachine::singleDataTranferEval() {
 
 void VirtualMachine::branchAndExchangeEval() {
 
+    // clang-format off
     static struct BranchAndExchange {
 
-        uint32_t rn : 4;
-        uint32_t : 24;
-        uint32_t condition : 4;
+        uint32_t rn        :  4;
+        uint32_t           : 24;
+        uint32_t condition :  4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -917,13 +910,16 @@ void VirtualMachine::branchAndExchangeEval() {
 
 void VirtualMachine::branchEval() {
 
+    // clang-format off
     static struct Branch {
 
-        uint32_t offset : 24; // Signed ! §4.4
-        uint32_t l : 1;
-        uint32_t : 3;
-        uint32_t condition : 4;
+        uint32_t offset    : 24; // Signed ! §4.4
+        uint32_t l         :  1;
+        uint32_t           :  3;
+        uint32_t condition :  4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -944,15 +940,18 @@ void VirtualMachine::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
+        // clang-format off
         uint32_t registerList : 16;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t s : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
-        uint32_t condition : 4;
+        uint32_t rn           :  4;
+        uint32_t l            :  1;
+        uint32_t w            :  1;
+        uint32_t s            :  1;
+        uint32_t u            :  1;
+        uint32_t p            :  1;
+        uint32_t              :  3;
+        uint32_t condition    :  4;
+        // clang-format on
+
     } instruction;
 
     static uint32_t offset = 0;
@@ -1131,23 +1130,26 @@ void VirtualMachine::blockDataTransferEval() {
 
 void VirtualMachine::halfwordDataTransferRegisterOffEval() {
 
+    // clang-format off
     struct HalfWordDataTransferRegisterOffset {
 
-        uint32_t rm : 4;
-        uint32_t : 1;
-        uint32_t h : 1;
-        uint32_t s : 1;
-        uint32_t : 5;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
+        uint32_t rm        : 4;
+        uint32_t           : 1;
+        uint32_t h         : 1;
+        uint32_t s         : 1;
+        uint32_t           : 5;
+        uint32_t rd        : 4;
+        uint32_t rn        : 4;
+        uint32_t l         : 1;
+        uint32_t w         : 1;
+        uint32_t           : 1;
+        uint32_t u         : 1;
+        uint32_t p         : 1;
+        uint32_t           : 3;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint32_t offset;
 
@@ -1221,7 +1223,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset - m_registers[instruction.rm];
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1230,7 +1232,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1244,24 +1246,27 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
 
 void VirtualMachine::halfwordDataTransferImmediateOffEval() {
 
+    // clang-format off
     struct HalfWordDataTransferImmediateOffset {
 
-        uint32_t offset1 : 4;
-        uint32_t : 1;
-        uint32_t h : 1;
-        uint32_t s : 1;
-        uint32_t : 1;
-        uint32_t offset2 : 4;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
+        uint32_t offset1   : 4;
+        uint32_t           : 1;
+        uint32_t h         : 1;
+        uint32_t s         : 1;
+        uint32_t           : 1;
+        uint32_t offset2   : 4;
+        uint32_t rd        : 4;
+        uint32_t rn        : 4;
+        uint32_t l         : 1;
+        uint32_t w         : 1;
+        uint32_t           : 1;
+        uint32_t u         : 1;
+        uint32_t p         : 1;
+        uint32_t           : 3;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint32_t offset;
 
@@ -1335,7 +1340,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1344,7 +1349,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
@@ -1358,12 +1363,15 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
 
 void VirtualMachine::softwareInterruptEval() {
 
+    // clang-format off
     struct SoftwareInterrupt {
 
-        uint32_t comment : 24;
-        uint32_t : 4;
-        uint32_t condition : 4;
+        uint32_t comment   : 24;
+        uint32_t           :  4;
+        uint32_t condition :  4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;

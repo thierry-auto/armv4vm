@@ -106,8 +106,6 @@ class VirtualMachine
     void crashed();
 #endif
 
-
-
   private:
     struct VmProperties *m_vmProperties;
     uint8_t *            m_ram;

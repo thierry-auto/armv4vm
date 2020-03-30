@@ -93,7 +93,6 @@ uint64_t VirtualMachine::load() {
     } else {
 
         m_error = E_LOAD_FAILED;
-        programSize = -1;
     }
 
     return programSize;

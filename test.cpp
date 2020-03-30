@@ -98,6 +98,8 @@ class TestVm : public QObject {
     void testSTMFA();
     void testSTMEA();
     void testSTMFA2();
+    void testSTMFA3();
+    void testSTMFA4();
     void testSTMED();
     void testSTM1();
     void testSTM2();
@@ -106,11 +108,12 @@ class TestVm : public QObject {
     void testSTR2();
     void testLDR2();
     void testMUL1();
-
     void testCONDPM();
-
+    void testCONDVC();
     void testProgramHello();
     void testProgramPrimeN();
+    void testProgramFloat();
+    void testProgramPrintf();
 };
 
 void TestVm::testMOV() {
@@ -859,7 +862,7 @@ void TestVm::testMUL1() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe0020190); // ldr r0, [r1]
+    seti(vm.m_ram, 0xe0020190); // mul r2,r0,r1
     vm.m_registers[0] = 0xffffff0f;
     vm.m_registers[1] = 0x00000002;
 
@@ -1280,6 +1283,61 @@ void TestVm::testSTMFA2() {
     QVERIFY(vm.m_registers[13] == 0x00000110);
 }
 
+void TestVm::testSTMFA3() {
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe8a30038); // STM r3!, {r3-r5}
+
+    vm.m_registers[0]  = 0x11223344;
+    vm.m_registers[1]  = 0x55667788;
+    vm.m_registers[2]  = 0x99aabbcc;
+    vm.m_registers[3]  = 0x00000100;
+    vm.m_registers[4]  = 0x00004444;
+    vm.m_registers[5]  = 0x00055555;
+    vm.m_registers[13] = 0x00000110;
+
+    vm.run(1);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00000100);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x00004444);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x108) == 0x00055555);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x10c) == 0x00000000);
+    QVERIFY(vm.m_registers[0] == 0x11223344);
+    QVERIFY(vm.m_registers[1] == 0x55667788);
+    QVERIFY(vm.m_registers[2] == 0x99aabbcc);
+    QVERIFY(vm.m_registers[3] == 0x0000010c);
+    QVERIFY(vm.m_registers[4] == 0x00004444);
+    QVERIFY(vm.m_registers[5] == 0x00055555);
+    QVERIFY(vm.m_registers[13] == 0x00000110);
+}
+
+void TestVm::testSTMFA4() {
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe8a30030); // STM r3!, {r4-r5}
+
+    vm.m_registers[0]  = 0x11223344;
+    vm.m_registers[1]  = 0x55667788;
+    vm.m_registers[2]  = 0x99aabbcc;
+    vm.m_registers[3]  = 0x00000100;
+    vm.m_registers[4]  = 0x00004444;
+    vm.m_registers[5]  = 0x00055555;
+    vm.m_registers[13] = 0x00000110;
+
+    vm.run(1);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00004444);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x104) == 0x00055555);
+    QVERIFY(*(uint32_t *)(vm.m_ram + 0x108) == 0x00000000);
+    QVERIFY(vm.m_registers[0] == 0x11223344);
+    QVERIFY(vm.m_registers[1] == 0x55667788);
+    QVERIFY(vm.m_registers[2] == 0x99aabbcc);
+    QVERIFY(vm.m_registers[3] == 0x00000108);
+    QVERIFY(vm.m_registers[4] == 0x00004444);
+    QVERIFY(vm.m_registers[5] == 0x00055555);
+    QVERIFY(vm.m_registers[13] == 0x00000110);
+}
+
 void TestVm::testSTR2() {
 
     VirtualMachine vm(&vmProperties, this);
@@ -1302,11 +1360,11 @@ void TestVm::testSTM1() {
 
     seti(vm.m_ram, 0xe8a30034); // stm	r3!,{r2,r4,r5}
 
-    vm.m_registers[2]  = 0x00000022;
-    vm.m_registers[3]  = 0x00000100;
-    vm.m_registers[4]  = 0x00004444;
-    vm.m_registers[5]  = 0x00055555;
-    vm.m_registers[6]  = 0x00666666;
+    vm.m_registers[2] = 0x00000022;
+    vm.m_registers[3] = 0x00000100;
+    vm.m_registers[4] = 0x00004444;
+    vm.m_registers[5] = 0x00055555;
+    vm.m_registers[6] = 0x00666666;
 
     vm.run(1);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00000022);
@@ -1327,11 +1385,11 @@ void TestVm::testSTM2() {
 
     seti(vm.m_ram, 0xe8a30038); // stm	r3!,{r3,r4,r5}
 
-    vm.m_registers[2]  = 0x00000022;
-    vm.m_registers[3]  = 0x00000100;
-    vm.m_registers[4]  = 0x00004444;
-    vm.m_registers[5]  = 0x00055555;
-    vm.m_registers[6]  = 0x00666666;
+    vm.m_registers[2] = 0x00000022;
+    vm.m_registers[3] = 0x00000100;
+    vm.m_registers[4] = 0x00004444;
+    vm.m_registers[5] = 0x00055555;
+    vm.m_registers[6] = 0x00666666;
 
     vm.run(1);
     QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0x00000100);
@@ -1350,31 +1408,54 @@ void TestVm::testCONDPM() {
     VirtualMachine vm(&vmProperties, this);
     vm.init();
 
-    seti(vm.m_ram, 0xe0902001); // adds r2, r0, r1
-    seti(vm.m_ram+4, 0x50823001); // addpl r3, r2, r1
+    seti(vm.m_ram, 0xe0902001);     // adds r2, r0, r1
+    seti(vm.m_ram + 4, 0x50823001); // addpl r3, r2, r1
     vm.m_registers[0] = 0xFFFFFF0F;
     vm.m_registers[1] = 0x00000002;
-    vm.m_cpsr = 0x00000000;
+    vm.m_registers[2] = 0x00000000;
+    vm.m_registers[3] = 0xDEADBEAF;
+    vm.m_cpsr         = 0x00000000;
 
     vm.run(2);
 
     QVERIFY(vm.m_registers[0] == 0xFFFFFF0F);
     QVERIFY(vm.m_registers[1] == 0x00000002);
     QVERIFY(vm.m_registers[2] == 0xffffff11);
-    QVERIFY(vm.m_registers[3] == 0x00000000);
+    QVERIFY(vm.m_registers[3] == 0xDEADBEAF);
     QVERIFY(vm.m_cpsr == 0x80000000);
 }
 
+void TestVm::testCONDVC() {
+
+    VirtualMachine vm(&vmProperties, this);
+    vm.init();
+
+    seti(vm.m_ram, 0xe0902001);     // adds r2, r0, r1
+    seti(vm.m_ram + 4, 0x70823001); // addvc r3, r2, r1
+    vm.m_registers[0] = 0xFFFFFF0F;
+    vm.m_registers[1] = 0x000F0000;
+    vm.m_registers[2] = 0x00000000;
+    vm.m_registers[3] = 0xDEADBEAF;
+    vm.m_cpsr         = 0x00000000;
+
+    vm.run(2);
+
+    QVERIFY(vm.m_registers[0] == 0xFFFFFF0F);
+    QVERIFY(vm.m_registers[1] == 0x000F0000);
+    QVERIFY(vm.m_registers[2] == 0x000eff0f);
+    QVERIFY(vm.m_registers[3] == 0x001dff0f);
+    QVERIFY(vm.m_cpsr == 0x20000000);
+}
 
 void TestVm::testProgramHello() {
 
     QString binPath(getBinPath());
     QString data;
 
-    vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
+    vmProperties.m_memsize = 1024 * 1024 * 48; // 48 Mio
     vmProperties.m_bin     = binPath + "/test_compile/hello.bin";
     unsigned char *mem     = nullptr;
-    bool running = true;
+    bool           running = true;
 
     VirtualMachine vm(&vmProperties, this);
     mem = vm.init();
@@ -1382,7 +1463,7 @@ void TestVm::testProgramHello() {
 
     while (running) {
 
-        switch(vm.run()) {
+        switch (vm.run()) {
 
         case VirtualMachine::Resume:
             break;
@@ -1392,7 +1473,7 @@ void TestVm::testProgramHello() {
             break;
 
         case VirtualMachine::Suspend:
-            data += (char)*(mem + 0x00C00000);
+            data += (char)*(mem + 0x02800000);
 
         default:
             break;
@@ -1405,34 +1486,111 @@ void TestVm::testProgramHello() {
 void TestVm::testProgramPrimeN() {
 
     QString binPath(getBinPath());
-    vmProperties.m_memsize = 1024 * 1024 * 24; // 24 Mio
-    vmProperties.m_bin     = binPath + "/test_compile/primeN.bin";
-    uint8_t * mem  = nullptr;
-    uint8_t * uart = nullptr;
-    bool running = true;
+    vmProperties.m_memsize = 1024 * 1024 * 48; // 48 Mio
+    vmProperties.m_bin     = binPath + "/test_compile/primen.bin";
+    uint8_t *mem           = nullptr;
+    uint8_t *uart          = nullptr;
+    bool     running       = true;
+
+    VirtualMachine vm(&vmProperties, this);
+    mem = vm.init();
+    if (vm.load()) {
+
+        uart = mem + 0x02800000;
+
+        while (running) {
+
+            switch (vm.run()) {
+
+            case VirtualMachine::Stop:
+                running = false;
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+    QVERIFY(*(uint32_t *)(uart) == 2999);
+}
+
+void TestVm::testProgramFloat() {
+
+    QString binPath(getBinPath());
+    vmProperties.m_memsize = 1024 * 1024 * 48;
+    vmProperties.m_bin     = binPath + "/test_compile/float.bin";
+    uint8_t *mem           = nullptr;
+    uint8_t *uart          = nullptr;
+    bool     running       = true;
+
+    VirtualMachine vm(&vmProperties, this);
+    mem = vm.init();
+    if (vm.load()) {
+
+        uart = mem + 0x02800000;
+
+        while (running) {
+
+            switch (vm.run()) {
+
+            case VirtualMachine::Resume:
+                break;
+
+            case VirtualMachine::Stop:
+                running = false;
+                break;
+
+            case VirtualMachine::Suspend:
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+    QVERIFY(*(uint32_t *)(uart) == 0x075bcd15);
+    QVERIFY(*(uint32_t *)(uart + 4) == 0x449a522c);
+    QVERIFY(*(uint64_t *)(uart + 8) == 0x40fe240ca03fe924);
+    QVERIFY(*(uint32_t *)(uart + 16) == 0x075bae50);
+    QVERIFY(*(uint8_t *)(uart + 20) == 0xDF);
+    QVERIFY(*(uint64_t *)(uart + 21) == 0x2bdb9cf8d41aef);
+}
+
+void TestVm::testProgramPrintf() {
+
+    QString binPath(getBinPath());
+    vmProperties.m_memsize = 1024 * 1024 * 52;
+    vmProperties.m_bin     = binPath + "/test_compile/printf.bin";
+    uint8_t *mem           = nullptr;
+    uint8_t *uart          = nullptr;
+    bool     running       = true;
 
     VirtualMachine vm(&vmProperties, this);
     mem = vm.init();
     vm.load();
-    uart = mem + 0x00C00000;
+    uart = mem + 0x02800000;
 
     while (running) {
 
-        switch(vm.run()) {
+        switch (vm.run()) {
+
+        case VirtualMachine::Resume:
+            break;
 
         case VirtualMachine::Stop:
             running = false;
+            break;
+
+        case VirtualMachine::Suspend:
+            std::cout << (char)*uart;
             break;
 
         default:
             break;
         }
     }
-
-    QVERIFY(*(uint32_t*)(uart) == 2999);
-    QVERIFY(*(uint32_t*)(uart) == 2999);
 }
-
-
 QTEST_MAIN(TestVm)
 #include "test.moc"

@@ -113,7 +113,7 @@ class VirtualMachine
 
     inline uint32_t fetch();
     inline void     decode(const uint32_t);
-    inline void     evaluate(/*uint32_t &*/);
+    inline void     evaluate();
 
     void execute();
     void print();
@@ -129,11 +129,19 @@ class VirtualMachine
     void halfwordDataTransferImmediateOffEval();
     void softwareInterruptEval();
 
-    inline uint32_t rotate(const uint32_t operand2) const;
+    inline uint32_t rotate(const uint32_t operand2, uint32_t &carry) const;
     inline uint32_t shift(const uint32_t operand2, uint32_t &carry) const;
-    inline uint32_t shiftA(const uint32_t operand2, uint32_t &carry) const;
 
     bool testCondition(const uint32_t instruction) const;
+
+    void setN() { m_cpsr |= 0x80000000; }
+    void unsetN() { m_cpsr &= 0x7FFFFFFF; }
+    void setZ() { m_cpsr |= 0x40000000; }
+    void unsetZ() { m_cpsr &= 0xBFFFFFFF; }
+    void setC() { m_cpsr |= 0x20000000; }
+    void unsetC() { m_cpsr &= 0xDFFFFFFF; }
+    void setV() { m_cpsr |= 0x10000000; }
+    void unsetV() { m_cpsr &= 0xEFFFFFFF; }
 
     struct Undefined {
 

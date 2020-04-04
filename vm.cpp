@@ -119,15 +119,15 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
+#ifdef DEBUG
+static long long debugHook = 0;
+#endif
 static uint32_t           stage1 = 0;
 VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
     VirtualMachine::Interrupt result        = Undefined;
     int                       setJumpResult = 0;
 
-#ifdef DEBUG
-    static long long debugHook = 0;
-#endif
     m_running = true;
     memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
 
@@ -148,11 +148,13 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 #endif
             }
         } else {
+            debugHook = 6;
             while (true) {
 
                 stage1 = fetch();
-                decode(stage1);
-                evaluate();
+        decode(stage1);
+        evaluate();
+
 #ifdef DEBUG
                 debugHook++;
 #endif
@@ -408,7 +410,7 @@ void VirtualMachine::dataProcessingEval() {
 
     // § 4.5.5
     operand1 = m_registers[instruction.rn] + (instruction.rn != 15 ? 0 : 4);
-    operand2 = instruction.immediate ? rotate(instruction.operand2) : shift(instruction.operand2, carryFromShifter);
+    operand2 = instruction.immediate ? rotate(instruction.operand2, carryFromShifter) : shift(instruction.operand2, carryFromShifter);
 
     switch (instruction.opcode) {
 
@@ -422,15 +424,14 @@ void VirtualMachine::dataProcessingEval() {
 
     case SUB:
         m_registers[instruction.rd] = operand1 - operand2;
-        // carryFromALU = m_registers[instruction.rd] < operand1;
         carryFromALU = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
         overflow     = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case RSB:
         m_registers[instruction.rd] = operand2 - operand1;
-        carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
-        overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
+        carryFromALU                = isCarryFromALUSub(operand2, operand1, m_registers[instruction.rd]);
+        overflow                    = isOverflowSub(operand2, operand1, m_registers[instruction.rd]);
         break;
 
     case ADD:
@@ -440,21 +441,21 @@ void VirtualMachine::dataProcessingEval() {
         break;
 
     case ADC:
-        m_registers[instruction.rd] = operand1 + operand2 + ((m_cpsr >> 28) & 0x2);
+        m_registers[instruction.rd] = operand1 + operand2 + ((m_cpsr >> 29) & 0x1);
         carryFromALU                = isCarryFromALUAdd(operand1, operand2, m_registers[instruction.rd]);
         overflow                    = isOverflowAdd(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case SBC:
-        m_registers[instruction.rd] = operand1 - operand2 + ((m_cpsr >> 28) & 0x2) - 1;
+        m_registers[instruction.rd] = operand1 - operand2 + ((m_cpsr >> 29) & 0x1) - 1;
         carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
         overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case RSC:
-        m_registers[instruction.rd] = operand2 - operand1 + ((m_cpsr >> 28) & 0x2) - 1;
-        carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
-        overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
+        m_registers[instruction.rd] = operand2 - operand1 + ((m_cpsr >> 29) & 0x1) - 1;
+        carryFromALU                = isCarryFromALUSub(operand2, operand1, m_registers[instruction.rd]);
+        overflow                    = isOverflowSub(operand2, operand1, m_registers[instruction.rd]);
         break;
 
     case TST:
@@ -515,95 +516,45 @@ void VirtualMachine::dataProcessingEval() {
             case MOV:
             case BIC:
             case MVN:
-                if (m_registers[instruction.rd] & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (m_registers[instruction.rd])
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-
-                if (carryFromShifter)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
+                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+                m_registers[instruction.rd] ? unsetZ() : setZ();
+                carryFromShifter ? setC() : unsetC();
                 break;
 
             case TST:
             case TEQ:
-                if (notWrittenResult & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-                if (notWrittenResult)
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-                if (carryFromShifter)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
+                notWrittenResult & 0x80000000 ? setN() : unsetN();
+                notWrittenResult ? unsetZ() : setZ();
+                carryFromShifter ? setC() : unsetC();
                 break;
 
                 // ARITHMETIC
+            case RSC:
             case SUB:
             case RSB:
             case ADD:
             case ADC:
             case SBC:
-            case RSC:
-                if (m_registers[instruction.rd] & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (m_registers[instruction.rd])
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-
-                if (carryFromALU)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
-
-                if (overflow)
-                    m_cpsr |= 0x10000000;
-                else
-                    m_cpsr &= 0xEFFFFFFF;
+                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+                m_registers[instruction.rd] ? unsetZ() : setZ();
+                carryFromALU ? setC() : unsetC();
+                overflow ? setV() : unsetV();
                 break;
 
             case CMP:
             case CMN:
-
-                if (notWrittenResult & 0x80000000)
-                    m_cpsr |= 0x80000000; // Negative = 1
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (notWrittenResult)
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000; // Zero
-
-                if (carryFromALU)
-                    m_cpsr |= 0x20000000; // Carry = 1
-                else
-                    m_cpsr &= 0xDFFFFFFF;
-
-                if (overflow)
-                    m_cpsr |= 0x10000000; // Overflow = 1
-                else
-                    m_cpsr &= 0xEFFFFFFF;
+                notWrittenResult & 0x80000000 ? setN() : unsetN();
+                notWrittenResult ? unsetZ() : setZ();
+                carryFromALU ? setC() : unsetC();
+                overflow ? setV() : unsetV();
                 break;
 
             default:
                 qt_assert(__FUNCTION__, __FILE__, __LINE__);
                 break;
             }
-        } else {
+        }
+        else {
 
             m_cpsr = m_spsr;
             qt_assert(__FUNCTION__, __FILE__, __LINE__);
@@ -686,14 +637,14 @@ void VirtualMachine::multiplyLongEval() {
 
         // Multiply accumulate RdHi,RdLo := Rm * Rs + RdHi,RdLo
         result                        = m_registers[instruction.rdhi];
-        result                        = (result << 32) | m_registers[instruction.rdlo];
-        result                        = m_registers[instruction.rm] * m_registers[instruction.rs] + result;
+        result                        = (result << 32) | (uint64_t)m_registers[instruction.rdlo];
+        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs] + result;
         m_registers[instruction.rdhi] = result >> 32;
         m_registers[instruction.rdlo] = result;
     } else {
 
         // Multiply only RdHi,RdLo := Rm * Rs
-        result                        = m_registers[instruction.rm] * m_registers[instruction.rs];
+        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs];
         m_registers[instruction.rdhi] = result >> 32;
         m_registers[instruction.rdlo] = result;
     }
@@ -730,6 +681,7 @@ void VirtualMachine::singleDataTranferEval() {
     static uint32_t value  = 0;
     static uint32_t rd     = 0;
     static uint32_t rn     = 0;
+    bool lsl0 = false;
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1209,7 +1161,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             m_registers[instruction.rn] = offset;
         }
     } else {
@@ -1220,7 +1172,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
                 (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
@@ -1237,7 +1189,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             m_registers[instruction.rn] = offset;
         }
     }
@@ -1338,23 +1290,28 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            if((offset % 4) == 0)
+                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+            else
+                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset-2) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
-
+                if((offset % 4) == 2) offset-=2;
                 m_registers[instruction.rn] = offset;
             }
         } else {
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            if((offset % 4) == 0)
+                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+            else
+                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
+            if((offset % 4) == 2) offset-=2;
             m_registers[instruction.rn] = offset;
         }
     }
@@ -1455,11 +1412,19 @@ bool VirtualMachine::testCondition(const uint32_t instruction) const {
     }
 }
 
-uint32_t VirtualMachine::rotate(const uint32_t operand2) const {
+uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
-    return (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
+
+    //lsl0 = !(operand2 & 0xF00);
+    uint32_t result = (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
+        if((operand2 & 0xF00) == 0)
+            carry       = m_cpsr & 0x20000000;
+        else
+            carry       = result & 0x80000000;
+
+    return result;
 }
 
 uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
@@ -1508,7 +1473,7 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
         } else if (shiftValue == 0) {
 
             shiftResult = value;
-            carry       = 0;
+            carry       = m_cpsr & 0x20000000;
         } else {
 
             shiftResult = value << shiftValue;

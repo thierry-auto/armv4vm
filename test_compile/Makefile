@@ -12,7 +12,7 @@ LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9
 #LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9.2.0/ -lstdc++
 
 
-all:hello.bin primen.bin float.bin printf.bin
+all:hello.bin primen.bin float.bin printf.bin bench.bin
 
 hello.o:hello.cpp
 	$(CXX) $(OPTIONSCXX) -c hello.cpp -o hello.o
@@ -54,6 +54,15 @@ printf.elf: armv4vm.ld printf.o startup.o syscalls.o
 	$(LD) $(LDFLAGS) -T armv4vm.ld printf.o startup.o syscalls.o -lstdc++ -lc -lgcc -lm -o $@
 
 printf.bin:printf.elf
+	$(OBJCOPY) -O binary $< $@
+
+bench.o:bench.cpp
+	$(CXX) $(OPTIONSCXX)  -c bench.cpp -o bench.o
+
+bench.elf: armv4vm.ld bench.o startup.o syscalls.o
+	$(LD) $(LDFLAGS) -T armv4vm.ld bench.o startup.o syscalls.o -lstdc++ -lc -lgcc -lm -o $@
+
+bench.bin:bench.elf
 	$(OBJCOPY) -O binary $< $@
 
 clean:

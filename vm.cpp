@@ -30,9 +30,9 @@
 
 #ifndef QT_CORE_LIB
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
-    {                                                                                                                  \
-        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
-        assert(0);                                                                                                     \
+{                                                                                                                  \
+    std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+    assert(0);                                                                                                     \
     }
 #endif
 
@@ -152,8 +152,8 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
             while (true) {
 
                 stage1 = fetch();
-        decode(stage1);
-        evaluate();
+                decode(stage1);
+                evaluate();
 
 #ifdef DEBUG
                 debugHook++;
@@ -460,24 +460,39 @@ void VirtualMachine::dataProcessingEval() {
 
     case TST:
         notWrittenResult = operand1 & operand2;
+#ifdef DEBUG
+        if(instruction.s == 0)
+            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
 
     case TEQ:
         notWrittenResult = operand1 ^ operand2;
+#ifdef DEBUG
+        if(instruction.s == 0)
+            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
 
     case CMP:
         notWrittenResult = operand1 - operand2;
         carryFromALU     = isCarryFromALUSub(operand1, operand2, notWrittenResult);
         overflow         = isOverflowSub(operand1, operand2, notWrittenResult);
+#ifdef DEBUG
+        if(instruction.s == 0)
+            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
 
     case CMN:
         notWrittenResult = operand1 + operand2;
         carryFromALU     = isCarryFromALUAdd(operand1, operand2, notWrittenResult);
         overflow         = isOverflowAdd(operand1, operand2, notWrittenResult);
+#ifdef DEBUG
+        if(instruction.s == 0)
+            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
-
     case ORR:
         m_registers[instruction.rd] = operand1 | operand2;
         break;
@@ -590,7 +605,7 @@ void VirtualMachine::multiplyEval() {
 
         // Multiply accumulate
         m_registers[instruction.rd] =
-            m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
+                m_registers[instruction.rm] * m_registers[instruction.rs] + m_registers[instruction.rn];
     } else {
 
         // Multiply
@@ -1104,6 +1119,8 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
 
     static uint32_t offset;
 
+    qt_assert(__FUNCTION__, __FILE__, __LINE__);
+
     if (false == testCondition(m_workingInstruction))
         return;
 
@@ -1174,7 +1191,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset - m_registers[instruction.rm];
             if((offset % 4) == 0) offset+=2;
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
 
@@ -1183,7 +1200,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         } else {
 
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1419,10 +1436,11 @@ uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const
 
     //lsl0 = !(operand2 & 0xF00);
     uint32_t result = (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
-        if((operand2 & 0xF00) == 0)
-            carry       = m_cpsr & 0x20000000;
-        else
-            carry       = result & 0x80000000;
+
+    if((operand2 & 0xF00) == 0)
+        carry       = m_cpsr & 0x20000000;
+    else
+        carry       = result & 0x80000000;
 
     return result;
 }

@@ -1,21 +1,23 @@
 //    Copyright (c) 2020, thierry vic
-
+//
 //    This file is part of armv4vm.
-
+//
 //    armv4vm is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-
+//
 //    armv4vm is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-
+//
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
+#include <csetjmp>
 
 #ifdef QT_CORE_LIB
 #include <QObject>
@@ -68,12 +70,21 @@ class VirtualMachine
 #endif
     ~VirtualMachine();
 
+    enum Interrupt : int {
+
+        Resume    = 1,
+        Stop      = 2,
+        Suspend   = 3,
+        Undefined = 4,
+        Break     = 5,
+    };
+
     uint8_t *       init();
     void            test();
     void            loadTest();
     uint64_t        load();
     const uint32_t *getRegisters() const;
-    void            run(const uint32_t nbMaxIteration = 4096);
+    Interrupt       run(const uint32_t nbMaxIteration = 0);
     uint32_t        getCPSR() const;
 
 #ifdef QT_CORE_LIB
@@ -104,7 +115,7 @@ class VirtualMachine
 
     inline uint32_t fetch();
     inline void     decode(const uint32_t);
-    inline void     evaluate(uint32_t &);
+    inline void     evaluate();
 
     void execute();
     void print();
@@ -117,13 +128,22 @@ class VirtualMachine
     void branchEval();
     void blockDataTransferEval();
     void halfwordDataTransferRegisterOffEval();
-    void halfwordDataTransferImmediateOff();
+    void halfwordDataTransferImmediateOffEval();
+    void softwareInterruptEval();
 
-    inline uint32_t rotate(const uint32_t operand2) const;
+    inline uint32_t rotate(const uint32_t operand2, uint32_t &carry) const;
     inline uint32_t shift(const uint32_t operand2, uint32_t &carry) const;
-    inline uint32_t shiftA(const uint32_t operand2, uint32_t &carry) const;
 
     bool testCondition(const uint32_t instruction) const;
+
+    void setN() { m_cpsr |= 0x80000000; }
+    void unsetN() { m_cpsr &= 0x7FFFFFFF; }
+    void setZ() { m_cpsr |= 0x40000000; }
+    void unsetZ() { m_cpsr &= 0xBFFFFFFF; }
+    void setC() { m_cpsr |= 0x20000000; }
+    void unsetC() { m_cpsr &= 0xDFFFFFFF; }
+    void setV() { m_cpsr |= 0x10000000; }
+    void unsetV() { m_cpsr &= 0xEFFFFFFF; }
 
     struct Undefined {
 
@@ -162,6 +182,7 @@ class VirtualMachine
 
     uint32_t m_workingInstruction;
     bool     m_running;
+    jmp_buf  m_runInterruptLongJump;
 
     static const uint32_t NEGATE_FLAG     = 0x80000000;
     static const uint32_t ZERO_FLAG       = 0x40000000;

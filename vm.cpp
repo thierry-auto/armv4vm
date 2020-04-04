@@ -1,17 +1,17 @@
 //    Copyright (c) 2020, thierry vic
-
+//
 //    This file is part of armv4vm.
-
+//
 //    armv4vm is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-
+//
 //    armv4vm is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-
+//
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -92,8 +92,7 @@ uint64_t VirtualMachine::load() {
         programSize = ds.readRawData(reinterpret_cast<char *>(m_ram), program.size());
     } else {
 
-        m_error     = E_LOAD_FAILED;
-        programSize = -1;
+        m_error = E_LOAD_FAILED;
     }
 
     return programSize;
@@ -119,24 +118,70 @@ uint64_t VirtualMachine::load() {
     return programSize;
 }
 #endif
-
-static uint32_t stage1 = 0;
-void            VirtualMachine::run(const uint32_t nbMaxIteration) {
-
 #ifdef DEBUG
-    static long long debugHook = 0;
+static long long debugHook = 0;
 #endif
+static uint32_t           stage1 = 0;
+VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
+
+    VirtualMachine::Interrupt result        = Undefined;
+    int                       setJumpResult = 0;
+
     m_running = true;
+    memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
+    setJumpResult = setjmp(m_runInterruptLongJump);
 
-    for (uint32_t i = 0; i < nbMaxIteration;) {
+    switch (setJumpResult) {
 
-        stage1 = fetch();
+    case 0:
+        if (nbMaxIteration != 0) {
+
+            for (uint32_t i = 0; i < nbMaxIteration; i++) {
+
+                stage1 = fetch();
+                decode(stage1);
+                evaluate();
+#ifdef DEBUG
+                debugHook++;
+#endif
+            }
+        } else {
+            debugHook = 6;
+            while (true) {
+
+                stage1 = fetch();
         decode(stage1);
-        evaluate(i);
+        evaluate();
 #ifdef DEBUG
         debugHook++;
 #endif
+            }
+        }
+        break;
+
+    case 1:
+        result = Resume;
+        break;
+
+    case 2:
+        result = Stop;
+        break;
+
+    case 3:
+        result = Suspend;
+        break;
+
+    case 5:
+        result = Break;
+        break;
+
+    case 4:
+    default:
+        result = Undefined;
+        break;
     }
+
+    return result;
 }
 
 uint32_t VirtualMachine::fetch() {
@@ -188,74 +233,57 @@ void VirtualMachine::decode(const uint32_t instruction) {
     if ((instruction & MASK_BRANCH_AND_EXCHANGE) == BRANCH_AND_EXCHANGE) {
 
         m_instructionSetFormat = branch_and_exchange;
-    }
-    else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
+    } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
-    }
-    else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
+    } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
-    }
-    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
+    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_REGISTER_OFF) == HALFWORD_DATA_TRANSFER_REGISTER_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_register_off;
-    }
-    else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
+    } else if ((instruction & MASK_MULTIPLY_LONG) == MULTIPLY_LONG) {
 
         m_instructionSetFormat = multiply_long;
-    }
-    else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
+    } else if ((instruction & MASK_HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) == HALFWORD_DATA_TRANSFER_IMMEDIATE_OFF) {
 
         m_instructionSetFormat = halfword_data_transfer_immediate_off;
-    }
-    else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
+    } else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
 
         m_instructionSetFormat = coprocessor_data_operation;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
+    } else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_register_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
+    } else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
 
         m_instructionSetFormat = software_interrupt;
-    }
-    else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
+    } else if ((instruction & MASK_UNDEFINED) == UNDEFINED) {
 
         m_instructionSetFormat = undefined;
-    }
-    else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
+    } else if ((instruction & MASK_BLOCK_DATA_TRANSFER) == BLOCK_DATA_TRANSFER) {
 
         m_instructionSetFormat = block_data_transfer;
-    }
-    else if ((instruction & MASK_BRANCH) == BRANCH) {
+    } else if ((instruction & MASK_BRANCH) == BRANCH) {
 
         m_instructionSetFormat = branch;
-    }
-    else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
+    } else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_data_transfer;
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
-    }
-    else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
+    } else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
 
         m_instructionSetFormat = data_processing;
-    }
-    else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
+    } else if ((instruction & MASK_SINGLE_DATA_TRANSFER) == SINGLE_DATA_TRANSFER) {
 
         m_instructionSetFormat = single_data_transfer;
-    }
-    else {
+    } else {
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
 
-void VirtualMachine::evaluate(uint32_t &i) {
-
-    i++;
+void VirtualMachine::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -284,7 +312,7 @@ void VirtualMachine::evaluate(uint32_t &i) {
         break;
 
     case halfword_data_transfer_immediate_off:
-        halfwordDataTransferImmediateOff();
+        halfwordDataTransferImmediateOffEval();
         break;
 
     case branch:
@@ -296,7 +324,7 @@ void VirtualMachine::evaluate(uint32_t &i) {
         break;
 
     case software_interrupt:
-        i = INT_MAX;
+        softwareInterruptEval();
         break;
 
     default:
@@ -350,18 +378,20 @@ void VirtualMachine::dataProcessingEval() {
         MVN = 0xF
     };
 
+    // clang-format off
     static struct DataProcessing {
 
-        uint32_t operand2 : 12;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t s : 1;
-        uint32_t opcode : 4;
-        uint32_t immediate : 1;
-        uint32_t : 2;
-        uint32_t condition : 4;
+        uint32_t operand2  : 12;
+        uint32_t rd        :  4;
+        uint32_t rn        :  4;
+        uint32_t s         :  1;
+        uint32_t opcode    :  4;
+        uint32_t immediate :  1;
+        uint32_t           :  2;
+        uint32_t condition :  4;
 
     } instruction;
+    // clang-format on
 
     // DataProcessing instruction;
     static uint32_t operand1         = 0;
@@ -381,7 +411,7 @@ void VirtualMachine::dataProcessingEval() {
 
     // § 4.5.5
     operand1 = m_registers[instruction.rn] + (instruction.rn != 15 ? 0 : 4);
-    operand2 = instruction.immediate ? rotate(instruction.operand2) : shift(instruction.operand2, carryFromShifter);
+    operand2 = instruction.immediate ? rotate(instruction.operand2, carryFromShifter) : shift(instruction.operand2, carryFromShifter);
 
     switch (instruction.opcode) {
 
@@ -395,15 +425,14 @@ void VirtualMachine::dataProcessingEval() {
 
     case SUB:
         m_registers[instruction.rd] = operand1 - operand2;
-        // carryFromALU = m_registers[instruction.rd] < operand1;
         carryFromALU = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
         overflow     = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case RSB:
         m_registers[instruction.rd] = operand2 - operand1;
-        carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
-        overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
+        carryFromALU                = isCarryFromALUSub(operand2, operand1, m_registers[instruction.rd]);
+        overflow                    = isOverflowSub(operand2, operand1, m_registers[instruction.rd]);
         break;
 
     case ADD:
@@ -413,21 +442,21 @@ void VirtualMachine::dataProcessingEval() {
         break;
 
     case ADC:
-        m_registers[instruction.rd] = operand1 + operand2 + ((m_cpsr >> 28) & 0x2);
+        m_registers[instruction.rd] = operand1 + operand2 + ((m_cpsr >> 29) & 0x1);
         carryFromALU                = isCarryFromALUAdd(operand1, operand2, m_registers[instruction.rd]);
         overflow                    = isOverflowAdd(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case SBC:
-        m_registers[instruction.rd] = operand1 - operand2 + ((m_cpsr >> 28) & 0x2) - 1;
+        m_registers[instruction.rd] = operand1 - operand2 + ((m_cpsr >> 29) & 0x1) - 1;
         carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
         overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
         break;
 
     case RSC:
-        m_registers[instruction.rd] = operand2 - operand1 + ((m_cpsr >> 28) & 0x2) - 1;
-        carryFromALU                = isCarryFromALUSub(operand1, operand2, m_registers[instruction.rd]);
-        overflow                    = isOverflowSub(operand1, operand2, m_registers[instruction.rd]);
+        m_registers[instruction.rd] = operand2 - operand1 + ((m_cpsr >> 29) & 0x1) - 1;
+        carryFromALU                = isCarryFromALUSub(operand2, operand1, m_registers[instruction.rd]);
+        overflow                    = isOverflowSub(operand2, operand1, m_registers[instruction.rd]);
         break;
 
     case TST:
@@ -488,95 +517,45 @@ void VirtualMachine::dataProcessingEval() {
             case MOV:
             case BIC:
             case MVN:
-                if (m_registers[instruction.rd] & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (m_registers[instruction.rd])
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-
-                if (carryFromShifter)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
+                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+                m_registers[instruction.rd] ? unsetZ() : setZ();
+                carryFromShifter ? setC() : unsetC();
                 break;
 
             case TST:
             case TEQ:
-                if (notWrittenResult & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-                if (notWrittenResult)
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-                if (carryFromShifter)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
+                notWrittenResult & 0x80000000 ? setN() : unsetN();
+                notWrittenResult ? unsetZ() : setZ();
+                carryFromShifter ? setC() : unsetC();
                 break;
 
                 // ARITHMETIC
+            case RSC:
             case SUB:
             case RSB:
             case ADD:
             case ADC:
             case SBC:
-            case RSC:
-                if (m_registers[instruction.rd] & 0x80000000)
-                    m_cpsr |= 0x80000000;
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (m_registers[instruction.rd])
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000;
-
-                if (carryFromALU)
-                    m_cpsr |= 0x20000000;
-                else
-                    m_cpsr &= 0xDFFFFFFF;
-
-                if (overflow)
-                    m_cpsr |= 0x10000000;
-                else
-                    m_cpsr &= 0xEFFFFFFF;
+                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+                m_registers[instruction.rd] ? unsetZ() : setZ();
+                carryFromALU ? setC() : unsetC();
+                overflow ? setV() : unsetV();
                 break;
 
             case CMP:
             case CMN:
-
-                if (notWrittenResult & 0x80000000)
-                    m_cpsr |= 0x80000000; // Negative = 1
-                else
-                    m_cpsr &= 0x7FFFFFFF;
-
-                if (notWrittenResult)
-                    m_cpsr &= 0xBFFFFFFF;
-                else
-                    m_cpsr |= 0x40000000; // Zero
-
-                if (carryFromALU)
-                    m_cpsr |= 0x20000000; // Carry = 1
-                else
-                    m_cpsr &= 0xDFFFFFFF;
-
-                if (overflow)
-                    m_cpsr |= 0x10000000; // Overflow = 1
-                else
-                    m_cpsr &= 0xEFFFFFFF;
+                notWrittenResult & 0x80000000 ? setN() : unsetN();
+                notWrittenResult ? unsetZ() : setZ();
+                carryFromALU ? setC() : unsetC();
+                overflow ? setV() : unsetV();
                 break;
 
             default:
                 qt_assert(__FUNCTION__, __FILE__, __LINE__);
                 break;
             }
-        } else {
+        }
+        else {
 
             m_cpsr = m_spsr;
             qt_assert(__FUNCTION__, __FILE__, __LINE__);
@@ -586,18 +565,21 @@ void VirtualMachine::dataProcessingEval() {
 
 void VirtualMachine::multiplyEval() {
 
+    // clang-format off
     struct Multiply {
 
-        uint32_t rm : 4;
-        uint32_t : 4;
-        uint32_t rs : 4;
-        uint32_t rn : 4;
-        uint32_t rd : 4;
-        uint32_t s : 1;
-        uint32_t a : 1;
-        uint32_t : 6;
+        uint32_t rm        : 4;
+        uint32_t           : 4;
+        uint32_t rs        : 4;
+        uint32_t rn        : 4;
+        uint32_t rd        : 4;
+        uint32_t s         : 1;
+        uint32_t a         : 1;
+        uint32_t           : 6;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -627,19 +609,22 @@ void VirtualMachine::multiplyEval() {
 
 void VirtualMachine::multiplyLongEval() {
 
+    // clang-format off
     static struct MultiplyLong {
 
-        uint32_t rm : 4;
-        uint32_t : 4;
-        uint32_t rs : 4;
-        uint32_t rdlo : 4;
-        uint32_t rdhi : 4;
-        uint32_t s : 1;
-        uint32_t a : 1;
-        uint32_t u : 1;
-        uint32_t : 5;
+        uint32_t rm        : 4;
+        uint32_t           : 4;
+        uint32_t rs        : 4;
+        uint32_t rdlo      : 4;
+        uint32_t rdhi      : 4;
+        uint32_t s         : 1;
+        uint32_t a         : 1;
+        uint32_t u         : 1;
+        uint32_t           : 5;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint64_t result = 0;
 
@@ -653,14 +638,14 @@ void VirtualMachine::multiplyLongEval() {
 
         // Multiply accumulate RdHi,RdLo := Rm * Rs + RdHi,RdLo
         result                        = m_registers[instruction.rdhi];
-        result                        = (result << 32) | m_registers[instruction.rdlo];
-        result                        = m_registers[instruction.rm] * m_registers[instruction.rs] + result;
+        result                        = (result << 32) | (uint64_t)m_registers[instruction.rdlo];
+        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs] + result;
         m_registers[instruction.rdhi] = result >> 32;
         m_registers[instruction.rdlo] = result;
     } else {
 
         // Multiply only RdHi,RdLo := Rm * Rs
-        result                        = m_registers[instruction.rm] * m_registers[instruction.rs];
+        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs];
         m_registers[instruction.rdhi] = result >> 32;
         m_registers[instruction.rdlo] = result;
     }
@@ -674,27 +659,30 @@ void VirtualMachine::multiplyLongEval() {
 
 void VirtualMachine::singleDataTranferEval() {
 
+    // clang-format off
     static struct SingleDataTranfer {
 
-        uint32_t offset : 12;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t load : 1;
-        uint32_t w : 1;
-        uint32_t b : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t immediate : 1;
-        uint32_t : 2;
-        uint32_t condition : 4;
+        uint32_t offset    : 12;
+        uint32_t rd        :  4;
+        uint32_t rn        :  4;
+        uint32_t load      :  1;
+        uint32_t w         :  1;
+        uint32_t b         :  1;
+        uint32_t u         :  1;
+        uint32_t p         :  1;
+        uint32_t immediate :  1;
+        uint32_t           :  2;
+        uint32_t condition :  4;
 
     } instruction;
+    // clang-format on
 
     static uint32_t offset = 0;
     static uint32_t carry  = 0;
     static uint32_t value  = 0;
     static uint32_t rd     = 0;
     static uint32_t rn     = 0;
+    bool lsl0 = false;
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -852,12 +840,15 @@ void VirtualMachine::singleDataTranferEval() {
 
 void VirtualMachine::branchAndExchangeEval() {
 
+    // clang-format off
     static struct BranchAndExchange {
 
-        uint32_t rn : 4;
-        uint32_t : 24;
-        uint32_t condition : 4;
+        uint32_t rn        :  4;
+        uint32_t           : 24;
+        uint32_t condition :  4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -871,13 +862,16 @@ void VirtualMachine::branchAndExchangeEval() {
 
 void VirtualMachine::branchEval() {
 
+    // clang-format off
     static struct Branch {
 
-        uint32_t offset : 24; // Signed ! §4.4
-        uint32_t l : 1;
-        uint32_t : 3;
-        uint32_t condition : 4;
+        uint32_t offset    : 24; // Signed ! §4.4
+        uint32_t l         :  1;
+        uint32_t           :  3;
+        uint32_t condition :  4;
+
     } instruction;
+    // clang-format on
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -898,15 +892,18 @@ void VirtualMachine::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
+        // clang-format off
         uint32_t registerList : 16;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t s : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
-        uint32_t condition : 4;
+        uint32_t rn           :  4;
+        uint32_t l            :  1;
+        uint32_t w            :  1;
+        uint32_t s            :  1;
+        uint32_t u            :  1;
+        uint32_t p            :  1;
+        uint32_t              :  3;
+        uint32_t condition    :  4;
+        // clang-format on
+
     } instruction;
 
     static uint32_t offset = 0;
@@ -1085,23 +1082,26 @@ void VirtualMachine::blockDataTransferEval() {
 
 void VirtualMachine::halfwordDataTransferRegisterOffEval() {
 
+    // clang-format off
     struct HalfWordDataTransferRegisterOffset {
 
-        uint32_t rm : 4;
-        uint32_t : 1;
-        uint32_t h : 1;
-        uint32_t s : 1;
-        uint32_t : 5;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
+        uint32_t rm        : 4;
+        uint32_t           : 1;
+        uint32_t h         : 1;
+        uint32_t s         : 1;
+        uint32_t           : 5;
+        uint32_t rd        : 4;
+        uint32_t rn        : 4;
+        uint32_t l         : 1;
+        uint32_t w         : 1;
+        uint32_t           : 1;
+        uint32_t u         : 1;
+        uint32_t p         : 1;
+        uint32_t           : 3;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint32_t offset;
 
@@ -1162,7 +1162,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             m_registers[instruction.rn] = offset;
         }
     } else {
@@ -1173,7 +1173,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
                     (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
@@ -1190,32 +1190,35 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-
+            if((offset % 4) == 0) offset+=2;
             m_registers[instruction.rn] = offset;
         }
     }
 }
 
-void VirtualMachine::halfwordDataTransferImmediateOff() {
+void VirtualMachine::halfwordDataTransferImmediateOffEval() {
 
+    // clang-format off
     struct HalfWordDataTransferImmediateOffset {
 
-        uint32_t offset1 : 4;
-        uint32_t : 1;
-        uint32_t h : 1;
-        uint32_t s : 1;
-        uint32_t : 1;
-        uint32_t offset2 : 4;
-        uint32_t rd : 4;
-        uint32_t rn : 4;
-        uint32_t l : 1;
-        uint32_t w : 1;
-        uint32_t : 1;
-        uint32_t u : 1;
-        uint32_t p : 1;
-        uint32_t : 3;
+        uint32_t offset1   : 4;
+        uint32_t           : 1;
+        uint32_t h         : 1;
+        uint32_t s         : 1;
+        uint32_t           : 1;
+        uint32_t offset2   : 4;
+        uint32_t rd        : 4;
+        uint32_t rn        : 4;
+        uint32_t l         : 1;
+        uint32_t w         : 1;
+        uint32_t           : 1;
+        uint32_t u         : 1;
+        uint32_t p         : 1;
+        uint32_t           : 3;
         uint32_t condition : 4;
+
     } instruction;
+    // clang-format on
 
     static uint32_t offset;
 
@@ -1288,26 +1291,51 @@ void VirtualMachine::halfwordDataTransferImmediateOff() {
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            if((offset % 4) == 0)
+                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+            else
+                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset-2) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
-
+                if((offset % 4) == 2) offset-=2;
                 m_registers[instruction.rn] = offset;
             }
         } else {
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            if((offset % 4) == 0)
+                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+            else
+                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
+            if((offset % 4) == 2) offset-=2;
             m_registers[instruction.rn] = offset;
         }
     }
+}
+
+void VirtualMachine::softwareInterruptEval() {
+
+    // clang-format off
+    struct SoftwareInterrupt {
+
+        uint32_t comment   : 24;
+        uint32_t           :  4;
+        uint32_t condition :  4;
+
+    } instruction;
+    // clang-format on
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    instruction = cast<SoftwareInterrupt>(m_workingInstruction);
+
+    longjmp(m_runInterruptLongJump, instruction.comment);
 }
 
 bool VirtualMachine::testCondition(const uint32_t instruction) const {
@@ -1385,11 +1413,19 @@ bool VirtualMachine::testCondition(const uint32_t instruction) const {
     }
 }
 
-uint32_t VirtualMachine::rotate(const uint32_t operand2) const {
+uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
-    return (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
+
+    //lsl0 = !(operand2 & 0xF00);
+    uint32_t result = (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
+        if((operand2 & 0xF00) == 0)
+            carry       = m_cpsr & 0x20000000;
+        else
+            carry       = result & 0x80000000;
+
+    return result;
 }
 
 uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
@@ -1438,7 +1474,7 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
         } else if (shiftValue == 0) {
 
             shiftResult = value;
-            carry       = 0;
+            carry       = m_cpsr & 0x20000000;
         } else {
 
             shiftResult = value << shiftValue;

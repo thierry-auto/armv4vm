@@ -792,6 +792,100 @@ private slots:
         QVERIFY(vm.m_registers[2] == 0xfffffe1e);
     }
 
+    void testMLA() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram, 0xe0203291); // mla r0,r1,r2,r3
+        vm.m_registers[0] = 0x00000000;
+        vm.m_registers[1] = 0x00000012;
+        vm.m_registers[2] = 0x0000007f;
+        vm.m_registers[3] = 0x00000024;
+
+        vm.run(1);
+        QVERIFY(vm.m_registers[0] == 0x00000912);
+        QVERIFY(vm.m_registers[1] == 0x00000012);
+        QVERIFY(vm.m_registers[2] == 0x0000007f);
+        QVERIFY(vm.m_registers[3] == 0x00000024);
+    }
+
+    void testMLA2() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram, 0xe0203291); // mla r0,r1,r2,r3
+        vm.m_registers[0] = 0x00000000;
+        vm.m_registers[1] = 0xFFFFFFF6;
+        vm.m_registers[2] = 0x00000014;
+        vm.m_registers[3] = 0x00000003;
+
+        vm.run(1);
+        QVERIFY(vm.m_registers[0] == 0xffffff3b);
+        QVERIFY(vm.m_registers[1] == 0xFFFFFFF6);
+        QVERIFY(vm.m_registers[2] == 0x00000014);
+        QVERIFY(vm.m_registers[3] == 0x00000003);
+    }
+
+    void testMLA3() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
+        vm.m_registers[0] = 0x00000000;
+        vm.m_registers[1] = 0x7FFFEFF6;
+        vm.m_registers[2] = 0x70070014;
+        vm.m_registers[3] = 0x00000003;
+
+        vm.run(1);
+        QVERIFY(vm.m_registers[0] == 0x2fb8bf3b);
+        QVERIFY(vm.m_registers[1] == 0x7FFFEFF6);
+        QVERIFY(vm.m_registers[2] == 0x70070014);
+        QVERIFY(vm.m_registers[3] == 0x00000003);
+
+    }
+
+    void testMLA4() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
+        vm.m_registers[0] = 0x00000000;
+        vm.m_registers[1] = 0x7FFFEFF6;
+        vm.m_registers[2] = 0x00000000;
+        vm.m_registers[3] = 0x00000000;
+
+        vm.run(1);
+        QVERIFY(vm.m_registers[0] == 0x00000000);
+        QVERIFY(vm.m_registers[1] == 0x7FFFEFF6);
+        QVERIFY(vm.m_registers[2] == 0x00000000);
+        QVERIFY(vm.m_registers[3] == 0x00000000);
+        QVERIFY(vm.m_cpsr == 0x40000000);
+    }
+
+    void testMLA5() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
+        vm.m_registers[0] = 0x00000000;
+        vm.m_registers[1] = 0xfffffff6;
+        vm.m_registers[2] = 0x00000002;
+        vm.m_registers[3] = 0x00000000;
+
+        vm.run(1);
+        QVERIFY(vm.m_registers[0] == 0xffffffec);
+        QVERIFY(vm.m_registers[1] == 0xfffffff6);
+        QVERIFY(vm.m_registers[2] == 0x00000002);
+        QVERIFY(vm.m_registers[3] == 0x00000000);
+        QVERIFY(vm.m_cpsr == 0x80000000);
+        QVERIFY(vm.m_cpsr == 0x80000000);
+    }
+
     void testLDR3() {
 
         VirtualMachine vm(&vmProperties, this);
@@ -1527,7 +1621,6 @@ private slots:
         QVERIFY(vm.m_registers[2] == 0x00000001);
         QVERIFY(vm.m_registers[3] == 0x00000048);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x54) == 0x0001e5b9);
-        QVERIFY(*(uint32_t *)(vm.m_ram + 0x54) == 0x0001e5b9);
     }
 
     void testSTRH4() {
@@ -1562,7 +1655,6 @@ private slots:
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0xeeeeeed4);
-        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0xeeeeeed4);
     }
 
     void testSTRB2() {
@@ -1579,7 +1671,6 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0x11d41111);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0x11d41111);
     }
 
@@ -1598,7 +1689,6 @@ private slots:
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0xd4111111);
-        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0xd4111111);
     }
 
     void testSTRB4() {
@@ -1615,7 +1705,6 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0x1111d411);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0x1111d411);
     }
 
@@ -1650,8 +1739,6 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0x00000000);
         QVERIFY(vm.m_cpsr == 0x60000000);
-        QVERIFY(vm.m_cpsr == 0x60000000);
-
     }
 
     void testTEQ() {
@@ -1669,8 +1756,6 @@ private slots:
         QVERIFY(vm.m_registers[4] == 0x7fe91f7c);
         QVERIFY(vm.m_registers[5] == 0x7ff00000);
         QVERIFY(vm.m_cpsr == 0x20000000);
-        QVERIFY(vm.m_cpsr == 0x20000000);
-
     }
 
     void testTEST() {
@@ -1686,8 +1771,6 @@ private slots:
 
         QVERIFY(vm.m_registers[1] == 0x3ff48fbe);
         QVERIFY(vm.m_cpsr == 0x60000000);
-        QVERIFY(vm.m_cpsr == 0x60000000);
-
     }
 
     void testRSC() {
@@ -1701,7 +1784,6 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_registers[3] == 0xffe80000);
         QVERIFY(vm.m_registers[3] == 0xffe80000);
         QVERIFY(vm.m_cpsr == 0x60000000);
     }
@@ -1740,8 +1822,6 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x1d0c09e8);
         QVERIFY(vm.m_cpsr == 0x00000000);
-        QVERIFY(vm.m_cpsr == 0x00000000);
-
     }
 
     void testTEST2() {
@@ -1757,8 +1837,6 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x00000000);
         QVERIFY(vm.m_cpsr == 0x40000000);
-        QVERIFY(vm.m_cpsr == 0x40000000);
-
     }
 
     //#define MEMSIZE 128
@@ -1917,7 +1995,6 @@ private slots:
         QString binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/bench.bin";
-        //vmProperties.m_bin     =  "/home/th/qemu/test_compile/bench.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;

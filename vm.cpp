@@ -502,7 +502,7 @@ void VirtualMachine::dataProcessingEval() {
         break;
 
     case BIC:
-        m_registers[instruction.rd] = m_registers[instruction.rn] & /*!*/ (~operand2);
+        m_registers[instruction.rd] = m_registers[instruction.rn] & (~operand2);
         break;
 
     case MVN:
@@ -518,61 +518,58 @@ void VirtualMachine::dataProcessingEval() {
 
     if (instruction.s) {
 
-        // Genre de test qu'on devrait pouvoir dégager si le compilo fait son
-        // boulot. A remplacer par un assert..
-        if (instruction.rd != 15) {
-
-            switch (instruction.opcode) {
-
-            // LOGICAL
-            case AND:
-            case EOR:
-            case ORR:
-            case MOV:
-            case BIC:
-            case MVN:
-                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
-                m_registers[instruction.rd] ? unsetZ() : setZ();
-                carryFromShifter ? setC() : unsetC();
-                break;
-
-            case TST:
-            case TEQ:
-                notWrittenResult & 0x80000000 ? setN() : unsetN();
-                notWrittenResult ? unsetZ() : setZ();
-                carryFromShifter ? setC() : unsetC();
-                break;
-
-                // ARITHMETIC
-            case RSC:
-            case SUB:
-            case RSB:
-            case ADD:
-            case ADC:
-            case SBC:
-                m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
-                m_registers[instruction.rd] ? unsetZ() : setZ();
-                carryFromALU ? setC() : unsetC();
-                overflow ? setV() : unsetV();
-                break;
-
-            case CMP:
-            case CMN:
-                notWrittenResult & 0x80000000 ? setN() : unsetN();
-                notWrittenResult ? unsetZ() : setZ();
-                carryFromALU ? setC() : unsetC();
-                overflow ? setV() : unsetV();
-                break;
-
-            default:
-                qt_assert(__FUNCTION__, __FILE__, __LINE__);
-                break;
-            }
-        }
-        else {
+#ifdef DEBUG
+        if (instruction.rd == 15) {
 
             m_cpsr = m_spsr;
             qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        }
+#endif
+        switch (instruction.opcode) {
+
+        // LOGICAL
+        case AND:
+        case EOR:
+        case ORR:
+        case MOV:
+        case BIC:
+        case MVN:
+            m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+            m_registers[instruction.rd] ? unsetZ() : setZ();
+            carryFromShifter ? setC() : unsetC();
+            break;
+
+        case TST:
+        case TEQ:
+            notWrittenResult & 0x80000000 ? setN() : unsetN();
+            notWrittenResult ? unsetZ() : setZ();
+            carryFromShifter ? setC() : unsetC();
+            break;
+
+            // ARITHMETIC
+        case RSC:
+        case SUB:
+        case RSB:
+        case ADD:
+        case ADC:
+        case SBC:
+            m_registers[instruction.rd] & 0x80000000 ? setN() : unsetN();
+            m_registers[instruction.rd] ? unsetZ() : setZ();
+            carryFromALU ? setC() : unsetC();
+            overflow ? setV() : unsetV();
+            break;
+
+        case CMP:
+        case CMN:
+            notWrittenResult & 0x80000000 ? setN() : unsetN();
+            notWrittenResult ? unsetZ() : setZ();
+            carryFromALU ? setC() : unsetC();
+            overflow ? setV() : unsetV();
+            break;
+
+        default:
+            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            break;
         }
     }
 }
@@ -614,10 +611,8 @@ void VirtualMachine::multiplyEval() {
 
     if (instruction.s && instruction.rd != 15) {
 
-        // m_cpsr |= carry ? CARRIED_FLAG : 0; // The carry flag is set to a
-        // meaningless value ?
-        m_cpsr |= (m_registers[instruction.rd] == 0) ? ZERO_FLAG : 0;
-        m_cpsr |= (m_registers[instruction.rd] & 0x80000000) ? NEGATE_FLAG : 0;
+        (m_registers[instruction.rd] == 0) ? setZ() : unsetZ();
+        (m_registers[instruction.rd] & 0x80000000) ? setN() : unsetN();
     }
 }
 
@@ -666,8 +661,8 @@ void VirtualMachine::multiplyLongEval() {
 
     if (instruction.s && instruction.rdhi != 15 && instruction.rdlo != 15) {
 
-        m_cpsr |= ((m_registers[instruction.rdlo] | m_registers[instruction.rdlo]) == 0) ? ZERO_FLAG : 0;
-        m_cpsr |= (m_registers[instruction.rdhi] & 0x80000000) ? NEGATE_FLAG : 0;
+        ((m_registers[instruction.rdlo] | m_registers[instruction.rdlo]) == 0) ? setZ() : unsetZ();
+        (m_registers[instruction.rdhi] & 0x80000000) ? setN() : unsetN();
     }
 }
 
@@ -696,7 +691,6 @@ void VirtualMachine::singleDataTranferEval() {
     static uint32_t value  = 0;
     static uint32_t rd     = 0;
     static uint32_t rn     = 0;
-    bool lsl0 = false;
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1178,7 +1172,12 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-            if((offset % 4) == 0) offset+=2;
+
+            if((offset % 4) == 0) {
+
+                offset += 2;
+            }
+
             m_registers[instruction.rn] = offset;
         }
     } else {
@@ -1189,7 +1188,12 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-            if((offset % 4) == 0) offset+=2;
+
+            if((offset % 4) == 0) {
+
+                offset += 2;
+            }
+
             *reinterpret_cast<uint32_t *>(m_ram + offset) =
                     (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
@@ -1206,7 +1210,12 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset = offset + m_registers[instruction.rm];
             else
                 offset = offset - m_registers[instruction.rm];
-            if((offset % 4) == 0) offset+=2;
+
+            if((offset % 4) == 0) {
+
+                offset += 2;
+            }
+
             m_registers[instruction.rn] = offset;
         }
     }
@@ -1313,7 +1322,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
                 *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset-2) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
 
             if (instruction.w) {
-                if((offset % 4) == 2) offset-=2;
+
+                if((offset % 4) == 2) {
+
+                    offset -= 2;
+                }
                 m_registers[instruction.rn] = offset;
             }
         } else {
@@ -1328,7 +1341,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
-            if((offset % 4) == 2) offset-=2;
+            if((offset % 4) == 2) {
+
+                offset -= 2;
+            }
+
             m_registers[instruction.rn] = offset;
         }
     }
@@ -1434,13 +1451,8 @@ uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
 
-    //lsl0 = !(operand2 & 0xF00);
     uint32_t result = (operand2 & 0xFF) << (32 - ((operand2 & 0xF00) >> 7)) | (operand2 & 0xFF) >> ((operand2 & 0xF00) >> 7);
-
-    if((operand2 & 0xF00) == 0)
-        carry       = m_cpsr & 0x20000000;
-    else
-        carry       = result & 0x80000000;
+    carry = operand2 & 0xF00 ? result & 0x80000000 : m_cpsr & 0x20000000;
 
     return result;
 }

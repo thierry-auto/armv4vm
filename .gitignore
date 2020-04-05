@@ -8,4 +8,6 @@ cmake_install.cmake
 *.o
 *.elf
 *.OLD
+*.out
+*~
 CMakeFiles/

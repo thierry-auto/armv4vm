@@ -1852,11 +1852,13 @@ private slots:
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/hello.bin";
         unsigned char *mem     = nullptr;
+        uint8_t *uart          = nullptr;
         bool           running = true;
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
         vm.load();
+        uart = mem + UARTPOS;
 
         while (running) {
 
@@ -1870,7 +1872,7 @@ private slots:
                 break;
 
             case VirtualMachine::Suspend:
-                data += (char)*(mem + UARTPOS);
+                data += (char)*uart;
 
             default:
                 break;
@@ -1901,6 +1903,10 @@ private slots:
 
                 case VirtualMachine::Stop:
                     running = false;
+                    break;
+
+                case VirtualMachine::Suspend:
+                    std::cout << (char)*uart;
                     break;
 
                 default:
@@ -1941,6 +1947,7 @@ private slots:
                 case VirtualMachine::Suspend:
                     break;
 
+
                 default:
                     break;
                 }
@@ -1963,6 +1970,7 @@ private slots:
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
+        QString data;
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
@@ -1981,6 +1989,7 @@ private slots:
                 break;
 
             case VirtualMachine::Suspend:
+                data += (char)*uart;
                 std::cout << (char)*uart;
                 break;
 
@@ -1988,6 +1997,8 @@ private slots:
                 break;
             }
         }
+
+        QVERIFY(data == "[printf] 2 c hello 41.123000\n[cout] 2 c hello 41.123\n");
     }
 
     void testProgramBench() {
@@ -1998,6 +2009,7 @@ private slots:
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
+        QString data;
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
@@ -2005,11 +2017,6 @@ private slots:
 
         if(vm.load()) {
 
-            vm.m_cpsr = 0x40000000;
-            //*(vm.m_pc) = 0x10000;
-            //vm.m_registers[13] = 0x0117338;
-            vm.m_registers[1]=0x183;
-            vm.m_registers[2]=0x100;
             while (running) {
 
                 switch (vm.run()) {
@@ -2022,6 +2029,7 @@ private slots:
                     break;
 
                 case VirtualMachine::Suspend:
+                    data += (char)*uart;
                     std::cout << (char)*uart;
                     break;
 
@@ -2030,6 +2038,7 @@ private slots:
                 }
             }
         }
+        QVERIFY(data == "4 11337 64624 74501 98671 149983 166011 167964 230031 276464 290271 343718 353417 378247 433098 443959 447113 449806 456279");
     }
 };
 QTEST_MAIN(TestVm)

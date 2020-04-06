@@ -1,3 +1,4 @@
+// https://www.geeksforgeeks.org/sieve-of-eratosthenes/
 
 // C++ program to print all primes smaller than or equal to
 // n using Sieve of Eratosthenes
@@ -12,8 +13,8 @@ uint32_t SieveOfEratosthenes(int n)
     // Create a boolean array "prime[0..n]" and initialize
     // all entries it as true. A value in prime[i] will
     // finally be false if i is Not a prime, else true.
-    bool prime[n+1];
-    uint32_t lastPrimeNumber;
+    bool prime[n+1] = {0};
+    uint32_t lastPrimeNumber = 0;
 
     memset(prime, true, sizeof(prime));
 
@@ -26,13 +27,14 @@ uint32_t SieveOfEratosthenes(int n)
             // equal to the square of it
             // numbers which are multiple of p and are
             // less than p^2 are already been marked.
-            for (int i=p*p; i<=n; i += p)
+            for (int i = p * p; i <= n; i += p)
+
                 prime[i] = false;
         }
     }
 
     // Print all prime numbers
-    for (int p=2; p<=n; p++)  {
+    for (int p = 2; p <= n; p++)  {
 
         if (prime[p]) {
 
@@ -46,9 +48,10 @@ uint32_t SieveOfEratosthenes(int n)
 // Driver Program to test above function
 int main()
 {
-    uint32_t result = SieveOfEratosthenes(3000);
+    uint32_t lastPrimeNumber = SieveOfEratosthenes(3000);
 
-    UART_DR(&uart_base) = result;
+    printf("Prime N = %ld\n", lastPrimeNumber);
+    UART_DR(&uart_base) = lastPrimeNumber;
 
-    return 0;
+    return EXIT_SUCCESS;
 }

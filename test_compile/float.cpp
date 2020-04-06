@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 
-
 extern unsigned char uart_base;
 
 int main(void)

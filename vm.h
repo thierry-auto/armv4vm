@@ -76,7 +76,6 @@ class VirtualMachine
         Stop      = 2,
         Suspend   = 3,
         Undefined = 4,
-        Break     = 5,
     };
 
     uint8_t *       init();
@@ -96,7 +95,6 @@ class VirtualMachine
 
         E_LOAD_FAILED,
         E_UNDEFINED
-
     };
 
 #ifdef QT_CORE_LIB

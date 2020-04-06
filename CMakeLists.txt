@@ -1,16 +1,33 @@
 cmake_minimum_required(VERSION 3.11.4)
 project(armv4vm VERSION 1.0.1)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 FIND_PACKAGE(Qt5 COMPONENTS Core Test)
 
+<<<<<<< HEAD
 ADD_DEFINITIONS(-Wall)
 ADD_DEFINITIONS(-fPIC)
 ADD_DEFINITIONS(-DDEBUG)
+=======
+IF(Qt5Core_FOUND)
+SET(CMAKE_AUTOMOC ON)
+ENDIF(Qt5Core_FOUND)
+
+add_compile_options(-Wall -fPIC)
+>>>>>>> origin/develop
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
+SET(ARMV4VM_HEADER_FILES vm.h)
+SET(ARMV4VM_SOURCE_FILES vm.cpp)
+SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
 
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
+add_link_options(-O0 -g3 -pg --coverage)
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+<<<<<<< HEAD
 SET(ARMV4VM_HEADER_FILES vm.h)
 SET(ARMV4VM_SOURCE_FILES vm.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
@@ -18,6 +35,11 @@ SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
 set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 
+=======
+SET(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
+configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
+
+>>>>>>> origin/develop
 IF(Qt5Core_FOUND)
     SET(CMAKE_AUTOMOC ON)
     INCLUDE_DIRECTORIES(SYSTEM ${QT_USE_FILE})
@@ -28,7 +50,10 @@ ELSE(Qt5Core_FOUND)
     ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
 ENDIF(Qt5Core_FOUND)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/develop
 IF(Qt5Core_FOUND)
     add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES})
     add_test(tu ${ARMV4VM_TEST_SOURCE_FILES})

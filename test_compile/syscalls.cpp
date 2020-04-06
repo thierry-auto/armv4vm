@@ -4,6 +4,22 @@
 extern "C" {
 #endif
 
+void suspendMachine() {
+
+    asm("swi 3");
+}
+
+void resumeMachine() {
+
+    asm("swi 1");
+}
+
+void stopMachine() {
+
+    asm("swi 2");
+}
+
+
 extern unsigned char uart_base;
 unsigned char *      UART0_ADDR = (unsigned char *)&uart_base;
 
@@ -75,6 +91,8 @@ int _write(int file, char *ptr, int len) {
     int todo;
     for (todo = 0; todo < len; todo++) {
         UART_DR(&uart_base) = *ptr++;
+
+        suspendMachine();
     }
     return len;
 }
@@ -92,6 +110,10 @@ int __exidx_end;
 int _getpid(void) { return 1; }
 
 void _exit() {}
+
+extern "C" void __sync_synchronize() {}
+void *          __dso_handle = (void *)NULL;
+
 
 #ifdef __cplusplus
 }

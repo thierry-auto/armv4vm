@@ -5,8 +5,13 @@ make install-{gcc,target-libgcc}
 
 cd ../newlib-build/
 CFLAGS_FOR_TARGET='-mcpu=arm7tdmi -marm -mlittle-endian -mfloat-abi=soft -O0' ../newlib-3.3.0/configure --prefix=/home/USER/armv4vm-cc/  --disable-interwork --disable-newlib-supplied-syscalls --with-gnu-ld --with-gnu-as --disable-shared --disable-nls  --disable-newlib-io-long-long --disable-newlib-io-long-double  --disable-newlib-io-c99-formats --target=arm-unknown-eabi  --disable-newlib-unbuf-stream-opt --disable-newlib-multithread --disable-newlib-io-float --enable-newlib-nano-formatted-io
+OU
+CFLAGS_FOR_TARGET='-mcpu=arm7tdmi -marm -mlittle-endian -mfloat-abi=soft -O0' ../newlib-3.3.0/configure --prefix=/home/th/armv4vm-cc/  --disable-interwork --disable-newlib-supplied-syscalls --with-gnu-ld --with-gnu-as --disable-shared --disable-nls  --enable-newlib-io-long-long --enable-newlib-io-long-double  --target=arm-unknown-eabi  --enable-newlib-unbuf-stream-opt --disable-newlib-multithread --enable-newlib-io-pos-args
+
 make
 make install
+
+
 
 cd ../libstdc++-build/
 CXXFLAGS_FOR_TARGET='-mcpu=arm7tdmi -marm -mlittle-endian -mfloat-abi=soft -O0' CFLAGS_FOR_TARGET='-mcpu=arm7tdmi -marm -mlittle-endian -mfloat-abi=soft -O0' ../gcc-9.3.0/configure --prefix=/home/USER/armv4vm-cc/ --target=arm-unknown-eabi --disable-multilib --disable-bootstrap --disable-shared --disable-nls --disable-threads -with-newlib --with-headers=../newlib-3.3.0/include/ --enable-languages=c,c++ --disable-libgomp --disable-libitm --disable-libquadmath --disable-libsanitizer --disable-libssp --disable-libvtv --disable-libcilkrts --disable-libatomic --disable-gcc --disable-libgcc

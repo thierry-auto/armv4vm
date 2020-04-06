@@ -5,3 +5,9 @@ tu_autogen
 tu
 libarmv4vm.a
 cmake_install.cmake
+*.o
+*.elf
+*.OLD
+*.out
+*~
+CMakeFiles/

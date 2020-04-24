@@ -22,6 +22,8 @@
 #include "config.h"
 #include "vm.h"
 
+namespace armv4vm {
+
 struct VmProperties vmProperties;
 
 static void seti(uint8_t *ram, uint32_t ii) {
@@ -2041,5 +2043,6 @@ private slots:
         QVERIFY(data == "4 11337 64624 74501 98671 149983 166011 167964 230031 276464 290271 343718 353417 378247 433098 443959 447113 449806 456279");
     }
 };
-QTEST_MAIN(TestVm)
+} // namespace armv4vm
+QTEST_MAIN(armv4vm::TestVm)
 #include "test.moc"

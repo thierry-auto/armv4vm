@@ -36,6 +36,8 @@
     }
 #endif
 
+namespace armv4vm {
+
 static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
 
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
@@ -1590,3 +1592,5 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
 const uint32_t *VirtualMachine::getRegisters() const { return m_registers; }
 
 uint32_t VirtualMachine::getCPSR() const { return m_cpsr; }
+
+} // namespace armv4vm

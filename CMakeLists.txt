@@ -21,7 +21,7 @@ add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
 add_link_options(-O0 -g3 -pg --coverage)
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-SET(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
+set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 
 IF(Qt5Core_FOUND)

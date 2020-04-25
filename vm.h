@@ -27,6 +27,8 @@
 #include <string>
 #endif
 
+namespace armv4vm {
+
 struct VmProperties {
 
     VmProperties() {
@@ -193,3 +195,5 @@ class VirtualMachine
 
     static const uint32_t MODE_FLAG = 0x0000001F;
 };
+
+} // namespace armv4vm

@@ -1927,28 +1927,29 @@ private slots:
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
-        vm.load();
-        uart = mem + UARTPOS;
+        if(vm.load()) {
 
-        while (running) {
+            uart = mem + UARTPOS;
 
-            switch (vm.run()) {
+            while (running) {
 
-            case VirtualMachine::Resume:
-                break;
+                switch (vm.run()) {
 
-            case VirtualMachine::Stop:
-                running = false;
-                break;
+                case VirtualMachine::Resume:
+                    break;
 
-            case VirtualMachine::Suspend:
-                data += (char)*uart;
+                case VirtualMachine::Stop:
+                    running = false;
+                    break;
 
-            default:
-                break;
+                case VirtualMachine::Suspend:
+                    data += (char)*uart;
+
+                default:
+                    break;
+                }
             }
         }
-
         QVERIFY(data == "hello world\n");
     }
 
@@ -1963,9 +1964,9 @@ private slots:
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
-        if (vm.load()) {
+        uart = mem + UARTPOS;
 
-            uart = mem + UARTPOS;
+        if (vm.load()) {
 
             while (running) {
 
@@ -1999,9 +2000,9 @@ private slots:
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
-        if (vm.load()) {
+        uart = mem + UARTPOS;
 
-            uart = mem + UARTPOS;
+        if (vm.load()) {
 
             while (running) {
 
@@ -2044,27 +2045,30 @@ private slots:
 
         VirtualMachine vm(&vmProperties, this);
         mem = vm.init();
-        vm.load();
         uart = mem + UARTPOS;
 
-        while (running) {
+        if(vm.load()) {
 
-            switch (vm.run()) {
 
-            case VirtualMachine::Resume:
-                break;
+            while (running) {
 
-            case VirtualMachine::Stop:
-                running = false;
-                break;
+                switch (vm.run()) {
 
-            case VirtualMachine::Suspend:
-                data += (char)*uart;
-                std::cout << (char)*uart;
-                break;
+                case VirtualMachine::Resume:
+                    break;
 
-            default:
-                break;
+                case VirtualMachine::Stop:
+                    running = false;
+                    break;
+
+                case VirtualMachine::Suspend:
+                    data += (char)*uart;
+                    std::cout << (char)*uart;
+                    break;
+
+                default:
+                    break;
+                }
             }
         }
 

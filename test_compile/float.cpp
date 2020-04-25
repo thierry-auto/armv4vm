@@ -13,6 +13,9 @@ int main(void)
     unsigned char c1 = 0xDF;
     long long ll1 = 12344891234589423;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
     unsigned char * uart = &uart_base;
 
     memcpy(uart, &i1, sizeof(int));
@@ -26,6 +29,8 @@ int main(void)
     memcpy(uart, &c1, sizeof(unsigned char));
     uart += sizeof(unsigned char);
     memcpy(uart, &ll1, sizeof(long long));
+
+#pragma GCC diagnostic pop
 
     return EXIT_SUCCESS;
 }

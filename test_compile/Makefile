@@ -5,7 +5,7 @@ CXX=$(CCPATH)/bin/arm-unknown-eabi-g++
 LD=$(CCPATH)/bin/arm-unknown-eabi-ld
 OBJCOPY=$(CCPATH)/bin/arm-unknown-eabi-objcopy
 
-OPTIONS=-O0 -Wall -marm -mcpu=arm7tdmi -mfloat-abi=soft -mlittle-endian -mno-unaligned-access -mno-thumb-interwork
+OPTIONS=-O2 -Wall -marm -mcpu=arm7tdmi -mfloat-abi=soft -mlittle-endian -mno-unaligned-access -mno-thumb-interwork
 OPTIONSC=$(OPTIONS) -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
 OPTIONSCXX=$(OPTIONS) -std=c++17 -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
 #LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9.3.0/ -lstdc++

@@ -1323,7 +1323,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
 
             if (instruction.w) {
 
-                if((offset % 4) == 2) {
+                if((offset % 4) == 0) {
 
                     offset -= 2;
                 }
@@ -1341,7 +1341,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
             else
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
-            if((offset % 4) == 2) {
+            if((offset % 4) == 0) {
 
                 offset -= 2;
             }

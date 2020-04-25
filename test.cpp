@@ -1640,6 +1640,74 @@ private slots:
         QVERIFY(*(uint32_t *)(vm.m_ram + 0x54) == 0x00010009);
     }
 
+    void testSTRH5() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0c320b2);  // strh r2, [r3], #2
+        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_registers[3] = 0x00000100;
+        seti(vm.m_ram + 0x100, 0xaaaaaaaa);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0xaabbccdd);
+        QVERIFY(vm.m_registers[3] == 0x00000102);
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0xaaaaccdd);
+    }
+
+    void testSTRH6() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0c320b3);  // strh r2, [r3], #3
+        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_registers[3] = 0x00000102;
+        seti(vm.m_ram + 0x100, 0xaaaaaaaa);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0xaabbccdd);
+        QVERIFY(vm.m_registers[3] == 0x00000105);
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0xccddaaaa);
+    }
+
+    void testLDRH1() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0d320b2);  // ldrh r2, [r3], #2
+        vm.m_registers[2] = 0x11223344;
+        vm.m_registers[3] = 0x00000100;
+        seti(vm.m_ram + 0x100, 0xaabbccdd);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0x0000ccdd);
+        QVERIFY(vm.m_registers[3] == 0x00000102);
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0xaabbccdd);
+    }
+
+    void testLDRH2() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0d320b3);  // ldrh r2, [r3], #3
+        vm.m_registers[2] = 0x11223344;
+        vm.m_registers[3] = 0x00000102;
+        seti(vm.m_ram + 0x100, 0xaabbccdd);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0x0000aabb);
+        QVERIFY(vm.m_registers[3] == 0x00000105);
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x100) == 0xaabbccdd);
+    }
+
     void testSTRB() {
 
         VirtualMachine vm(&vmProperties, this);

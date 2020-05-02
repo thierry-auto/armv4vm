@@ -38,7 +38,12 @@ struct VmProperties {
     }
     ~VmProperties() {}
 
-    VmProperties(const VmProperties &);
+    VmProperties(const VmProperties &other) {
+
+        m_bin = other.m_bin;
+        m_memsize = other.m_memsize;
+        m_debug = other.m_debug;
+    }
 
 #ifdef QT_CORE_LIB
     QString m_bin;
@@ -65,10 +70,11 @@ class VirtualMachine
 {
 
   public:
-    explicit VirtualMachine(struct VmProperties *);
 
 #ifdef QT_CORE_LIB
     explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
+#else
+    explicit VirtualMachine(struct VmProperties *);
 #endif
     ~VirtualMachine();
 

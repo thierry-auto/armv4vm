@@ -46,14 +46,14 @@ static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ?
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
+#ifdef QT_CORE_LIB
+VirtualMachine::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
 }
-
-#ifdef QT_CORE_LIB
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
+#else
+VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;

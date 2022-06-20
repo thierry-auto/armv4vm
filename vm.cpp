@@ -150,7 +150,9 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 #endif
             }
         } else {
+#ifdef DEBUG
             debugHook = 6;
+#endif
             while (true) {
 
                 stage1 = fetch();

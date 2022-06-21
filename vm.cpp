@@ -17,6 +17,9 @@
 
 #include "vm.h"
 
+long long debugHook = 0;
+
+
 #ifdef QT_CORE_LIB
 #include <QDataStream>
 #include <QFile>
@@ -121,9 +124,7 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
-#ifdef DEBUG
-static long long debugHook = 0;
-#endif
+
 static uint32_t           stage1 = 0;
 VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
@@ -145,21 +146,13 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
                 stage1 = fetch();
                 decode(stage1);
                 evaluate();
-#ifdef DEBUG
-                debugHook++;
-#endif
             }
         } else {
-            debugHook = 6;
             while (true) {
 
                 stage1 = fetch();
                 decode(stage1);
                 evaluate();
-
-#ifdef DEBUG
-                debugHook++;
-#endif
             }
         }
         break;
@@ -177,6 +170,25 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
         break;
 
     case 4:
+        result = LockPop;
+        break;
+
+    case 5:
+        result = UnlockPop;
+        break;
+
+    case 6:
+        result = LockPush;
+        break;
+
+    case 7:
+        result = UnlockPush;
+        break;
+
+    case 8:
+        result = Fatal;
+        break;
+
     default:
         result = Undefined;
         break;
@@ -1369,7 +1381,6 @@ void VirtualMachine::softwareInterruptEval() {
         return;
 
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
-
     longjmp(m_runInterruptLongJump, instruction.comment);
 }
 

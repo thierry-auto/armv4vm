@@ -78,12 +78,17 @@ class VirtualMachine
 #endif
     ~VirtualMachine();
 
-    enum Interrupt : int {
+    enum Interrupt : int32_t {
 
-        Resume    = 1,
-        Stop      = 2,
-        Suspend   = 3,
-        Undefined = 4,
+        Resume     = 1,
+        Stop       = 2,
+        Suspend    = 3,
+        LockPop    = 4,
+        UnlockPop  = 5,
+        LockPush   = 6,
+        UnlockPush = 7,
+        Fatal      = 8,
+        Undefined  = 4,
     };
 
     uint8_t *       init();
@@ -91,7 +96,7 @@ class VirtualMachine
     void            loadTest();
     uint64_t        load();
     const uint32_t *getRegisters() const;
-    Interrupt       run(const uint32_t nbMaxIteration = 0);
+
     uint32_t        getCPSR() const;
 
 #ifdef QT_CORE_LIB
@@ -99,6 +104,10 @@ class VirtualMachine
     friend class TestVm;
 #endif
 
+/*public slots:*/
+    Interrupt run(const uint32_t nbMaxIteration = 0);
+
+public:
     enum Error {
 
         E_LOAD_FAILED,

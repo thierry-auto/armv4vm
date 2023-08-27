@@ -1879,6 +1879,46 @@ private slots:
         QVERIFY(vm.m_cpsr == 0x20000000);
     }
 
+    void testSMULL() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0c23290); // smull   r3, r2, r0, r2
+        vm.m_registers[0] = 0x17;
+        vm.m_registers[2] = 0xd;
+        vm.m_registers[3] = 0x7;
+        vm.m_cpsr         = 0x20000000;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[0] == 0x17);
+        QVERIFY(vm.m_registers[2] == 0x0);
+        QVERIFY(vm.m_registers[3] == 0x12b);
+        QVERIFY(vm.m_cpsr == 0x20000000);
+    }
+
+    void testSMULL2() {
+
+        VirtualMachine vm(&vmProperties, this);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe0c23190); // smull   r3, r2, r0, r1
+        vm.m_registers[0] = -324;       // fffffebc
+        vm.m_registers[1] = 45674233;   // 2b8eef9
+        vm.m_registers[2] = 0x7213;
+        vm.m_registers[3] = 0x72345;
+        vm.m_cpsr         = 0x20000000;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[0] == -324);
+        QVERIFY(vm.m_registers[1] == 45674233);
+        QVERIFY(vm.m_registers[2] == 0xfffffffc);
+        QVERIFY(vm.m_registers[3] == 0x8df18cdc);
+        QVERIFY(vm.m_cpsr == 0x20000000);
+    }
+
     void testRSBS() {
 
         VirtualMachine vm(&vmProperties, this);
@@ -2073,6 +2113,43 @@ private slots:
         }
 
         QVERIFY(data == "[printf] 2 c hello 41.123000\n[cout] 2 c hello 41.123\n");
+    }
+
+    void testProgramModulo() {
+
+        QString binPath(getBinPath());
+        vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
+        vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
+        uint8_t *mem           = nullptr;
+        uint8_t *uart          = nullptr;
+        bool     running       = true;
+        VirtualMachine vm(&vmProperties, this);
+        mem      = vm.init();
+        uart     = mem + UARTPOS;
+
+        if (vm.load()) {
+
+            while (running) {
+
+                switch (vm.run()) {
+
+                case VirtualMachine::Resume:
+                    break;
+
+                case VirtualMachine::Stop:
+                    running = false;
+                    break;
+
+                case VirtualMachine::Suspend:
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
+        QVERIFY(vm.m_registers[0] == 0);
     }
 
     void testProgramBench() {

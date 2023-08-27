@@ -630,6 +630,9 @@ void VirtualMachine::multiplyEval() {
     }
 }
 
+inline int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
+inline uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
+
 void VirtualMachine::multiplyLongEval() {
 
     // clang-format off
@@ -649,7 +652,8 @@ void VirtualMachine::multiplyLongEval() {
     } instruction;
     // clang-format on
 
-    static uint64_t result = 0;
+    int64_t  signedResult   = 0;
+    uint64_t unsignedResult = 0;
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -657,20 +661,33 @@ void VirtualMachine::multiplyLongEval() {
     // § 4.12
     instruction = cast<MultiplyLong>(m_workingInstruction);
 
-    if (instruction.a) {
+    // https:   // cpulator.01xz.net/?sys=arm
 
-        // Multiply accumulate RdHi,RdLo := Rm * Rs + RdHi,RdLo
-        result                        = m_registers[instruction.rdhi];
-        result                        = (result << 32) | (uint64_t)m_registers[instruction.rdlo];
-        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs] + result;
-        m_registers[instruction.rdhi] = result >> 32;
-        m_registers[instruction.rdlo] = result;
-    } else {
+    if (instruction.u) { // signed
 
-        // Multiply only RdHi,RdLo := Rm * Rs
-        result                        = (uint64_t)m_registers[instruction.rm] * (uint64_t)m_registers[instruction.rs];
-        m_registers[instruction.rdhi] = result >> 32;
-        m_registers[instruction.rdlo] = result;
+        if (instruction.a) {
+
+            // Multiply accumulate RdHi,RdLo := Rm * Rs + RdHi,RdLo
+            signedResult = m_registers[instruction.rdhi];
+            signedResult = (signedResult << 32) | m_registers[instruction.rdlo];
+            signedResult += signedCastTo64(m_registers[instruction.rm]) * signedCastTo64(m_registers[instruction.rs]);
+        }
+
+        signedResult += signedCastTo64(m_registers[instruction.rm]) * signedCastTo64(m_registers[instruction.rs]);
+        m_registers[instruction.rdhi] = signedResult >> 32;
+        m_registers[instruction.rdlo] = signedResult & 0xFFFFFFFF;
+
+    } else { // unsigned
+        if (instruction.a) {
+
+            // Multiply accumulate RdHi,RdLo := Rm * Rs + RdHi,RdLo
+            unsignedResult = m_registers[instruction.rdhi];
+            unsignedResult = (unsignedResult << 32) | m_registers[instruction.rdlo];
+        }
+
+        unsignedResult += unsignedCastTo64(m_registers[instruction.rm]) * unsignedCastTo64(m_registers[instruction.rs]);
+        m_registers[instruction.rdhi] = unsignedResult >> 32;
+        m_registers[instruction.rdlo] = unsignedResult & 0xFFFFFFFF;
     }
 
     if (instruction.s && instruction.rdhi != 15 && instruction.rdlo != 15) {

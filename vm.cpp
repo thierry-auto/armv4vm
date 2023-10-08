@@ -249,6 +249,9 @@ void VirtualMachine::decode(const uint32_t instruction) {
     } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
+#ifdef DEBUG
+        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
     } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
@@ -1040,7 +1043,7 @@ void VirtualMachine::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset += 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8; // et pas + 12
+                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4; // et pas + 12
                 }
             } else {
 
@@ -1057,7 +1060,7 @@ void VirtualMachine::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
                     offset += 4;
                 }
             }
@@ -1070,7 +1073,7 @@ void VirtualMachine::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset -= 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
                 }
 
                 // Registre 14, 13, 12, ...
@@ -1088,7 +1091,7 @@ void VirtualMachine::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
                     offset -= 4;
                 }
 
@@ -1213,6 +1216,8 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         }
     } else {
 
+        uint32_t rd = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 4;
+
         if (instruction.p) {
 
             if (instruction.u)
@@ -1225,8 +1230,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset += 2;
             }
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            *reinterpret_cast<uint32_t *>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1234,8 +1238,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
             }
         } else {
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            *reinterpret_cast<uint32_t *>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1340,6 +1343,8 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
         }
     } else {
 
+        uint32_t rd = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 4;
+
         if (instruction.p) {
 
             if (instruction.u)
@@ -1348,9 +1353,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+                *reinterpret_cast<uint32_t *>(m_ram + offset) =
+                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset-2) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                *reinterpret_cast<uint32_t *>(m_ram + offset - 2) =
+                    (*reinterpret_cast<uint32_t *>(m_ram + offset - 2) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1363,9 +1370,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
         } else {
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+                *reinterpret_cast<uint32_t *>(m_ram + offset) =
+                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                *reinterpret_cast<uint32_t *>(m_ram + offset - 2) =
+                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);

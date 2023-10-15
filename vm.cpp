@@ -16,11 +16,11 @@
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vm.h"
+#include "memoryhandler.h"
 
 long long debugHook = 0;
 
-
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
 #include <QDataStream>
 #include <QFile>
 #else
@@ -31,7 +31,7 @@ long long debugHook = 0;
 #include <iostream>
 #endif
 
-#ifndef QT_CORE_LIB
+#ifndef UNABLE_QT
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
 {                                                                                                                  \
     std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
@@ -42,38 +42,41 @@ long long debugHook = 0;
 namespace armv4vm {
 
 static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
-
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
-
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
-#ifdef QT_CORE_LIB
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
+#ifdef UNABLE_QT
+VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
 }
 #else
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
+template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
+
+    m_vmProperties = vmProperties;
+}
+
+template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
 }
-#endif
 
-VirtualMachine::~VirtualMachine() {
+template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
 
-    if (m_ram) {
-
-        delete[] m_ram;
-    }
-
-    m_ram = nullptr;
+    m_vmProperties = vmProperties;
 }
 
-uint8_t *VirtualMachine::init() {
+template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
+template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
+#endif
+
+template <typename T> T VirtualMachine<T>::init() { return 0; }
+
+template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
     m_ram = new uint8_t[m_vmProperties->m_memsize];
     memset(m_ram, 0x00, m_vmProperties->m_memsize);
@@ -85,8 +88,21 @@ uint8_t *VirtualMachine::init() {
     return m_ram;
 }
 
-#ifdef QT_CORE_LIB
-uint64_t VirtualMachine::load() {
+template <> MemoryProtected VirtualMachine<MemoryProtected>::init() {
+
+    // m_ram = new uint8_t[m_vmProperties->m_memsize];
+    // std::vector<uint8_t> m_ram;
+
+    // m_ram.resize(m_vmProperties->m_memsize);
+
+    m_cpsr = 0;
+    m_spsr = 0;
+    MemoryProtected m;
+    return m;
+}
+
+#ifdef UNABLE_QT
+uint64_t VirtualMachine<T>::load() {
 
     QFile    program(m_vmProperties->m_bin);
     uint64_t programSize = 0;
@@ -103,7 +119,7 @@ uint64_t VirtualMachine::load() {
     return programSize;
 }
 #else
-uint64_t VirtualMachine::load() {
+template <typename T> uint64_t VirtualMachine<T>::load() {
 
     std::fstream program;
     uint64_t     programSize = 0;
@@ -113,7 +129,8 @@ uint64_t VirtualMachine::load() {
 
         programSize = program.tellg();
         program.seekg(0, std::ios::beg);
-        program.read(reinterpret_cast<char *>(m_ram), programSize);
+
+        program.read((char *)(uint8_t *)m_ram, programSize);
         program.close();
     } else {
         m_error     = E_LOAD_FAILED;
@@ -124,11 +141,11 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
+static uint32_t stage1 = 0;
 
-static uint32_t           stage1 = 0;
-VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
+template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::run(const uint32_t nbMaxIteration) {
 
-    VirtualMachine::Interrupt result        = Undefined;
+    VirtualMachine<T>::Interrupt result        = VirtualMachine<T>::Interrupt::Undefined;
     int                       setJumpResult = 0;
 
     m_running = true;
@@ -158,56 +175,56 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
         break;
 
     case 1:
-        result = Resume;
+        result = VirtualMachine<T>::Interrupt::Resume;
         break;
 
     case 2:
-        result = Stop;
+        result = VirtualMachine<T>::Interrupt::Stop;
         break;
 
     case 3:
-        result = Suspend;
+        result = VirtualMachine<T>::Interrupt::Suspend;
         break;
 
     case 4:
-        result = LockPop;
+        result = VirtualMachine<T>::Interrupt::LockPop;
         break;
 
     case 5:
-        result = UnlockPop;
+        result = VirtualMachine<T>::Interrupt::UnlockPop;
         break;
 
     case 6:
-        result = LockPush;
+        result = VirtualMachine<T>::Interrupt::LockPush;
         break;
 
     case 7:
-        result = UnlockPush;
+        result = VirtualMachine<T>::Interrupt::UnlockPush;
         break;
 
     case 8:
-        result = Fatal;
+        result = VirtualMachine<T>::Interrupt::Fatal;
         break;
 
     default:
-        result = Undefined;
+        result = VirtualMachine<T>::Interrupt::Undefined;
         break;
     }
 
     return result;
 }
 
-uint32_t VirtualMachine::fetch() {
+template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
     static uint32_t result;
 
-    result = *reinterpret_cast<uint32_t *>(m_ram + (*m_pc));
+    result = * /*reinterpret_cast<uint32_t *>*/ (m_ram + (*m_pc));
     *m_pc += 4;
 
     return result;
 }
 
-void VirtualMachine::decode(const uint32_t instruction) {
+template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction) {
 
     static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
@@ -299,7 +316,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     }
 }
 
-void VirtualMachine::evaluate() {
+template <typename T> void VirtualMachine<T>::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -372,7 +389,7 @@ inline bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, const uint
     return ((NEG(op1) && POS(op2)) || (NEG(op1) && POS(result)) || (POS(op2) && POS(result)));
 }
 
-void VirtualMachine::dataProcessingEval() {
+template <typename T> void VirtualMachine<T>::dataProcessingEval() {
 
     enum OpCode {
 
@@ -486,8 +503,8 @@ void VirtualMachine::dataProcessingEval() {
     case TEQ:
         notWrittenResult = operand1 ^ operand2;
 #ifdef DEBUG
-        if(instruction.s == 0)
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        // if(instruction.s == 0)
+        //   qt_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
 
@@ -591,7 +608,7 @@ void VirtualMachine::dataProcessingEval() {
     }
 }
 
-void VirtualMachine::multiplyEval() {
+template <typename T> void VirtualMachine<T>::multiplyEval() {
 
     // clang-format off
     struct Multiply {
@@ -636,7 +653,7 @@ void VirtualMachine::multiplyEval() {
 inline int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
 inline uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
-void VirtualMachine::multiplyLongEval() {
+template <typename T> void VirtualMachine<T>::multiplyLongEval() {
 
     // clang-format off
     static struct MultiplyLong {
@@ -700,7 +717,7 @@ void VirtualMachine::multiplyLongEval() {
     }
 }
 
-void VirtualMachine::singleDataTranferEval() {
+template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
     // clang-format off
     static struct SingleDataTranfer {
@@ -734,6 +751,8 @@ void VirtualMachine::singleDataTranferEval() {
 
     carry  = 0;
     offset = instruction.immediate ? shift(instruction.offset & 0xFEF, carry) : instruction.offset;
+
+    // § 4.9.4
     rd     = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 8; // et pas + 12
     rn     = instruction.rn != 15 ? m_registers[instruction.rn] : m_registers[instruction.rn] + 4; // et pas + 8
 
@@ -880,7 +899,7 @@ void VirtualMachine::singleDataTranferEval() {
     // retained by setting the offset to zero.
 }
 
-void VirtualMachine::branchAndExchangeEval() {
+template <typename T> void VirtualMachine<T>::branchAndExchangeEval() {
 
     // clang-format off
     static struct BranchAndExchange {
@@ -902,7 +921,7 @@ void VirtualMachine::branchAndExchangeEval() {
     *m_pc = m_registers[instruction.rn];
 }
 
-void VirtualMachine::branchEval() {
+template <typename T> void VirtualMachine<T>::branchEval() {
 
     // clang-format off
     static struct Branch {
@@ -930,7 +949,7 @@ void VirtualMachine::branchEval() {
     (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
 }
 
-void VirtualMachine::blockDataTransferEval() {
+template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
@@ -1122,7 +1141,7 @@ void VirtualMachine::blockDataTransferEval() {
     }
 }
 
-void VirtualMachine::halfwordDataTransferRegisterOffEval() {
+template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferRegisterOffset {
@@ -1255,7 +1274,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
     }
 }
 
-void VirtualMachine::halfwordDataTransferImmediateOffEval() {
+template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferImmediateOffset {
@@ -1391,7 +1410,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
     }
 }
 
-void VirtualMachine::softwareInterruptEval() {
+template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
 
     // clang-format off
     struct SoftwareInterrupt {
@@ -1410,7 +1429,7 @@ void VirtualMachine::softwareInterruptEval() {
     longjmp(m_runInterruptLongJump, instruction.comment);
 }
 
-bool VirtualMachine::testCondition(const uint32_t instruction) const {
+template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {
 
     // N Z C V . . . . . .
     enum ConditionCode {
@@ -1485,7 +1504,7 @@ bool VirtualMachine::testCondition(const uint32_t instruction) const {
     }
 }
 
-uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const {
+template <typename T> uint32_t VirtualMachine<T>::rotate(const uint32_t operand2, uint32_t &carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
@@ -1496,7 +1515,7 @@ uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const
     return result;
 }
 
-uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
+template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2, uint32_t &carry) const {
 
     uint32_t              shiftResult     = 0;
     uint32_t              shiftValue      = 0;
@@ -1626,8 +1645,7 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
     return shiftResult;
 }
 
-const uint32_t *VirtualMachine::getRegisters() const { return m_registers; }
-
-uint32_t VirtualMachine::getCPSR() const { return m_cpsr; }
+template <typename T> const uint32_t *VirtualMachine<T>::getRegisters() const { return m_registers; }
+template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { return m_cpsr; }
 
 } // namespace armv4vm

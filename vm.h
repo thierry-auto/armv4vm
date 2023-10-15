@@ -17,17 +17,20 @@
 
 #pragma once
 
-#include <csetjmp>
+#include "memoryhandler.h"
 
-#ifdef QT_CORE_LIB
-#include <QObject>
-#include <QTextStream>
-#else
+#include <algorithm>
+#include <csetjmp>
 #include <cstdint>
+#include <exception>
+#include <memory>
+#include <stdexcept>
 #include <string>
-#endif
+#include <vector>
 
 namespace armv4vm {
+
+class MemoryProtected;
 
 struct VmProperties {
 
@@ -45,7 +48,7 @@ struct VmProperties {
         m_debug = other.m_debug;
     }
 
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
     QString m_bin;
 #else
     std::string m_bin;
@@ -62,23 +65,23 @@ struct VmProperties {
     }
 };
 
+template <typename T>
 class VirtualMachine
 
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
     : public QObject
 #endif
 {
 
   public:
-
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
     explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
 #else
     explicit VirtualMachine(struct VmProperties *);
 #endif
     ~VirtualMachine();
 
-    enum Interrupt : int32_t {
+    enum class Interrupt : int32_t {
 
         Resume     = 1,
         Stop       = 2,
@@ -91,7 +94,7 @@ class VirtualMachine
         Undefined  = 4,
     };
 
-    uint8_t *       init();
+    T               init();
     void            test();
     void            loadTest();
     uint64_t        load();
@@ -99,12 +102,12 @@ class VirtualMachine
 
     uint32_t        getCPSR() const;
 
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
     friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
-    friend class TestVm;
 #endif
+    friend class TestVm;
 
-/*public slots:*/
+    /*public slots:*/
     Interrupt run(const uint32_t nbMaxIteration = 0);
 
 public:
@@ -114,7 +117,7 @@ public:
         E_UNDEFINED
     };
 
-#ifdef QT_CORE_LIB
+#ifdef UNABLE_QT
   signals:
     void started();
     void finished();
@@ -125,7 +128,7 @@ public:
 
   private:
     struct VmProperties *m_vmProperties;
-    uint8_t *            m_ram;
+    T                    m_ram;
     enum Error           m_error;
 
     inline uint32_t fetch();
@@ -198,7 +201,7 @@ public:
     uint32_t m_workingInstruction;
     bool     m_running;
     jmp_buf  m_runInterruptLongJump;
-
+#if 0
     static const uint32_t NEGATE_FLAG     = 0x80000000;
     static const uint32_t ZERO_FLAG       = 0x40000000;
     static const uint32_t CARRIED_FLAG    = 0x20000000;
@@ -209,6 +212,14 @@ public:
     static const uint32_t THUMB_FLAG = 0x00000020;
 
     static const uint32_t MODE_FLAG = 0x0000001F;
+#endif
 };
+
+// explicit template
+template class VirtualMachine<uint8_t *>;
+// template class VirtualMachine<MemoryProtected>;
+
+using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
+// using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
 } // namespace armv4vm

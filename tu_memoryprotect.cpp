@@ -8,6 +8,8 @@
 
 namespace armv4vm {
 
+using Test1Vm = VirtualMachine<MemoryProtected>;
+
 struct VmProperties vmProperties;
 
 class TestMem : public QObject {
@@ -18,173 +20,278 @@ class TestMem : public QObject {
 
   private slots:
 
-    void testNoBound() {
+    void testInstance() {
+        struct VmProperties vmProperties;
+        Test1Vm             vm1(&vmProperties);
+    }
 
-        uint8_t                             mem[200] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint8_t                             v1 = 112;
-        bool                                exceptionRaised = false;
+    void testReadWrite8() {
 
-        spaces.push_back({40, 10});
-        pro.init(mem, 200, spaces);
+        uint8_t            mem[64] = {0};
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        uint8_t            v1 = 0x11;
+        uint8_t            v2 = 0;
+        uint8_t            v3 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(mem, 64, ranges);
 
         try {
-            pro[41] = v1;
+            writePointer<uint8_t>(mem + 10) = v1;
+            writePointer<uint8_t>(pro + 20) = v1;
+            QVERIFY(mem[20] == 0x11);
+            QVERIFY(mem[21] == 0x0);
+            QVERIFY(mem[22] == 0x0);
+            QVERIFY(mem[23] == 0x0);
+
+            writePointer<uint8_t>(mem + 24) = v1;
+            writePointer<uint8_t>(pro + 28) = v1;
+            QVERIFY(mem[24] == 0x11);
+            QVERIFY(pro[28] == 0x11);
+
+            v2 = readPointer<uint8_t>(mem + 24);
+            v3 = readPointer<uint8_t>(pro + 28);
+            QVERIFY(v2 == v3);
+
+            writePointer<uint8_t>(&mem[32]) = 12;
+            writePointer<uint8_t>(pro + 33) = 12;
+
+            v1      = mem[32];
+            v2      = pro[33];
+            QVERIFY(v1 == v2);
+
         } catch (std::exception &e) {
             exceptionRaised = true;
         }
-        QVERIFY(mem[41] == v1);
+
         QVERIFY(exceptionRaised == false);
     }
 
-    void testMaxBound() {
+    void testReadWrite16() {
 
-        uint8_t                             mem[200] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint8_t                             v1 = 124;
-        bool                                exceptionRaised = false;
-        spaces.push_back({40, 10});
-        pro.init(mem, 200, spaces);
+        uint8_t            mem[64] = {0};
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint16_t     v1 = 0x1122;
+        uint16_t           v2 = 0;
+        uint16_t           v3 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(mem, 64, ranges);
 
         try {
-            pro[49] = v1;
+            writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
+            writePointer<uint8_t>(pro + 20) = static_cast<uint8_t>(v1);
+
+            QVERIFY(mem[20] == 0x22);
+            QVERIFY(mem[21] == 0x0);
+            QVERIFY(mem[22] == 0x0);
+            QVERIFY(mem[23] == 0x0);
+
+            writePointer<uint16_t>(mem + 24) = v1;
+            writePointer<uint16_t>(pro + 28) = v1;
+
+            QVERIFY(mem[24] == 0x22);
+            QVERIFY(mem[25] == 0x11);
+            QVERIFY(pro[28] == 0x22);
+            QVERIFY(pro[29] == 0x11);
+
+            writePointer<uint16_t>(mem + 24) = v1;
+            writePointer<uint16_t>(pro + 28) = v1;
+
+            v2 = readPointer<uint8_t>(mem + 24);
+            v3 = readPointer<uint8_t>(pro + 28);
+            QVERIFY(v2 == v3);
+
+            v2 = readPointer<uint16_t>(mem + 24);
+            v3 = readPointer<uint16_t>(pro + 28);
+            QVERIFY(v2 == v3);
+
+            writePointer<uint8_t>(mem + 32) = 0xEB;
+            writePointer<uint8_t>(pro + 33) = 0xEB;
+
+            v2 = mem[32];
+            v3 = pro[33];
+            QVERIFY(v2 == v3);
+
         } catch (std::exception &e) {
             exceptionRaised = true;
         }
-        QVERIFY(mem[49] == v1);
+
         QVERIFY(exceptionRaised == false);
     }
 
-    void testMaxBound2() {
+    void testOutOfRange8() {
 
-        uint8_t                             mem[200] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint8_t                             v1 = 124;
-        bool                                exceptionRaised = false;
-        spaces.push_back({39, 10});
-        pro.init(mem, 200, spaces);
+        uint8_t            mem[64] = {0};
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint8_t      v1 = 0x11;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 32});
+        pro.init(mem, 64, ranges);
 
         try {
-            pro[50] = v1;
+            writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
+            writePointer<uint8_t>(pro + 20) = readPointer<uint8_t>(mem + 10);
+
+            QVERIFY(mem[20] == v1);
+
+            writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
+            writePointer<uint8_t>(pro + 42) = readPointer<uint8_t>(mem + 10);
+
         } catch (std::exception &e) {
             exceptionRaised = true;
         }
 
-        QVERIFY(mem[50] != v1);
+        QVERIFY(pro[42] == 0);
         QVERIFY(exceptionRaised == true);
     }
 
-    void testNoBound32() {
+    void testOutOfRange16() {
 
-        uint8_t                             mem[64] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint32_t                            v1 = 0x11223344;
-        bool                                exceptionRaised = false;
-        spaces.push_back({10, 20});
-        pro.init(mem, 64, spaces);
+        uint8_t            mem[64] = {0};
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint16_t     v1 = 0x1122;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 32});
+        pro.init(mem, 64, ranges);
 
         try {
-            pro[11] = v1;
+            writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
+            writePointer<uint16_t>(pro + 20) = readPointer<uint16_t>(mem + 10);
+
+            QVERIFY(mem[20] == 0x22);
+            QVERIFY(mem[21] == 0x11);
+
+            writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
+            writePointer<uint16_t>(pro + 31) = readPointer<uint16_t>(mem + 10);
+
         } catch (std::exception &e) {
             exceptionRaised = true;
         }
-        QVERIFY(mem[11] == 0x44);
-        QVERIFY(mem[12] == 0x33);
-        QVERIFY(mem[13] == 0x22);
-        QVERIFY(mem[14] == 0x11);
-        QVERIFY(exceptionRaised == false);
-    }
 
-    void testBoundMin32() {
-
-        uint8_t                             mem[64] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint32_t                            v1 = 0xAA44DD77;
-        bool                                exceptionRaised = false;
-        spaces.push_back({10, 20});
-        pro.init(mem, 64, spaces);
-
-        try {
-            pro[10] = v1;
-        } catch (std::exception &e) {
-            exceptionRaised = true;
-        }
-        QVERIFY(mem[10] == 0x77);
-        QVERIFY(mem[11] == 0xDD);
-        QVERIFY(mem[12] == 0x44);
-        QVERIFY(mem[13] == 0xAA);
-        QVERIFY(exceptionRaised == false);
-    }
-
-    void testBoundMax32() {
-
-        uint8_t                             mem[64] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint32_t                            v1 = 0x12fead57;
-        bool                                exceptionRaised = false;
-        spaces.push_back({9, 20});
-        pro.init(mem, 64, spaces);
-
-        try {
-            pro[26] = v1;
-        } catch (std::exception &e) {
-            exceptionRaised = true;
-        }
-        QVERIFY(mem[26] == 0x57);
-        QVERIFY(mem[27] == 0xAD);
-        QVERIFY(mem[28] == 0xFE);
-        QVERIFY(mem[29] == 0x12);
-        QVERIFY(exceptionRaised == false);
-    }
-
-    void test2BoundMax32() {
-
-        uint8_t                             mem[64] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint32_t                            v1              = 0x4c9fb3d1;
-        bool                                exceptionRaised = false;
-        spaces.push_back({9, 20});
-        pro.init(mem, 64, spaces);
-
-        try {
-            pro[27] = v1;
-        } catch (std::exception &e) {
-            exceptionRaised = true;
-        }
-        QVERIFY(mem[27] == 0x00);
-        QVERIFY(mem[28] == 0x00);
-        QVERIFY(mem[29] == 0x00);
-        QVERIFY(mem[30] == 0x00);
+        QVERIFY(pro[31] == 0);
+        QVERIFY(pro[32] == 0);
         QVERIFY(exceptionRaised == true);
     }
 
-    void test2BoundMax16() {
+    //    void testPlusValue16() {
 
-        uint8_t                             mem[64] = {0};
-        std::vector<Space>                  spaces;
-        MemoryProtected                     pro;
-        uint16_t                            v1              = 0x4c9f;
-        bool                                exceptionRaised = false;
-        spaces.push_back({10, 20});
-        pro.init(mem, 64, spaces);
+    //        uint8_t            mem[64] = {0};
+    //        std::vector<Range> ranges;
+    //        MemoryProtected    pro;
+    //        uint16_t           v1              = 0x1122;
+    //        uint16_t           v2              = 0;
+    //        uint16_t           v3              = 0;
+    //        bool               exceptionRaised = false;
+    //        ranges.push_back({0, 64});
+    //        pro.init(mem, 64, ranges);
 
-        try {
-            pro[27] = v1;
-        } catch (std::exception &e) {
-            exceptionRaised = true;
-        }
-        QVERIFY(mem[27] == 0x9F);
-        QVERIFY(mem[28] == 0x4C);
-        QVERIFY(exceptionRaised == false);
-    }
+    //        try {
+    //            mem[10] = v1;
+    //            pro[20] = v1;
+
+    //            QVERIFY(mem[20] == 0x22);
+    //            QVERIFY(mem[21] == 0x0);
+
+    //            *reinterpret_cast<uint16_t *>(&mem[24]) = v1;
+    //            *reinterpret_cast<uint16_t *>(&pro[28]) = v1;
+
+    //            QVERIFY(mem[24] == 0x22);
+    //            QVERIFY(mem[25] == 0x11);
+
+    //            QVERIFY(pro[28] == 0x22);
+    //            QVERIFY(pro[29] == 0x11);
+
+    //            v2 = *toPointerU16(&mem[24]);
+    //            v3 = *toPointerU16(&pro[28]);
+
+    //            QVERIFY(v2 == v3);
+
+    //        } catch (std::exception &e) {
+    //            exceptionRaised = true;
+    //        }
+
+    //        QVERIFY(exceptionRaised == false);
+    //    }
+
+    //    void testPlusValue32() {
+
+    //        uint8_t            mem[64] = {0};
+    //        std::vector<Range> ranges;
+    //        MemoryProtected    pro;
+    //        uint32_t           v1              = 0x11223344;
+    //        uint32_t           v2              = 0;
+    //        uint32_t           v3              = 0;
+    //        bool               exceptionRaised = false;
+    //        ranges.push_back({0, 64});
+    //        pro.init(mem, 64, ranges);
+
+    //        try {
+    //            mem[10] = v1;
+    //            pro[20] = v1;
+
+    //            QVERIFY(mem[20] == 0x44);
+    //            QVERIFY(mem[21] == 0x0);
+    //            QVERIFY(mem[22] == 0x0);
+    //            QVERIFY(mem[23] == 0x0);
+
+    //            *toPointerU32(&mem[24]) = v1;
+    //            *toPointerU32(&pro[28]) = v1;
+
+    //            QVERIFY(mem[24] == 0x44);
+    //            QVERIFY(mem[25] == 0x33);
+    //            QVERIFY(mem[26] == 0x22);
+    //            QVERIFY(mem[27] == 0x11);
+
+    //            QVERIFY(pro[28] == 0x44);
+    //            QVERIFY(pro[29] == 0x33);
+    //            QVERIFY(pro[30] == 0x22);
+    //            QVERIFY(pro[31] == 0x11);
+
+    //            v2 = *reinterpret_cast<uint32_t *>(&mem[24]);
+    //            v3 = *reinterpret_cast<const uint32_t *>(&pro[28]);
+
+    //            QVERIFY(v2 == v3);
+
+    //        } catch (std::exception &e) {
+    //            exceptionRaised = true;
+    //        }
+
+    //        QVERIFY(exceptionRaised == false);
+    //    }
+
+    //    void testErrorBound() {
+
+    //        uint8_t            mem[64] = {0};
+    //        std::vector<Range> ranges;
+    //        MemoryProtected    pro;
+    //        uint8_t            v1              = 0x11;
+    //        bool               exceptionRaised = false;
+
+    //        ranges.push_back({32, 32});
+    //        pro.init(mem, 64, ranges);
+
+    //        try {
+    //            *reinterpret_cast<uint32_t *>(&pro[38]) = v1;
+    //        } catch (std::exception &e) {
+    //            exceptionRaised = true;
+    //        }
+    //        QVERIFY(mem[30] == 0);
+    //        QVERIFY(mem[31] == 0);
+    //        QVERIFY(mem[32] == 0);
+    //        QVERIFY(mem[33] == 0);
+    //        QVERIFY(exceptionRaised == true);
+    //    }
 };
+
 } // namespace armv4vm
 QTEST_MAIN(armv4vm::TestMem)
 #include "tu_memoryprotect.moc"

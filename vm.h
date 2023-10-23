@@ -18,7 +18,7 @@
 #pragma once
 
 #include "memoryhandler.h"
-
+#include <QString>
 #include <algorithm>
 #include <csetjmp>
 #include <cstdint>
@@ -47,8 +47,7 @@ struct VmProperties {
         m_memsize = other.m_memsize;
         m_debug = other.m_debug;
     }
-
-#ifdef UNABLE_QT
+#if 0
     QString m_bin;
 #else
     std::string m_bin;
@@ -65,22 +64,8 @@ struct VmProperties {
     }
 };
 
-template <typename T>
-class VirtualMachine
-
-#ifdef UNABLE_QT
-    : public QObject
-#endif
-{
-
+class VirtualMachineBase {
   public:
-#ifdef UNABLE_QT
-    explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
-#else
-    explicit VirtualMachine(struct VmProperties *);
-#endif
-    ~VirtualMachine();
-
     enum class Interrupt : int32_t {
 
         Resume     = 1,
@@ -91,8 +76,26 @@ class VirtualMachine
         LockPush   = 6,
         UnlockPush = 7,
         Fatal      = 8,
-        Undefined  = 4,
+        Undefined  = 9,
     };
+};
+
+template <typename T>
+class VirtualMachine : public VirtualMachineBase
+
+#ifdef UNABLE_QT
+    ,
+                       public QObject
+#endif
+{
+
+  public:
+#ifdef UNABLE_QT
+    explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
+#else
+    explicit VirtualMachine(struct VmProperties *);
+#endif
+    ~VirtualMachine();
 
     T               init();
     void            test();

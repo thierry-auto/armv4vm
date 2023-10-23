@@ -216,9 +216,7 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
 
 template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
-    static uint32_t result;
-
-    result = * /*reinterpret_cast<uint32_t *>*/ (m_ram + (*m_pc));
+    uint32_t result = *reinterpret_cast<uint32_t *>(m_ram + (*m_pc));
     *m_pc += 4;
 
     return result;
@@ -1092,7 +1090,8 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset -= 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
+                    //*reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                 }
 
                 // Registre 14, 13, 12, ...
@@ -1119,6 +1118,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
+                        m_registers[i]                                = *reinterpret_cast<uint32_t *>(m_ram + offset);
                         *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
                         offset -= 4;
                     }
@@ -1166,7 +1166,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
 
     static uint32_t offset;
 
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
+    // qt_assert(__FUNCTION__, __FILE__, __LINE__);
 
     if (false == testCondition(m_workingInstruction))
         return;

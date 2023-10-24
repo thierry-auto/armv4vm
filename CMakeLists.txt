@@ -9,7 +9,7 @@ IF(Qt6Core_FOUND)
 SET(CMAKE_AUTOMOC ON)
 ENDIF(Qt6Core_FOUND)
 
-add_compile_options(-Wall -fPIC)
+add_compile_options(-std=c++2b -Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(ARMV4VM_HEADER_FILES vm.h memoryhandler.h)

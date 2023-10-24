@@ -182,6 +182,46 @@ class TestMem : public QObject {
         QVERIFY(exceptionRaised == true);
     }
 
+    void testOutOfRange32() {
+
+        uint8_t            mem[64] = {0};
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+        uint32_t           v2 = 0;
+        uint32_t           v3 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({32, 32});
+        pro.init(mem, 64, ranges);
+
+        try {
+            writePointer<uint32_t>(mem + 1)  = v1;
+            writePointer<uint32_t>(pro + 44) = readPointer<uint32_t>(mem + 1);
+
+            QVERIFY(mem[44] == 0x44);
+            QVERIFY(mem[45] == 0x33);
+            QVERIFY(mem[46] == 0x22);
+            QVERIFY(mem[47] == 0x11);
+
+            v2 = readPointer<uint16_t>(mem + 1);
+            v3 = readPointer<uint16_t>(pro + 44);
+
+            QVERIFY(v2 == v3);
+
+            writePointer<uint32_t>(pro + 30) = readPointer<uint32_t>(pro + 44);
+
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(pro[30] == 0);
+        QVERIFY(pro[31] == 0);
+        QVERIFY(pro[32] == 0);
+        QVERIFY(pro[33] == 0);
+        QVERIFY(exceptionRaised == true);
+    }
+
     //    void testPlusValue16() {
 
     //        uint8_t            mem[64] = {0};

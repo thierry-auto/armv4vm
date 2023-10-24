@@ -216,7 +216,7 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
 
 template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
-    uint32_t result = *reinterpret_cast<uint32_t *>(m_ram + (*m_pc));
+    uint32_t result = readPointer<uint32_t>(m_ram + (*m_pc));
     *m_pc += 4;
 
     return result;
@@ -762,20 +762,20 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn + offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn - offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn - offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
                     }
                 }
             } else {
-                m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn) & 0x000000FF;
+                m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn) & 0x000000FF;
 
                 if (instruction.u) {
 
@@ -791,7 +791,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    value = *reinterpret_cast<uint32_t *>(m_ram + rn + offset);
+                    value = readPointer<uint32_t>(m_ram + rn + offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -800,7 +800,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
                     }
                 } else {
 
-                    value = *reinterpret_cast<uint32_t *>(m_ram + rn - offset);
+                    value = readPointer<uint32_t>(m_ram + rn - offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -810,7 +810,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
                 }
             } else {
 
-                value = *reinterpret_cast<uint32_t *>(m_ram + rn);
+                value = readPointer<uint32_t>(m_ram + rn);
 
                 m_registers[instruction.rd] = value;
                 if (instruction.u) {
@@ -832,14 +832,14 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    *reinterpret_cast<uint8_t *>(m_ram + rn + offset) = static_cast<uint8_t>(value);
+                    writePointer<uint8_t>(m_ram + rn + offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    *reinterpret_cast<uint8_t *>(m_ram + rn - offset) = static_cast<uint8_t>(value);
+                    writePointer<uint8_t>(m_ram + rn - offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -847,7 +847,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
                 }
             } else {
 
-                *reinterpret_cast<uint8_t *>(m_ram + rn) = static_cast<uint8_t>(value);
+                writePointer<uint8_t>(m_ram + rn) = static_cast<uint8_t>(value);
 
                 if (instruction.u) {
 
@@ -863,14 +863,14 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + rn + offset) = rd;
+                    writePointer<uint32_t>(m_ram + rn + offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + rn - offset) = rd;
+                    writePointer<uint32_t>(m_ram + rn - offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -878,7 +878,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
                 }
             } else {
 
-                *reinterpret_cast<uint32_t *>(m_ram + rn) = rd;
+                writePointer<uint32_t>(m_ram + rn) = rd;
 
                 if (instruction.u) {
 
@@ -989,7 +989,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset += 4;
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                     }
                 }
             } else {
@@ -999,7 +999,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                         offset += 4;
                     }
                 }
@@ -1014,7 +1014,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                     }
                 }
             } else {
@@ -1024,7 +1024,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                         offset -= 4;
                     }
                 }
@@ -1052,7 +1052,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                         offset += 4;
                         //* reinterpret_cast<uint32_t*>(m_ram + offset) =
                         // m_registers[i];
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                     }
                 }
 
@@ -1060,7 +1060,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset += 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4; // et pas + 12
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4; // et pas + 12
                 }
             } else {
 
@@ -1069,7 +1069,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                         offset += 4;
                     }
                 }
@@ -1077,7 +1077,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                     offset += 4;
                 }
             }
@@ -1090,7 +1090,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset -= 4;
-                    //*reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
+                    // readPointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                     writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                 }
 
@@ -1100,7 +1100,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                     }
                 }
             } else {
@@ -1109,7 +1109,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 4;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                     offset -= 4;
                 }
 
@@ -1118,8 +1118,8 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i]                                = *reinterpret_cast<uint32_t *>(m_ram + offset);
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        m_registers[i]                         = readPointer<uint32_t>(m_ram + offset);
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                         offset -= 4;
                     }
                 }
@@ -1164,7 +1164,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
     } instruction;
     // clang-format on
 
-    static uint32_t offset;
+    uint32_t offset;
 
     // qt_assert(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1192,14 +1192,14 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1211,14 +1211,14 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1249,7 +1249,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
                 offset += 2;
             }
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
+            writePointer<uint32_t>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1257,7 +1257,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
             }
         } else {
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
+            writePointer<uint32_t>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1324,14 +1324,14 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEv
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1343,14 +1343,14 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEv
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1372,11 +1372,11 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEv
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
+                writePointer<uint32_t>(m_ram + offset) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset - 2) =
-                    (*reinterpret_cast<uint32_t *>(m_ram + offset - 2) & 0x0000FFFF) | (rd << 16);
+                writePointer<uint32_t>(m_ram + offset - 2) =
+                    (readPointer<uint32_t>(m_ram + offset - 2) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1389,11 +1389,11 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEv
         } else {
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
+                writePointer<uint32_t>(m_ram + offset) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset - 2) =
-                    (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (rd << 16);
+                writePointer<uint32_t>(m_ram + offset - 2) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);

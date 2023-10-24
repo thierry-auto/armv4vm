@@ -13,7 +13,7 @@ add_compile_options(-std=c++2b -Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(ARMV4VM_HEADER_FILES vm.h memoryhandler.h)
-SET(ARMV4VM_SOURCE_FILES vm.cpp memoryhandler.cpp)
+SET(ARMV4VM_SOURCE_FILES vm.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES tu_memoryprotect.cpp)
 

@@ -78,6 +78,10 @@ class VirtualMachineBase {
         Fatal      = 8,
         Undefined  = 9,
     };
+
+    virtual uint8_t  *init()                                 = 0;
+    virtual uint64_t  load()                                 = 0;
+    virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
 };
 
 template <typename T>
@@ -97,7 +101,7 @@ class VirtualMachine : public VirtualMachineBase
 #endif
     ~VirtualMachine();
 
-    T               init();
+    uint8_t        *init();
     void            test();
     void            loadTest();
     uint64_t        load();

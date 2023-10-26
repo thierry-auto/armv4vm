@@ -27,7 +27,7 @@ class TestMem : public QObject {
 
     void testReadWrite8() {
 
-        uint8_t            mem[64] = {0};
+        uint8_t           *mem;
         std::vector<Range> ranges;
         MemoryProtected    pro;
         uint8_t            v1 = 0x11;
@@ -36,7 +36,7 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         ranges.push_back({0, 64});
-        pro.init(mem, 64, ranges);
+        mem = pro.init(64, ranges);
 
         try {
             writePointer<uint8_t>(mem + 10) = v1;
@@ -71,7 +71,7 @@ class TestMem : public QObject {
 
     void testReadWrite16() {
 
-        uint8_t            mem[64] = {0};
+        uint8_t           *mem = nullptr;
         std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
@@ -80,7 +80,7 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         ranges.push_back({0, 64});
-        pro.init(mem, 64, ranges);
+        mem = pro.init(64, ranges);
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
@@ -126,14 +126,14 @@ class TestMem : public QObject {
 
     void testOutOfRange8() {
 
-        uint8_t            mem[64] = {0};
+        uint8_t           *mem;
         std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint8_t      v1 = 0x11;
 
         bool exceptionRaised = false;
         ranges.push_back({0, 32});
-        pro.init(mem, 64, ranges);
+        mem = pro.init(64, ranges);
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
@@ -154,14 +154,14 @@ class TestMem : public QObject {
 
     void testOutOfRange16() {
 
-        uint8_t            mem[64] = {0};
+        uint8_t           *mem;
         std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
 
         bool exceptionRaised = false;
         ranges.push_back({0, 32});
-        pro.init(mem, 64, ranges);
+        mem = pro.init(64, ranges);
 
         try {
             writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
@@ -184,7 +184,7 @@ class TestMem : public QObject {
 
     void testOutOfRange32() {
 
-        uint8_t            mem[64] = {0};
+        uint8_t           *mem;
         std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
@@ -193,7 +193,7 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         ranges.push_back({32, 32});
-        pro.init(mem, 64, ranges);
+        mem = pro.init(64, ranges);
 
         try {
             writePointer<uint32_t>(mem + 1)  = v1;

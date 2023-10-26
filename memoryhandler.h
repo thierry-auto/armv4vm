@@ -30,17 +30,17 @@ template <typename T> class IsInAuthorizedRange {
 class ByteRef {
 
   private:
-    uint8_t                  *m_origin;
-    uint32_t                  m_offset;
+    uint8_t                  &m_origin;
+    const uint32_t            m_offset;
     const std::vector<Range> *m_authorized;
 
   public:
-    ByteRef(uint8_t *mem, const uint32_t offset, const std::vector<Range> &authorized)
+    ByteRef(uint8_t &mem, const uint32_t offset, const std::vector<Range> &authorized)
         : m_origin(mem), m_offset(offset), m_authorized(&authorized) {}
 
-    ByteRef(const ByteRef &other)
-        : m_origin(other.m_origin), m_offset(other.m_offset), m_authorized(other.m_authorized) {}
+    ByteRef(ByteRef &other) : m_origin(other.m_origin), m_offset(other.m_offset), m_authorized(other.m_authorized) {}
 
+    /*
     ByteRef &operator=(const ByteRef &other) {
 
         m_origin     = other.m_origin;
@@ -48,10 +48,10 @@ class ByteRef {
         m_authorized = other.m_authorized;
 
         return *this;
-    }
+    }*/
 
-    uint8_t operator*() { return *(m_origin + m_offset); }
-    operator uint8_t() { return *(m_origin + m_offset); }
+    uint8_t operator*() { return *(&m_origin + m_offset); }
+    operator uint8_t() { return *(&m_origin + m_offset); }
 
     friend ByteRef                  operator+(const ByteRef &left, const uint32_t right);
     friend ByteRef                  operator-(const ByteRef &left, const uint32_t right);
@@ -74,40 +74,45 @@ template <typename T> inline T readPointer(const ByteRef &b) { return *reinterpr
 template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
 template <typename T> inline T &writePointer(ByteRef b) {
 
-    if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(), IsInAuthorizedRange<T>(b.m_origin, b.m_offset))) {
+    if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(),
+                     IsInAuthorizedRange<T>(&(b.m_origin), b.m_offset))) {
 
         throw std::runtime_error("segmentation fault");
     }
 
-    return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
+    return *reinterpret_cast<T *>(&(b.m_origin) + b.m_offset);
 }
 
 class MemoryProtected {
 
   public:
-    MemoryProtected() : m_mem(nullptr) {}
+    MemoryProtected() : m_size(0) {}
 
-    void init(uint8_t *mem, const uint32_t sizee, std::vector<Range> &authorized) {
+    uint8_t *init(const uint32_t size, const std::vector<Range> &authorized) {
 
-        m_mem        = mem;
-        m_size       = sizee;
+        m_mem.reserve(size);
+        m_size       = size;
         m_authorized = authorized;
+
+        return m_mem.data();
     }
 
-    inline uint8_t operator[](const uint32_t offset) const { return *(m_mem + offset); }
-    operator uint8_t *() { return m_mem; }
+    inline uint8_t operator[](const uint32_t offset) const { return *(m_mem.data() + offset); }
+    operator uint8_t *() { return m_mem.data(); }
 
-    friend inline ByteRef operator+(const MemoryProtected &mem, const uint32_t offset);
+    friend inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset);
+
+    uint8_t *getMem() { return m_mem.data(); }
 
   private:
-    uint8_t           *m_mem;
+    std::vector<uint8_t> m_mem;
     uint32_t           m_size;
     std::vector<Range> m_authorized;
 };
 
-inline ByteRef operator+(const MemoryProtected &mem, const uint32_t offset) {
+inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset) {
 
-    return ByteRef(mem.m_mem, offset, mem.m_authorized);
+    return ByteRef(mem.m_mem.front(), offset, mem.m_authorized);
 }
 
 } // namespace armv4vm

@@ -74,7 +74,7 @@ template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
 template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
 #endif
 
-template <typename T> T VirtualMachine<T>::init() { return 0; }
+template <typename T> uint8_t *VirtualMachine<T>::init() { return nullptr; }
 
 template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
@@ -88,17 +88,22 @@ template <> uint8_t *VirtualMachine<uint8_t *>::init() {
     return m_ram;
 }
 
-template <> MemoryProtected VirtualMachine<MemoryProtected>::init() {
+template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
 
     // m_ram = new uint8_t[m_vmProperties->m_memsize];
-    // std::vector<uint8_t> m_ram;
+    //  std::vector<uint8_t> m_ram;
 
     // m_ram.resize(m_vmProperties->m_memsize);
 
     m_cpsr = 0;
     m_spsr = 0;
-    MemoryProtected m;
-    return m;
+
+    std::vector<Range> ranges;
+    ranges.push_back({0, m_vmProperties->m_memsize});
+
+    m_ram.init(m_vmProperties->m_memsize, ranges);
+
+    return m_ram.getMem();
 }
 
 #ifdef UNABLE_QT

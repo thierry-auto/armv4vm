@@ -222,6 +222,77 @@ class TestMem : public QObject {
         QVERIFY(exceptionRaised == true);
     }
 
+    void testOutOfRange32_2() {
+
+        uint8_t           *mem;
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+        const uint32_t     v2 = 0x55667788;
+
+        bool exceptionRaised = false;
+        ranges.push_back({4, 4});
+        mem = pro.init(8, ranges);
+
+        try {
+            writePointer<uint32_t>(pro + 4) = v1;
+
+            QVERIFY(mem[4] == 0x44);
+            QVERIFY(mem[5] == 0x33);
+            QVERIFY(mem[6] == 0x22);
+            QVERIFY(mem[7] == 0x11);
+
+            writePointer<uint32_t>(pro + 2) = v2;
+
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(mem[2] == 0x0);
+        QVERIFY(mem[3] == 0x0);
+        QVERIFY(mem[4] == 0x44);
+        QVERIFY(mem[5] == 0x33);
+        QVERIFY(exceptionRaised == true);
+
+        exceptionRaised = false;
+
+        try {
+            writePointer<uint32_t>(pro + 5) = v1;
+
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+        QVERIFY(mem[5] == 0x33);
+        QVERIFY(mem[6] == 0x22);
+        QVERIFY(mem[7] == 0x11);
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testMinusPlus() {
+
+        uint8_t           *mem;
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({64, 64});
+        mem = pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro + 112 - 3) = v1;
+
+            QVERIFY(mem[109] == 0x44);
+            QVERIFY(mem[110] == 0x33);
+            QVERIFY(mem[111] == 0x22);
+            QVERIFY(mem[112] == 0x11);
+
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == false);
+    }
     //    void testPlusValue16() {
 
     //        uint8_t            mem[64] = {0};

@@ -62,12 +62,12 @@ template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmP
 template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_ram          = nullptr;
-    m_vmProperties = vmProperties;
+    m_vmProperties = *vmProperties;
 }
 
 template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
 
-    m_vmProperties = vmProperties;
+    m_vmProperties = *vmProperties;
 }
 
 template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
@@ -78,8 +78,8 @@ template <typename T> uint8_t *VirtualMachine<T>::init() { return nullptr; }
 
 template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
-    m_ram = new uint8_t[m_vmProperties->m_memsize];
-    memset(m_ram, 0x00, m_vmProperties->m_memsize);
+    m_ram = new uint8_t[m_vmProperties.m_memsize];
+    memset(m_ram, 0x00, m_vmProperties.m_memsize);
     memset(m_registers, 0, sizeof(m_registers));
 
     m_cpsr = 0;
@@ -90,18 +90,15 @@ template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
 template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
 
-    // m_ram = new uint8_t[m_vmProperties->m_memsize];
+    // m_ram = new uint8_t[m_vmProperties.m_memsize];
     //  std::vector<uint8_t> m_ram;
 
-    // m_ram.resize(m_vmProperties->m_memsize);
+    // m_ram.resize(m_vmProperties.m_memsize);
 
     m_cpsr = 0;
     m_spsr = 0;
 
-    std::vector<Range> ranges;
-    ranges.push_back({0, m_vmProperties->m_memsize});
-
-    m_ram.init(m_vmProperties->m_memsize, ranges);
+    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
 
     return m_ram.getMem();
 }
@@ -109,7 +106,7 @@ template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
 #ifdef UNABLE_QT
 uint64_t VirtualMachine<T>::load() {
 
-    QFile    program(m_vmProperties->m_bin);
+    QFile    program(m_vmProperties.m_bin);
     uint64_t programSize = 0;
 
     if (program.open(QIODevice::ReadOnly)) {
@@ -129,7 +126,7 @@ template <typename T> uint64_t VirtualMachine<T>::load() {
     std::fstream program;
     uint64_t     programSize = 0;
 
-    program.open(m_vmProperties->m_bin, std::ios::in | std::ios::binary | std::ios::ate);
+    program.open(m_vmProperties.m_bin, std::ios::in | std::ios::binary | std::ios::ate);
     if (program.is_open()) {
 
         programSize = program.tellg();

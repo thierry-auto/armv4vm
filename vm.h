@@ -34,10 +34,24 @@ class MemoryProtected;
 
 struct VmProperties {
 
+    struct MemModel {
+
+        enum Type {
+            DIRECT,
+            PROTECTED,
+        };
+
+        MemModel(Type type = DIRECT) : m_type(type) { m_range.clear(); }
+
+        Type                        m_type;
+        std::vector<armv4vm::Range> m_range;
+    };
+
     VmProperties() {
         m_bin     = "";
         m_memsize = 0;
         m_debug   = 0;
+        m_memModel = MemModel::DIRECT;
     }
     ~VmProperties() {}
 
@@ -46,7 +60,19 @@ struct VmProperties {
         m_bin = other.m_bin;
         m_memsize = other.m_memsize;
         m_debug = other.m_debug;
+        m_memModel = other.m_memModel;
     }
+
+    VmProperties operator=(const VmProperties &other) {
+
+        m_bin      = other.m_bin;
+        m_memsize  = other.m_memsize;
+        m_debug    = other.m_debug;
+        m_memModel = other.m_memModel;
+
+        return *this;
+    }
+
 #if 0
     QString m_bin;
 #else
@@ -55,6 +81,7 @@ struct VmProperties {
 
     int  m_memsize;
     bool m_debug;
+    MemModel m_memModel;
 
     void clear() {
 
@@ -134,7 +161,7 @@ public:
 #endif
 
   private:
-    struct VmProperties *m_vmProperties;
+    struct VmProperties  m_vmProperties;
     T                    m_ram;
     enum Error           m_error;
 

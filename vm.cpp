@@ -94,6 +94,7 @@ template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
     //  std::vector<uint8_t> m_ram;
 
     // m_ram.resize(m_vmProperties.m_memsize);
+    memset(m_registers, 0, sizeof(m_registers));
 
     m_cpsr = 0;
     m_spsr = 0;

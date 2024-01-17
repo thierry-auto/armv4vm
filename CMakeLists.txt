@@ -3,18 +3,18 @@ project(armv4vm VERSION 1.0.1)
 
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-FIND_PACKAGE(Qt5 COMPONENTS Core Test)
+FIND_PACKAGE(Qt6 REQUIRED COMPONENTS Core Test)
 
-IF(Qt5Core_FOUND)
+#IF(Qt5Core_FOUND)
 SET(CMAKE_AUTOMOC ON)
-ENDIF(Qt5Core_FOUND)
+#ENDIF(Qt5Core_FOUND)
 
 add_compile_options(-Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-SET(ARMV4VM_HEADER_FILES vm.h)
-SET(ARMV4VM_SOURCE_FILES vm.cpp)
-SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
+SET(ARMV4VM_HEADER_FILES include/vm.h)
+SET(ARMV4VM_SOURCE_FILES src/vm.cpp)
+SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
@@ -24,18 +24,27 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 
-IF(Qt5Core_FOUND)
+#target_include_directories(armv4vm PUBLIC include/)
+
+#IF(Qt5Core_FOUND)
     SET(CMAKE_AUTOMOC ON)
     INCLUDE_DIRECTORIES(SYSTEM ${QT_USE_FILE})
-    ADD_DEFINITIONS(-D${Qt5Core_COMPILE_DEFINITIONS})
-    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-    TARGET_LINK_LIBRARIES(armv4vm Qt5::Core)
-ELSE(Qt5Core_FOUND)
-    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-ENDIF(Qt5Core_FOUND)
+    #ADD_DEFINITIONS(-D${Qt5Core_COMPILE_DEFINITIONS})
+    #
 
-IF(Qt5Core_FOUND)
-    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES})
-    add_test(tu ${ARMV4VM_TEST_SOURCE_FILES})
-    target_link_libraries(tu Qt5::Core Qt5::Test armv4vm)
-ENDIF(Qt5Core_FOUND)
+    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+    target_include_directories(armv4vm PUBLIC include)
+    TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
+
+#ELSE(Qt5Core_FOUND)
+#    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+#ENDIF(Qt5Core_FOUND)
+
+#IF(Qt6Core_FOUND)
+#    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES})
+#    add_test(tu ${ARMV4VM_TEST_SOURCE_FILES})
+#    target_link_libraries(tu Qt6::Core Qt6::Test armv4vm)
+#ENDIF(Qt6Core_FOUND)
+
+set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "include/vm.h")
+install(TARGETS armv4vm)

@@ -152,8 +152,9 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
     int                       setJumpResult = 0;
 
     m_running = true;
-    memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
 
+    // A remplacer par un try..catch..
+    memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
     setJumpResult = setjmp(m_runInterruptLongJump);
 
     switch (setJumpResult) {
@@ -227,7 +228,7 @@ template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
 template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction) {
 
-    static const uint32_t DATA_PROCESSING                      = 0x00000000;
+    constexp uint32_t     DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
     static const uint32_t MULTIPLY_LONG                        = 0x00800090;
     static const uint32_t SINGLE_DATA_SWAP                     = 0x01000090;
@@ -1429,7 +1430,7 @@ template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
         return;
 
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
-    longjmp(m_runInterruptLongJump, instruction.comment);
+    longjmp(m_runInterruptLongJump, instruction.comment); // A remplacer par un thrown
 }
 
 template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {

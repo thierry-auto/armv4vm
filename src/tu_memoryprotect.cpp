@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "vm.h"
+#include "armv4vm.h"
 
 namespace armv4vm {
 

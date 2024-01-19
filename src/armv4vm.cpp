@@ -15,8 +15,10 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "vm.h"
+
+#include "armv4vm.h"
 #include "memoryhandler.h"
+
 
 long long debugHook = 0;
 
@@ -169,6 +171,11 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
                 evaluate();
             }
         } else {
+
+#ifdef DEBUG
+            debugHook = 6;
+#endif
+
             while (true) {
 
                 stage1 = fetch();
@@ -228,7 +235,7 @@ template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
 template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction) {
 
-    constexp uint32_t     DATA_PROCESSING                      = 0x00000000;
+    static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
     static const uint32_t MULTIPLY_LONG                        = 0x00800090;
     static const uint32_t SINGLE_DATA_SWAP                     = 0x01000090;
@@ -654,6 +661,7 @@ template <typename T> void VirtualMachine<T>::multiplyEval() {
 
 inline int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
 inline uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
+
 
 template <typename T> void VirtualMachine<T>::multiplyLongEval() {
 

@@ -3,6 +3,7 @@ project(armv4vm VERSION 1.0.1)
 
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
+
 FIND_PACKAGE(Qt6 COMPONENTS Core Test)
 
 IF(Qt6Core_FOUND)
@@ -12,10 +13,14 @@ ENDIF(Qt6Core_FOUND)
 add_compile_options(-std=c++2b -Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-SET(ARMV4VM_HEADER_FILES vm.h memoryhandler.h)
-SET(ARMV4VM_SOURCE_FILES vm.cpp)
-SET(ARMV4VM_TEST_SOURCE_FILES test.cpp)
+
+INCLUDE_DIRECTORIES(include)
+
+SET(ARMV4VM_HEADER_FILES include/armv4vm.h include/memoryhandler.h)
+SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
+SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES tu_memoryprotect.cpp)
+
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
@@ -24,6 +29,7 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
+
 
 IF(Qt6Core_FOUND)
     SET(CMAKE_AUTOMOC ON)
@@ -44,6 +50,7 @@ IF(Qt6Core_FOUND)
     target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
 ENDIF(Qt6Core_FOUND)
 
-install(FILES vm.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ RENAME armv4vm.h )
-install(TARGETS armv4vm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
+set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "include/armv4vm.h")
+#install(TARGETS armv4vm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
+install(TARGETS armv4vm)
 

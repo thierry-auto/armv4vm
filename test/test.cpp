@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "vm.h"
+#include "armv4vm.h"
 
 namespace armv4vm {
 
@@ -1901,6 +1901,7 @@ private slots:
     void testSMULL2() {
 
         VirtualMachineUnprotected vm(&vmProperties);
+
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0c23190); // smull   r3, r2, r0, r1
@@ -2133,13 +2134,17 @@ private slots:
 
     void testProgramModulo() {
 
+
         std::string binPath(getBinPath());
+
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
+
         VirtualMachineUnprotected vm(&vmProperties);
+
         mem      = vm.init();
         uart     = mem + UARTPOS;
 
@@ -2148,6 +2153,7 @@ private slots:
             while (running) {
 
                 switch (vm.run()) {
+
 
                 case VirtualMachineUnprotected::Interrupt::Resume:
                     break;

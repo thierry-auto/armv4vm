@@ -1,5 +1,6 @@
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+import os
 
 
 class armv4vmRecipe(ConanFile):
@@ -49,8 +50,12 @@ class armv4vmRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["armv4vm"]
-
+        # pour donner accès aux include depuis au projets parents
+        self.cpp_info.libs = ["armv4vm"]        
+        self.cpp_info.includedirs = ["include"]
+        self.cpp_info.set_property("cmake_file_name", "armv4vm")
+        self.cpp_info.set_property("cmake_target_name", "armv4vm::armv4vm")
+        #self.cpp_info.includedirs.append(os.path.join("include", "armv4vm"))
     
 
     

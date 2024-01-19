@@ -1,4 +1,4 @@
-#include "vm.h"
+#include "armv4vm.h"
 #include <vector>
 #include <string>
 

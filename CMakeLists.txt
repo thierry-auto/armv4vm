@@ -12,8 +12,8 @@ SET(CMAKE_AUTOMOC ON)
 add_compile_options(-Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-SET(ARMV4VM_HEADER_FILES include/vm.h)
-SET(ARMV4VM_SOURCE_FILES src/vm.cpp)
+SET(ARMV4VM_HEADER_FILES include/armv4vm.h)
+SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -46,5 +46,5 @@ configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 #    target_link_libraries(tu Qt6::Core Qt6::Test armv4vm)
 #ENDIF(Qt6Core_FOUND)
 
-set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "include/vm.h")
+set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "include/armv4vm.h")
 install(TARGETS armv4vm)

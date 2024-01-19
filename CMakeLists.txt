@@ -19,7 +19,7 @@ INCLUDE_DIRECTORIES(include)
 SET(ARMV4VM_HEADER_FILES include/armv4vm.h include/memoryhandler.h)
 SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
-SET(ARMV4VM_TEST2_SOURCE_FILES tu_memoryprotect.cpp)
+SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")

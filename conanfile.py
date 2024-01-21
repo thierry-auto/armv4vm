@@ -1,7 +1,10 @@
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.files import *
 import os
-
+from conan import ConanFile
+from conan.tools.files import copy
+from os.path import join
 
 class armv4vmRecipe(ConanFile):
     name = "armv4vm"
@@ -46,7 +49,8 @@ class armv4vmRecipe(ConanFile):
         cmake.build()
 
     def package(self):
-        cmake = CMake(self)
+        cmake = CMake(self)        
+        copy(self, "*.h", join(self.source_folder, "include"), join(self.package_folder, "include"))
         cmake.install()
 
     def package_info(self):

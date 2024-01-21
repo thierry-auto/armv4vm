@@ -14,7 +14,7 @@ add_compile_options(-std=c++2b -Wall -fPIC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-INCLUDE_DIRECTORIES(include)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 SET(ARMV4VM_HEADER_FILES include/armv4vm.h include/memoryhandler.h)
 SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)

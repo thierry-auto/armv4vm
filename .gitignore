@@ -12,3 +12,5 @@ cmake_install.cmake
 *~
 CMakeFiles/
 test_package/build/
+build/
+CMakeUserPresets.json

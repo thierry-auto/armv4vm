@@ -18,7 +18,9 @@
 #pragma once
 
 #include "memoryhandler.h"
+#ifdef UNABLE_QT
 #include <QString>
+#endif
 #include <algorithm>
 #include <csetjmp>
 #include <cstdint>
@@ -116,7 +118,7 @@ class VirtualMachine : public VirtualMachineBase
 
 #ifdef UNABLE_QT
     ,
-                       public QObject
+    public QObject
 #endif
 {
 

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "memoryhandler.h"
-#include <QString>
 #include <algorithm>
 #include <csetjmp>
 #include <cstdint>
@@ -114,14 +113,14 @@ class VirtualMachineBase {
 template <typename T>
 class VirtualMachine : public VirtualMachineBase
 
-#ifdef UNABLE_QT
+#ifdef QT_VERSION
     ,
                        public QObject
 #endif
 {
 
   public:
-#ifdef UNABLE_QT
+#ifdef QT_VERSION
     explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
 #else
     explicit VirtualMachine(struct VmProperties *);
@@ -136,7 +135,7 @@ class VirtualMachine : public VirtualMachineBase
 
     uint32_t        getCPSR() const;
 
-#ifdef UNABLE_QT
+#ifdef QT_VERSION
     friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
 #endif
     friend class TestVm;
@@ -151,7 +150,7 @@ public:
         E_UNDEFINED
     };
 
-#ifdef UNABLE_QT
+#ifdef QT_VERSION    
   signals:
     void started();
     void finished();

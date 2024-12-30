@@ -249,8 +249,8 @@ public:
 };
 
 // explicit template
-template class VirtualMachine<uint8_t *>;
-template class VirtualMachine<MemoryProtected>;
+extern template class VirtualMachine<uint8_t *>;
+extern template class VirtualMachine<MemoryProtected>;
 
 using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;

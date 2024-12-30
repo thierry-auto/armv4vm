@@ -378,22 +378,22 @@ template <typename T> void VirtualMachine<T>::evaluate() {
 #define POS(i) ((~(i)) >> 31)
 #define NEG(i) ((i) >> 31)
 
-inline bool isOverflowAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isOverflowAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && NEG(op2) && POS(result)) || (POS(op1) && POS(op2) && NEG(result)));
 }
 
-inline bool isOverflowSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isOverflowSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && POS(op2) && POS(result)) || (POS(op1) && NEG(op2) && NEG(result)));
 }
 
-inline bool isCarryFromALUAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isCarryFromALUAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && NEG(op2)) || (NEG(op1) && POS(result)) || (NEG(op2) && POS(result)));
 }
 
-inline bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && POS(op2)) || (NEG(op1) && POS(result)) || (POS(op2) && POS(result)));
 }
@@ -659,8 +659,8 @@ template <typename T> void VirtualMachine<T>::multiplyEval() {
     }
 }
 
-inline int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
-inline uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
+inline static int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
+inline static uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
 
 template <typename T> void VirtualMachine<T>::multiplyLongEval() {

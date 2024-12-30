@@ -10,7 +10,12 @@ IF(Qt6Core_FOUND)
 SET(CMAKE_AUTOMOC ON)
 ENDIF(Qt6Core_FOUND)
 
-add_compile_options(-std=c++2b -Wall -fPIC)
+IF(UNIX)
+add_compile_options(-Wall -fPIC)
+ELSE()
+ENDIF(UNIX)
+
+SET(CMAKE_CXX_STANDARD 20)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -21,11 +26,12 @@ SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 
-
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
-add_link_options(-O0 -g3 -pg --coverage)
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+IF(UNIX)
+    IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-DDEBUG -O0 -g3 -pg --coverage)
+    add_link_options(-O0 -g3 -pg --coverage)
+    ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+ENDIF(UNIX)
 
 set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)

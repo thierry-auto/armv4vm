@@ -17,6 +17,10 @@
 
 #pragma once
 
+#if _WIN32
+#pragma warning(disable : 4820) // Les alignements
+#endif
+
 #include "memoryhandler.h"
 #include <algorithm>
 #include <csetjmp>

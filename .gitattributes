@@ -1,0 +1,5 @@
+# Traiter tous les fichiers .bin comme des fichiers binaires
+*.bin binary
+
+# Traiter un fichier spécifique comme un fichier binaire
+mon_fichier_binaire.bin binary

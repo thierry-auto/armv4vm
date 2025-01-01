@@ -58,58 +58,11 @@ VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *pa
 #endif
 template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
 
-    m_vmProperties = vmProperties;
-}
-
-template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
-
-    m_ram          = nullptr;
-    m_cpsr         = 0;
-    m_error        = E_NONE;
-    m_instructionSetFormat = unknown;
-    std::memset(m_registers, 0, 16);
-    m_spsr                 = 0;
     m_vmProperties = *vmProperties;
 }
-
-template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
-
-    m_vmProperties = *vmProperties;
-}
-
-template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
-template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
 
 
 template <typename T> uint8_t *VirtualMachine<T>::init() { return nullptr; }
-
-template <> uint8_t *VirtualMachine<uint8_t *>::init() {
-
-    m_ram = new uint8_t[m_vmProperties.m_memsize];
-    memset(m_ram, 0x00, m_vmProperties.m_memsize);
-    memset(m_registers, 0, sizeof(m_registers));
-
-    m_cpsr = 0;
-    m_spsr = 0;
-
-    return m_ram;
-}
-
-template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
-
-    // m_ram = new uint8_t[m_vmProperties.m_memsize];
-    //  std::vector<uint8_t> m_ram;
-
-    // m_ram.resize(m_vmProperties.m_memsize);
-    memset(m_registers, 0, sizeof(m_registers));
-
-    m_cpsr = 0;
-    m_spsr = 0;
-
-    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
-
-    return m_ram.getMem();
-}
 
 #ifdef BUILD_WITH_QT
 uint64_t VirtualMachine<T>::load() {
@@ -1135,7 +1088,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i]                         = readPointer<uint32_t>(m_ram + offset);
+                        //m_registers[i]                         = readPointer<uint32_t>(m_ram + offset);
                         writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                         offset -= 4;
                     }
@@ -1664,6 +1617,55 @@ template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2,
 
 template <typename T> const uint32_t *VirtualMachine<T>::getRegisters() const { return m_registers; }
 template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { return m_cpsr; }
+
+
+template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
+
+    m_ram          = nullptr;
+    m_cpsr         = 0;
+    m_error        = E_NONE;
+    m_instructionSetFormat = unknown;
+    std::memset(m_registers, 0, 16);
+    m_spsr                 = 0;
+    m_vmProperties = *vmProperties;
+}
+
+template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
+
+    m_vmProperties = *vmProperties;
+}
+
+template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
+template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
+
+
+template <> uint8_t *VirtualMachine<uint8_t *>::init() {
+
+    m_ram = new uint8_t[m_vmProperties.m_memsize];
+    memset(m_ram, 0x00, m_vmProperties.m_memsize);
+    memset(m_registers, 0, sizeof(m_registers));
+
+    m_cpsr = 0;
+    m_spsr = 0;
+
+    return m_ram;
+}
+
+template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
+
+    // m_ram = new uint8_t[m_vmProperties.m_memsize];
+    //  std::vector<uint8_t> m_ram;
+
+           // m_ram.resize(m_vmProperties.m_memsize);
+    memset(m_registers, 0, sizeof(m_registers));
+
+    m_cpsr = 0;
+    m_spsr = 0;
+
+    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
+
+    return m_ram.getMem();
+}
 
 
 

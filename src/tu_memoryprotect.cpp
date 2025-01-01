@@ -1,7 +1,6 @@
 
 #include <QObject>
 #include <QtTest>
-#include <iostream>
 #include <vector>
 
 #include "armv4vm.h"
@@ -265,6 +264,147 @@ class TestMem : public QObject {
         QVERIFY(mem[5] == 0x33);
         QVERIFY(mem[6] == 0x22);
         QVERIFY(mem[7] == 0x11);
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testMinus() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({64, 64});
+        pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro - 3) = v1;
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testMinus2() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({64, 64});
+        pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro - 4) = v1;
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testMinus3() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro - 4) = v1;
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testMinus4() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro - 4) = v1;
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == true);
+    }
+
+    void testPlus4() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        const uint32_t     v1 = 0x11223344;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(128, ranges);
+
+        try {
+            writePointer<uint32_t>(pro + 4) = v1;
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == false);
+    }
+
+
+    void testReadSucced() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        uint32_t     v1 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({32, 64});
+        pro.init(128, ranges);
+        uint8_t *mem = pro.getMem();
+        *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
+
+        try {
+            v1 = readPointer<uint32_t>(pro+32);
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        (void)v1;
+
+        QVERIFY(exceptionRaised == false);
+        QVERIFY(v1 == 0x12345678);
+    }
+
+    void testReadFailed() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        uint32_t     v1 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({0, 64});
+        pro.init(128, ranges);
+
+        try {
+            v1 = readPointer<uint32_t>(pro-1);
+        } catch (std::exception &e) {
+            exceptionRaised = true;
+        }
+
+        (void)v1;
+
         QVERIFY(exceptionRaised == true);
     }
 

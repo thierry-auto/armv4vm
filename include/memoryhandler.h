@@ -3,12 +3,7 @@
 #include <algorithm>
 #include <csetjmp>
 #include <cstdint>
-#include <exception>
-#include <functional>
-#include <memory>
 #include <stdexcept>
-#include <string>
-#include <type_traits>
 #include <vector>
 
 namespace armv4vm {
@@ -34,7 +29,7 @@ class ByteRef {
     inline static const std::vector<Range> *m_authorized;
 
   private:
-    uint32_t m_offset;
+    int32_t m_offset;
 
   public:
     ByteRef(const uint32_t offset) : m_offset(offset) {}
@@ -66,14 +61,24 @@ inline ByteRef operator+(const ByteRef &left, const uint8_t right) { return Byte
 // inline ByteRef operator-(const ByteRef &left, const uint32_t right) { return ByteRef(left.m_offset - right); }
 
 template <typename T> inline T  readPointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
-template <typename T> inline T readPointer(const ByteRef &b) { return *reinterpret_cast<T *>(b.m_origin + b.m_offset); }
 template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
+
+template <typename T> inline T readPointer(const ByteRef &b) {
+
+    if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(), IsInAuthorizedRange<T>(b.m_origin, b.m_offset))) {
+
+        throw std::runtime_error("segmentation fault");
+    }
+
+    return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
+
+}
+
 template <typename T> inline T &writePointer(ByteRef b) {
 
     if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(), IsInAuthorizedRange<T>(b.m_origin, b.m_offset))) {
 
         throw std::runtime_error("segmentation fault");
-        // plutot un assert ?
     }
 
     return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
@@ -101,7 +106,8 @@ class MemoryProtected {
     operator uint8_t *() { return m_mem.data(); }
 
     friend inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset);
-    // manque sans doute le operator -
+    friend inline ByteRef operator-(MemoryProtected &mem, const uint32_t offset);
+
     uint8_t *getMem() { return m_mem.data(); }
 
   private:
@@ -113,15 +119,19 @@ class MemoryProtected {
 inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset) {
 
     (void)mem;
-    return ByteRef(offset);
+    return ByteRef(1 * offset);
+
+    //ByteRef b;
+
 }
 
-// inline ByteRef operator-(MemoryProtected &mem, const uint32_t offset) {
+inline ByteRef operator-(MemoryProtected &mem, const uint32_t offset) {
 
-//    static_assert(1, "mlm");
-
-//    //    (void)mem;
-//    //    return ByteRef(offset);
-//}
+    //static_assert(1, "mlm");
+    // todo : A corriger, mais on met un négatif dans un non signé, du coup
+    // ByteRef::m_offset recçoit une grande valeur positive
+    (void)mem;
+    return ByteRef(-1 * offset);
+}
 
 } // namespace armv4vm

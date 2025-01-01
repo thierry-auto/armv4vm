@@ -1252,6 +1252,8 @@ private slots:
         vm.m_registers[3]  = 0xddee00ff;
         vm.m_registers[13] = 0x00000100;
 
+        *(uint32_t *)(vm.m_ram + 0xf4) = 0xABCDEF09;
+
         vm.run(1);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0xf4) == 0x11223344);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0xf8) == 0x55667788);

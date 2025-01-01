@@ -254,10 +254,10 @@ public:
 // explicit template
 
 
+//extern template class VirtualMachine<uint8_t *>;
+//extern template class VirtualMachine<MemoryProtected>;
+
 using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
-
-extern template class VirtualMachine<uint8_t *>;
-extern template class VirtualMachine<MemoryProtected>;
 
 } // namespace armv4vm

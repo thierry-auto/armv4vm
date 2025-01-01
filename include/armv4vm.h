@@ -117,44 +117,42 @@ class VirtualMachineBase {
 template <typename T>
 class VirtualMachine : public VirtualMachineBase
 
-#ifdef QT_VERSION
-    ,
-                       public QObject
+#ifdef BUILD_WITH_QT
+ , public QObject
 #endif
 {
 
   public:
-#ifdef QT_VERSION
+#ifdef BUILD_WITH_QT
     explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
 #else
-    explicit VirtualMachine(struct VmProperties *);
+    explicit VirtualMachine(struct VmProperties * = nullptr);
 #endif
     ~VirtualMachine();
 
-    uint8_t        *init();
-    void            test();
-    void            loadTest();
-    uint64_t        load();
+    uint8_t        *init() override;
+    uint64_t        load() override;
     const uint32_t *getRegisters() const;
 
     uint32_t        getCPSR() const;
 
-#ifdef QT_VERSION
+#ifdef BUILD_WITH_QT
     friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
 #endif
     friend class TestVm;
 
     /*public slots:*/
-    Interrupt run(const uint32_t nbMaxIteration = 0);
+    Interrupt run(const uint32_t nbMaxIteration = 0) override;
 
 public:
     enum Error {
 
+        E_NONE,
         E_LOAD_FAILED,
         E_UNDEFINED
     };
 
-#ifdef QT_VERSION    
+#ifdef BUILD_WITH_QT    
   signals:
     void started();
     void finished();
@@ -223,6 +221,7 @@ public:
         coprocessor_data_operation,
         coprocessor_register_transfer,
         software_interrupt,
+        unknown,
     };
 
     FormatSummary m_instructionSetFormat;
@@ -253,10 +252,12 @@ public:
 };
 
 // explicit template
-extern template class VirtualMachine<uint8_t *>;
-extern template class VirtualMachine<MemoryProtected>;
+
 
 using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
+
+extern template class VirtualMachine<uint8_t *>;
+extern template class VirtualMachine<MemoryProtected>;
 
 } // namespace armv4vm

@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 3.11.4)
+	cmake_minimum_required(VERSION 3.11.4)
 project(armv4vm VERSION 1.0.1)
 
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
+IF(WIN32)
+	set (CMAKE_PREFIX_PATH "C:\\Qt\\6.8.1\\msvc2022_64\\")
+	set(Qt6_DIR "C:\\Qt\\6.8.1\\msvc2022_64\\lib\\cmake\\")
+ENDIF(WIN32)
 
 FIND_PACKAGE(Qt6 COMPONENTS Core Test)
 
@@ -11,9 +15,9 @@ SET(CMAKE_AUTOMOC ON)
 ENDIF(Qt6Core_FOUND)
 
 IF(UNIX)
-add_compile_options(-Wall -fPIC)
-ELSE()
-ENDIF(UNIX)
+    add_compile_options(-Wall -fPIC)
+ELSEIF(WIN32)
+ENDIF()
 
 SET(CMAKE_CXX_STANDARD 20)
 
@@ -22,7 +26,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 INCLUDE_DIRECTORIES(include)
 
 SET(ARMV4VM_HEADER_FILES include/armv4vm.h include/memoryhandler.h)
-SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
+SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp src/test2.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 

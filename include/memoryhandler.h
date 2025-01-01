@@ -73,6 +73,7 @@ template <typename T> inline T &writePointer(ByteRef b) {
     if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(), IsInAuthorizedRange<T>(b.m_origin, b.m_offset))) {
 
         throw std::runtime_error("segmentation fault");
+        // plutot un assert ?
     }
 
     return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
@@ -100,7 +101,7 @@ class MemoryProtected {
     operator uint8_t *() { return m_mem.data(); }
 
     friend inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset);
-
+    // manque sans doute le operator -
     uint8_t *getMem() { return m_mem.data(); }
 
   private:

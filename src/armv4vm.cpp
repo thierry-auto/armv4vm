@@ -22,7 +22,7 @@
 
 long long debugHook = 0;
 
-#ifdef QT_VERSION
+#ifdef BUILD_WITH_QT
 #include <QDataStream>
 #include <QFile>
 #else
@@ -33,7 +33,7 @@ long long debugHook = 0;
 #include <iostream>
 #endif
 
-#ifndef QT_VERSION
+#ifndef BUILD_WITH_QT
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
 {                                                                                                                  \
     std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
@@ -49,7 +49,7 @@ static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ?
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
-#ifdef QT_VERSION
+#ifdef BUILD_WITH_QT
 VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
     m_ram          = nullptr;
@@ -64,6 +64,11 @@ template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmP
 template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_ram          = nullptr;
+    m_cpsr         = 0;
+    m_error        = E_NONE;
+    m_instructionSetFormat = unknown;
+    std::memset(m_registers, 0, 16);
+    m_spsr                 = 0;
     m_vmProperties = *vmProperties;
 }
 
@@ -106,7 +111,7 @@ template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
     return m_ram.getMem();
 }
 
-#ifdef QT_VERSION
+#ifdef BUILD_WITH_QT
 uint64_t VirtualMachine<T>::load() {
 
     QFile    program(m_vmProperties.m_bin);
@@ -1659,5 +1664,7 @@ template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2,
 
 template <typename T> const uint32_t *VirtualMachine<T>::getRegisters() const { return m_registers; }
 template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { return m_cpsr; }
+
+
 
 } // namespace armv4vm

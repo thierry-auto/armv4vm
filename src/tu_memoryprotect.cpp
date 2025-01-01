@@ -61,7 +61,7 @@ class TestMem : public QObject {
             v2      = pro[33];
             QVERIFY(v1 == v2);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -116,7 +116,7 @@ class TestMem : public QObject {
             v3 = pro[33];
             QVERIFY(v2 == v3);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -143,7 +143,7 @@ class TestMem : public QObject {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
             writePointer<uint8_t>(pro + 42) = readPointer<uint8_t>(mem + 10);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -172,7 +172,7 @@ class TestMem : public QObject {
             writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
             writePointer<uint16_t>(pro + 31) = readPointer<uint16_t>(mem + 10);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -210,7 +210,7 @@ class TestMem : public QObject {
 
             writePointer<uint32_t>(pro + 30) = readPointer<uint32_t>(pro + 44);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -243,7 +243,7 @@ class TestMem : public QObject {
 
             writePointer<uint32_t>(pro + 2) = v2;
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -258,7 +258,7 @@ class TestMem : public QObject {
         try {
             writePointer<uint32_t>(pro + 5) = v1;
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
         QVERIFY(mem[5] == 0x33);
@@ -279,7 +279,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(pro - 3) = v1;
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -298,7 +298,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -317,7 +317,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -336,7 +336,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -355,7 +355,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(pro + 4) = v1;
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -377,7 +377,7 @@ class TestMem : public QObject {
 
         try {
             v1 = readPointer<uint32_t>(pro+32);
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -399,7 +399,7 @@ class TestMem : public QObject {
 
         try {
             v1 = readPointer<uint32_t>(pro-1);
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -427,7 +427,7 @@ class TestMem : public QObject {
             QVERIFY(mem[111] == 0x22);
             QVERIFY(mem[112] == 0x11);
 
-        } catch (std::exception &e) {
+        } catch (std::exception &) {
             exceptionRaised = true;
         }
 
@@ -466,7 +466,7 @@ class TestMem : public QObject {
 
     //            QVERIFY(v2 == v3);
 
-    //        } catch (std::exception &e) {
+    //        } catch (std::exception &) {
     //            exceptionRaised = true;
     //        }
 
@@ -512,7 +512,7 @@ class TestMem : public QObject {
 
     //            QVERIFY(v2 == v3);
 
-    //        } catch (std::exception &e) {
+    //        } catch (std::exception &) {
     //            exceptionRaised = true;
     //        }
 
@@ -532,7 +532,7 @@ class TestMem : public QObject {
 
     //        try {
     //            *reinterpret_cast<uint32_t *>(&pro[38]) = v1;
-    //        } catch (std::exception &e) {
+    //        } catch (std::exception &) {
     //            exceptionRaised = true;
     //        }
     //        QVERIFY(mem[30] == 0);

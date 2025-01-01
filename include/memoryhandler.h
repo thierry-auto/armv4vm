@@ -33,7 +33,7 @@ class ByteRef {
 
   public:
     ByteRef(const uint32_t offset) : m_offset(offset) {}
-    ByteRef(ByteRef &other) : m_offset(other.m_offset) {}
+    ByteRef(const ByteRef &other) : m_offset(other.m_offset) {}
 
     ByteRef &operator=(const ByteRef &other) {
 

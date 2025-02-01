@@ -51,12 +51,20 @@ VirtualMachine::VirtualMachine(struct VmProperties *vmProperties, QObject *paren
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
+    m_cpsr                 = 0;
+    m_error                = E_NO_ERROR;
+    m_instructionSetFormat = undefined;
+    std::fill(m_registers.begin(), m_registers.end(), 0);
 }
 #else
 VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
+    m_cpsr         = 0;
+    m_error        = E_NO_ERROR;
+    m_instructionSetFormat = undefined;
+    m_registers.fill(0);
 }
 #endif
 
@@ -74,7 +82,7 @@ uint8_t *VirtualMachine::init() {
 
     m_ram = new uint8_t[m_vmProperties->m_memsize];
     memset(m_ram, 0x00, m_vmProperties->m_memsize);
-    memset(m_registers, 0, sizeof(m_registers));
+    m_registers.fill(0);
 
     m_cpsr = 0;
     m_spsr = 0;
@@ -121,23 +129,13 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
-#ifdef DEBUG
-static long long debugHook = 0;
-#endif
 static uint32_t           stage1 = 0;
 VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
     VirtualMachine::Interrupt result        = Undefined;
-    int                       setJumpResult = 0;
-
     m_running = true;
-    memset(m_runInterruptLongJump, 0, sizeof(m_runInterruptLongJump));
 
-    setJumpResult = setjmp(m_runInterruptLongJump);
-
-    switch (setJumpResult) {
-
-    case 0:
+    try {
         if (nbMaxIteration != 0) {
 
             for (uint32_t i = 0; i < nbMaxIteration; i++) {
@@ -145,43 +143,19 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
                 stage1 = fetch();
                 decode(stage1);
                 evaluate();
-#ifdef DEBUG
-                debugHook++;
-#endif
             }
         } else {
-#ifdef DEBUG
-            debugHook = 6;
-#endif
+
             while (true) {
 
                 stage1 = fetch();
                 decode(stage1);
                 evaluate();
-
-#ifdef DEBUG
-                debugHook++;
-#endif
             }
         }
-        break;
+    } catch (VmException exception) {
 
-    case 1:
-        result = Resume;
-        break;
-
-    case 2:
-        result = Stop;
-        break;
-
-    case 3:
-        result = Suspend;
-        break;
-
-    case 4:
-    default:
-        result = Undefined;
-        break;
+        result = exception.m_interrupt;
     }
 
     return result;
@@ -941,7 +915,8 @@ void VirtualMachine::blockDataTransferEval() {
     } instruction;
 
     static uint32_t offset = 0;
-    static int      i      = 0;
+    static std::array<uint32_t, 16>::size_type i = 0;
+    //int i = 0;
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -984,7 +959,7 @@ void VirtualMachine::blockDataTransferEval() {
             if (instruction.p) {
 
                 // pre-decrement load, LDMEA, LDMBD
-                for (i = 15; i >= 0; i--) {
+                for (i = 15; static_cast<int>(i) >= 0; i--) {
 
                     if (instruction.registerList & (1 << i)) {
 
@@ -995,7 +970,7 @@ void VirtualMachine::blockDataTransferEval() {
             } else {
 
                 // post-decrement load, LDMFA, LDMDA
-                for (i = 15; i >= 0; i--) {
+                for (i = 15; static_cast<int>(i) >= 0; i--) {
 
                     if (instruction.registerList & (1 << i)) {
 
@@ -1069,7 +1044,7 @@ void VirtualMachine::blockDataTransferEval() {
                 }
 
                 // Registre 14, 13, 12, ...
-                for (i = 14; i >= 0; i--) {
+                for (i = 14; static_cast<int>(i) >= 0; i--) {
 
                     if (instruction.registerList & (1 << i)) {
 
@@ -1088,7 +1063,7 @@ void VirtualMachine::blockDataTransferEval() {
                 }
 
                 // Registres 14, 13, ...
-                for (i = 14; i >= 0; i--) {
+                for (i = 14; static_cast<int>(i) >= 0; i--) {
 
                     if (instruction.registerList & (1 << i)) {
 
@@ -1394,7 +1369,8 @@ void VirtualMachine::softwareInterruptEval() {
 
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
 
-    longjmp(m_runInterruptLongJump, instruction.comment);
+    //longjmp(m_runInterruptLongJump, instruction.comment);
+    throw VmException(static_cast<VirtualMachine::Interrupt>(instruction.comment));
 }
 
 bool VirtualMachine::testCondition(const uint32_t instruction) const {
@@ -1613,7 +1589,7 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
     return shiftResult;
 }
 
-const uint32_t *VirtualMachine::getRegisters() const { return m_registers; }
+const std::array<uint32_t, 16> &VirtualMachine::getRegisters() const { return m_registers; }
 
 uint32_t VirtualMachine::getCPSR() const { return m_cpsr; }
 

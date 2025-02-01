@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <csetjmp>
+#include <array>
 
 #ifdef QT_CORE_LIB
 #include <QObject>
@@ -94,7 +94,7 @@ class alignas(32) VirtualMachine
     void            test();
     void            loadTest();
     uint64_t        load();
-    const uint32_t *getRegisters() const;
+    const std::array<uint32_t, 16> & getRegisters() const;
     Interrupt       run(const uint32_t nbMaxIteration = 0);
     uint32_t        getCPSR() const;
 
@@ -105,8 +105,9 @@ class alignas(32) VirtualMachine
 
     enum Error {
 
+        E_NO_ERROR,
         E_LOAD_FAILED,
-        E_UNDEFINED
+        E_UNDEFINED,
     };
 
 #ifdef QT_CORE_LIB
@@ -179,7 +180,9 @@ class alignas(32) VirtualMachine
 
     FormatSummary m_instructionSetFormat;
 
-    uint32_t m_registers[16];
+    //uint32_t m_registers[16];
+    std::array<uint32_t, 16> m_registers;
+
     uint32_t m_cpsr;
     uint32_t m_spsr;
 
@@ -189,7 +192,7 @@ class alignas(32) VirtualMachine
 
     uint32_t m_workingInstruction;
     bool     m_running;
-    jmp_buf  m_runInterruptLongJump;
+    //jmp_buf  m_runInterruptLongJump;
 
     static const uint32_t NEGATE_FLAG     = 0x80000000;
     static const uint32_t ZERO_FLAG       = 0x40000000;
@@ -201,6 +204,12 @@ class alignas(32) VirtualMachine
     static const uint32_t THUMB_FLAG = 0x00000020;
 
     static const uint32_t MODE_FLAG = 0x0000001F;
+};
+
+class VmException : public std::exception {
+  public:
+    VmException(VirtualMachine::Interrupt interrupt = VirtualMachine::Interrupt::Resume) : m_interrupt(interrupt) {}
+    VirtualMachine::Interrupt m_interrupt;
 };
 
 } // namespace armv4vm

@@ -103,7 +103,7 @@ uint64_t VirtualMachine::load() {
 uint64_t VirtualMachine::load() {
 
     std::fstream program;
-    uint64_t     programSize = 0;
+    std::streampos programSize = 0;
 
     program.open(m_vmProperties->m_bin, std::ios::in | std::ios::binary | std::ios::ate);
     if (program.is_open()) {
@@ -117,7 +117,7 @@ uint64_t VirtualMachine::load() {
         programSize = -1;
     }
 
-    return programSize;
+    return programSize > 0;
 }
 #endif
 
@@ -330,6 +330,11 @@ void VirtualMachine::evaluate() {
         softwareInterruptEval();
         break;
 
+    case single_data_swap:
+    case coprocessor_data_transfer:
+    case coprocessor_data_operation:
+    case coprocessor_register_transfer:
+    case undefined:
     default:
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
         break;
@@ -664,8 +669,8 @@ void VirtualMachine::multiplyLongEval() {
         }
 
         signedResult += signedCastTo64(m_registers[instruction.rm]) * signedCastTo64(m_registers[instruction.rs]);
-        m_registers[instruction.rdhi] = signedResult >> 32;
-        m_registers[instruction.rdlo] = signedResult & 0xFFFFFFFF;
+        m_registers[instruction.rdhi] = static_cast<uint32_t>(signedResult >> 32);
+        m_registers[instruction.rdlo] = static_cast<uint32_t>(signedResult & 0xFFFFFFFF);
 
     } else { // unsigned
         if (instruction.a) {
@@ -1377,7 +1382,7 @@ void VirtualMachine::softwareInterruptEval() {
     // clang-format off
     struct SoftwareInterrupt {
 
-        uint32_t comment   : 24;
+        int32_t  comment   : 24;
         uint32_t           :  4;
         uint32_t condition :  4;
 

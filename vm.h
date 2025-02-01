@@ -27,6 +27,11 @@
 #include <string>
 #endif
 
+#if WIN32
+#pragma warning(push)
+#pragma warning(disable : 4820 4514 4626 4324) 
+#endif
+
 namespace armv4vm {
 
 struct VmProperties {
@@ -36,7 +41,7 @@ struct VmProperties {
         m_memsize = 0;
         m_debug   = 0;
     }
-    ~VmProperties() {}
+    ~VmProperties() { }
 
     VmProperties(const VmProperties &other) {
 
@@ -50,8 +55,7 @@ struct VmProperties {
 #else
     std::string m_bin;
 #endif
-
-    int  m_memsize;
+    uint32_t m_memsize;
     bool m_debug;
 
     void clear() {
@@ -62,7 +66,7 @@ struct VmProperties {
     }
 };
 
-class VirtualMachine
+class alignas(32) VirtualMachine
 
 #ifdef QT_CORE_LIB
     : public QObject
@@ -122,9 +126,6 @@ class VirtualMachine
     inline uint32_t fetch();
     inline void     decode(const uint32_t);
     inline void     evaluate();
-
-    void execute();
-    void print();
 
     void dataProcessingEval();
     void multiplyEval();
@@ -203,3 +204,7 @@ class VirtualMachine
 };
 
 } // namespace armv4vm
+
+#if WIN32
+#pragma warning(pop)
+#endif

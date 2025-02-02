@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "vm.h"
+#include "armv4vm.h"
 
 namespace armv4vm {
 
@@ -41,7 +41,7 @@ public:
 private slots:
 
     void testMOV() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe3a0002d); // mov r0, #45
@@ -53,7 +53,7 @@ private slots:
     }
 
     void testADD() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0900001); // add r0, r0, r1
@@ -69,7 +69,7 @@ private slots:
 
     void testADD2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0900001); // add r0, r0, r1
@@ -85,7 +85,7 @@ private slots:
 
     void testSUBS() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0510002); // subs r0, r1, r2
@@ -101,7 +101,7 @@ private slots:
     }
 
     void testSUBS2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0510002); // subs    r0, r1, r2
@@ -117,7 +117,7 @@ private slots:
     }
 
     void testSUBS3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0510002); // subs    r0, r1, r2
@@ -132,7 +132,7 @@ private slots:
     }
 
     void testLSLS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00211);
@@ -147,7 +147,7 @@ private slots:
     }
 
     void testLSLS2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00001);
@@ -161,7 +161,7 @@ private slots:
     }
 
     void testLSRS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00231); // lsrs r0, r1, r2
@@ -176,7 +176,7 @@ private slots:
     }
 
     void testASRS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, r2
@@ -193,7 +193,7 @@ private slots:
 
     void testASRS2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, r2
@@ -209,7 +209,7 @@ private slots:
     }
 
     void testASRS3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, r2
@@ -224,7 +224,7 @@ private slots:
     }
 
     void testASRS4() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, r2
@@ -240,7 +240,7 @@ private slots:
     }
 
     void testASRS5() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, r2
@@ -256,7 +256,7 @@ private slots:
     }
 
     void testASRS6() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00251); // asrs r0, r1, #0
@@ -271,7 +271,7 @@ private slots:
     }
 
     void testASRS7() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00001); // asrs r0, r1, #0
@@ -285,7 +285,7 @@ private slots:
     }
 
     void testRORS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00271); // rors r0, r1, r2
@@ -301,7 +301,7 @@ private slots:
     }
 
     void testRORS2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00271); // rors r0, r1, r2
@@ -317,7 +317,7 @@ private slots:
     }
 
     void testRORS3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00001); // rors r0, r1, #0
@@ -333,7 +333,7 @@ private slots:
     }
 
     void testRRXS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00061); // rrxs r0, r1
@@ -349,7 +349,7 @@ private slots:
     }
 
     void testRRXS2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00061); // rrxs r0, r1
@@ -365,7 +365,7 @@ private slots:
     }
 
     void testRORS4() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00170); // rors r0, r0, r1
@@ -380,7 +380,7 @@ private slots:
     }
 
     void testRORS5() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00260); // rors r0, #4
@@ -393,7 +393,7 @@ private slots:
     }
 
     void testMOVS() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe1b00221); // movs r0, r1, lsr #4
@@ -408,7 +408,7 @@ private slots:
     }
 
     void testORR() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe3800d7d); // ORR r0, r0, #8000
@@ -421,7 +421,7 @@ private slots:
     }
 
     void testORR2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe3800002); // ORR r0, r0, #2 ; 0x2
@@ -434,7 +434,7 @@ private slots:
     }
 
     void testORR3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe3800002); // ORR r0, r0, #2 ; 0x2
@@ -448,7 +448,7 @@ private slots:
     }
 
     void testORR4() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe3810602); // ORR r0, r1, #2097152
@@ -462,7 +462,7 @@ private slots:
     }
 
     void testLDR() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5910004); // ldr  r0, [r1, #4]
@@ -478,7 +478,7 @@ private slots:
 
     void testSTR() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5810004); // str     r0, [r1, #4]
@@ -497,7 +497,7 @@ private slots:
     void testPUSH() {
         // uint8_t ram[128] = {0};
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe92d0007); // push     {r0, r1, r2}
@@ -516,7 +516,7 @@ private slots:
     }
 
     void testPUSHPOP() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe92d001f);     // push {r0, r1, r2, r3, r4}
@@ -559,7 +559,7 @@ private slots:
 
     void testADD3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0810002); // add r0, r1, r2
@@ -576,7 +576,7 @@ private slots:
 
     void testADDS() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0910002); // adds r0, r1, r2
@@ -593,7 +593,7 @@ private slots:
 
     void testADD4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0910002); // add r0, r1, r2
@@ -610,7 +610,7 @@ private slots:
 
     void testADD5() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0810002); // add r0, r1, r2
@@ -627,7 +627,7 @@ private slots:
 
     void testADD6() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0910002); // add r0, r1, r2
@@ -644,7 +644,7 @@ private slots:
 
     void testLDRB() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5f10002);     // ldrb r0, [r1, #2]!
@@ -669,7 +669,7 @@ private slots:
 
     void testLDRB2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5f10001);     // ldrb r0, [r1, #1]!
@@ -693,7 +693,7 @@ private slots:
     }
 
     void testLDRB3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5d10000); // ldrb r0, [r1]
@@ -720,7 +720,7 @@ private slots:
 
     void testLDRB4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5f10003);     // ldrb r0, [r1, #3]!
@@ -745,7 +745,7 @@ private slots:
 
     void testLDRB5() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe4110004);     // ldr r0, [r1], #-4
@@ -770,7 +770,7 @@ private slots:
     }
 
     void testLDR2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5910000); // ldr r0, [r1]
@@ -783,7 +783,7 @@ private slots:
     }
 
     void testMUL1() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0020190); // mul r2,r0,r1
@@ -796,7 +796,7 @@ private slots:
 
     void testMLA() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0203291); // mla r0,r1,r2,r3
@@ -814,7 +814,7 @@ private slots:
 
     void testMLA2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0203291); // mla r0,r1,r2,r3
@@ -832,7 +832,7 @@ private slots:
 
     void testMLA3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
@@ -851,7 +851,7 @@ private slots:
 
     void testMLA4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
@@ -870,7 +870,7 @@ private slots:
 
     void testMLA5() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0303291); // mlas r0,r1,r2,r3
@@ -890,7 +890,7 @@ private slots:
 
     void testLDR3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5b10000);     // ldr r0, [r1, #0]!
@@ -916,7 +916,7 @@ private slots:
 
     void testLDR4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5310004);     // ldr r0, [r1, #-4]!
@@ -942,7 +942,7 @@ private slots:
 
     void testLDR5() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe4910004);     // ldr r0, [r1], #4
@@ -968,7 +968,7 @@ private slots:
 
     void testLDR6() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe4910000);     // ldr r0, [r1], #0
@@ -995,7 +995,7 @@ private slots:
 
     void testLDR7() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe491f000); // ldr r15, [r1], #0
@@ -1015,7 +1015,7 @@ private slots:
 
     void testLDR8() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe6910002); // ldr r0, [r1], r2
@@ -1036,7 +1036,7 @@ private slots:
 
     void testLDR9() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe7b10002); // ldr r0, [r1, r2]!
@@ -1057,7 +1057,7 @@ private slots:
 
     void testLDR10() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe7f10002); // ldrb r0, [r1, r2]!
@@ -1078,7 +1078,7 @@ private slots:
 
     void testLDR11() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe7e10002); // strb r0, [r1, r2]!
@@ -1100,7 +1100,7 @@ private slots:
 
     void testLDR12() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe58f0000); // str r0, [r15]
@@ -1116,7 +1116,7 @@ private slots:
 
     void testLDR13() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5cf0000); // strb r0, [r15]
@@ -1133,7 +1133,7 @@ private slots:
 
     void testLDR14() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5c10000); // strb r0, [r1]
@@ -1154,7 +1154,7 @@ private slots:
 
     void testLDR15() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe7f10002); // ldrb r0, [r1]
@@ -1172,7 +1172,7 @@ private slots:
     }
 
     void testLDMFD() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8bd000f); // LDMFD r13!, {r0-r3}
@@ -1196,7 +1196,7 @@ private slots:
     }
 
     void testLDMFA() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe83d000f); // LDMFA r13!, {r0-r3}
@@ -1221,7 +1221,7 @@ private slots:
     }
 
     void testSTMFA() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe92d000f); // STMFA r13!, {r0-r3}
@@ -1241,7 +1241,7 @@ private slots:
     }
 
     void testSTMED() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe82d000f); // STMED r13!, {r0-r3}
@@ -1251,6 +1251,8 @@ private slots:
         vm.m_registers[2]  = 0x99aabbcc;
         vm.m_registers[3]  = 0xddee00ff;
         vm.m_registers[13] = 0x00000100;
+
+        *(uint32_t *)(vm.m_ram + 0xf4) = 0xABCDEF09;
 
         vm.run(1);
         QVERIFY(*(uint32_t *)(vm.m_ram + 0xf4) == 0x11223344);
@@ -1262,7 +1264,7 @@ private slots:
 
     void testSTMEA() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8ad000f); // STMEA r13!, {r0-r3}
@@ -1282,7 +1284,7 @@ private slots:
     }
 
     void testSTMFA2() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe9ad000f); // STMFA r13!, {r0-r3}
@@ -1302,7 +1304,7 @@ private slots:
     }
 
     void testSTMFA3() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8a30038); // STM r3!, {r3-r5}
@@ -1330,7 +1332,7 @@ private slots:
     }
 
     void testSTMFA4() {
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8a30030); // STM r3!, {r4-r5}
@@ -1358,7 +1360,7 @@ private slots:
 
     void testSTR2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe5a10004); // str r0, [r1, #4]!
@@ -1373,7 +1375,7 @@ private slots:
 
     void testSTM1() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8a30034); // stm	r3!,{r2,r4,r5}
@@ -1398,7 +1400,7 @@ private slots:
 
     void testSTM2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe8a30038); // stm	r3!,{r3,r4,r5}
@@ -1423,7 +1425,7 @@ private slots:
 
     void testCONDPM() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0902001);     // adds r2, r0, r1
@@ -1445,7 +1447,7 @@ private slots:
 
     void testCONDVC() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram, 0xe0902001);     // adds r2, r0, r1
@@ -1467,7 +1469,7 @@ private slots:
 
     void testCONDCC() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1540002);  // cmp   r4,r2
@@ -1502,7 +1504,7 @@ private slots:
 
     void testHALF() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
@@ -1527,7 +1529,7 @@ private slots:
 
     void testHALF2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
@@ -1551,7 +1553,7 @@ private slots:
 
     void testHALF3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
@@ -1571,7 +1573,7 @@ private slots:
 
     void testSTRH() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1c330be);  // strh   r3, [r3, #14]
@@ -1593,7 +1595,7 @@ private slots:
 
     void testSTRH2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1c330be);  // strh   r3, [r3, #14]
@@ -1610,7 +1612,7 @@ private slots:
 
     void testSTRH3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1c320be);  // strh r2, [r3, #14]
@@ -1627,7 +1629,7 @@ private slots:
 
     void testSTRH4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1c320be);  // strh r2, [r3, #14]
@@ -1644,7 +1646,7 @@ private slots:
 
     void testSTRH5() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0c320b2);  // strh r2, [r3], #2
@@ -1661,7 +1663,7 @@ private slots:
 
     void testSTRH6() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0c320b3);  // strh r2, [r3], #3
@@ -1678,7 +1680,7 @@ private slots:
 
     void testLDRH1() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0d320b2);  // ldrh r2, [r3], #2
@@ -1695,7 +1697,7 @@ private slots:
 
     void testLDRH2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0d320b3);  // ldrh r2, [r3], #3
@@ -1712,7 +1714,7 @@ private slots:
 
     void testSTRB() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe5c10000);  // strb r0, [r1]
@@ -1729,7 +1731,7 @@ private slots:
 
     void testSTRB2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe5c10002);  // strb r0, [r1, #2]
@@ -1746,7 +1748,7 @@ private slots:
 
     void testSTRB3() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe5c10003);  // strb r0, [r1, #3]
@@ -1763,7 +1765,7 @@ private slots:
 
     void testSTRB4() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe5c10001);  // strb r0, [r1, #1]
@@ -1780,7 +1782,7 @@ private slots:
 
     void testADCS() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
@@ -1798,7 +1800,7 @@ private slots:
 
     void testANDS() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe2100003);  // ands r0, r0, #3
@@ -1813,7 +1815,7 @@ private slots:
 
     void testTEQ() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe1340005);  // teq r4, r5
@@ -1830,7 +1832,7 @@ private slots:
 
     void testTEST() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
@@ -1845,7 +1847,7 @@ private slots:
 
     void testRSC() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe2e33000);  // rsc r3, r3, #0
@@ -1860,7 +1862,7 @@ private slots:
 
     void testUMULL() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe08ec290);  // umull   ip, lr, r0, r2
@@ -1881,7 +1883,7 @@ private slots:
 
     void testSMULL() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0c23290); // smull   r3, r2, r0, r2
@@ -1900,7 +1902,8 @@ private slots:
 
     void testSMULL2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
+
         vm.init();
 
         seti(vm.m_ram + 0, 0xe0c23190); // smull   r3, r2, r0, r1
@@ -1921,7 +1924,7 @@ private slots:
 
     void testRSBS() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe2722000);  // rsbs r2,r2,#0
@@ -1936,7 +1939,7 @@ private slots:
 
     void testTEST2() {
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
         seti(vm.m_ram + 0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
@@ -1949,6 +1952,22 @@ private slots:
         QVERIFY(vm.m_cpsr == 0x40000000);
     }
 
+    void testR15() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe320f000); // nop
+        seti(vm.m_ram + 4, 0xe780f001); // STR    R15, [R0, R1]
+        vm.m_registers[0] = 0x0000000a;
+        vm.m_registers[1] = 0x00000002;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(2);
+
+        QVERIFY(*(uint32_t *)(vm.m_ram + 12) == 0x00000010);
+    }
+
     //#define MEMSIZE 128
 #define MEMSIZE 300
 #define UARTPOS 0x05000000
@@ -1956,8 +1975,8 @@ private slots:
 
     void testProgramHello() {
 
-        QString binPath(getBinPath());
-        QString data;
+        std::string binPath(getBinPath());
+        std::string data;
 
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/hello.bin";
@@ -1965,7 +1984,7 @@ private slots:
         uint8_t *uart          = nullptr;
         bool           running = true;
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         mem = vm.init();
         if(vm.load()) {
 
@@ -1975,14 +1994,14 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Resume:
+                case VirtualMachineUnprotected::Interrupt::Resume:
                     break;
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     data += (char)*uart;
 
                 default:
@@ -1995,14 +2014,14 @@ private slots:
 
     void testProgramPrimeN() {
 
-        QString binPath(getBinPath());
+        std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/primen.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         mem = vm.init();
         uart = mem + UARTPOS;
 
@@ -2012,11 +2031,11 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     std::cout << (char)*uart;
                     break;
 
@@ -2031,14 +2050,14 @@ private slots:
 
     void testProgramFloat() {
 
-        QString binPath(getBinPath());
+        std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/float.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         mem = vm.init();
         uart = mem + UARTPOS;
 
@@ -2048,14 +2067,14 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Resume:
+                case VirtualMachineUnprotected::Interrupt::Resume:
                     break;
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     break;
 
 
@@ -2075,7 +2094,7 @@ private slots:
 
     void testProgramPrintf() {
 
-        QString binPath(getBinPath());
+        std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/printf.bin";
         uint8_t *mem           = nullptr;
@@ -2083,7 +2102,7 @@ private slots:
         bool     running       = true;
         QString data;
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         mem = vm.init();
         uart = mem + UARTPOS;
 
@@ -2094,14 +2113,14 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Resume:
+                case VirtualMachineUnprotected::Interrupt::Resume:
                     break;
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     data += (char)*uart;
                     std::cout << (char)*uart;
                     break;
@@ -2117,13 +2136,17 @@ private slots:
 
     void testProgramModulo() {
 
-        QString binPath(getBinPath());
+
+        std::string binPath(getBinPath());
+
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
-        VirtualMachine vm(&vmProperties, this);
+
+        VirtualMachineUnprotected vm(&vmProperties);
+
         mem      = vm.init();
         uart     = mem + UARTPOS;
 
@@ -2133,14 +2156,15 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Resume:
+
+                case VirtualMachineUnprotected::Interrupt::Resume:
                     break;
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     break;
 
                 default:
@@ -2154,7 +2178,7 @@ private slots:
 
     void testProgramBench() {
 
-        QString binPath(getBinPath());
+        std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/bench.bin";
         uint8_t *mem           = nullptr;
@@ -2162,7 +2186,7 @@ private slots:
         bool     running       = true;
         QString data;
 
-        VirtualMachine vm(&vmProperties, this);
+        VirtualMachineUnprotected vm(&vmProperties);
         mem = vm.init();
         uart = mem + UARTPOS;
 
@@ -2172,14 +2196,14 @@ private slots:
 
                 switch (vm.run()) {
 
-                case VirtualMachine::Resume:
+                case VirtualMachineUnprotected::Interrupt::Resume:
                     break;
 
-                case VirtualMachine::Stop:
+                case VirtualMachineUnprotected::Interrupt::Stop:
                     running = false;
                     break;
 
-                case VirtualMachine::Suspend:
+                case VirtualMachineUnprotected::Interrupt::Suspend:
                     data += (char)*uart;
                     std::cout << (char)*uart;
                     break;

@@ -15,9 +15,14 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "vm.h"
 
-#ifdef QT_CORE_LIB
+#include "armv4vm.h"
+#include "memoryhandler.h"
+
+
+long long debugHook = 0;
+
+#ifdef BUILD_WITH_QT
 #include <QDataStream>
 #include <QFile>
 #else
@@ -28,7 +33,7 @@
 #include <iostream>
 #endif
 
-#ifndef QT_CORE_LIB
+#ifndef BUILD_WITH_QT
 #define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
 {                                                                                                                  \
     std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
@@ -39,25 +44,14 @@
 namespace armv4vm {
 
 static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
-
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
-
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
-#ifdef QT_CORE_LIB
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
-    m_ram          = nullptr;
-    m_vmProperties = vmProperties;
-    m_cpsr                 = 0;
-    m_error                = E_NO_ERROR;
-    m_instructionSetFormat = undefined;
-    std::fill(m_registers.begin(), m_registers.end(), 0);
-}
-#else
-VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
+#ifdef BUILD_WITH_QT
+VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
     m_ram          = nullptr;
     m_vmProperties = vmProperties;
@@ -67,33 +61,18 @@ VirtualMachine::VirtualMachine(struct VmProperties *vmProperties) {
     m_registers.fill(0);
 }
 #endif
+template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
 
-VirtualMachine::~VirtualMachine() {
-
-    if (m_ram) {
-
-        delete[] m_ram;
-    }
-
-    m_ram = nullptr;
+    m_vmProperties = *vmProperties;
 }
 
-uint8_t *VirtualMachine::init() {
+template <typename T> uint8_t *VirtualMachine<T>::init() { return nullptr; }
 
-    m_ram = new uint8_t[m_vmProperties->m_memsize];
-    memset(m_ram, 0x00, m_vmProperties->m_memsize);
-    m_registers.fill(0);
 
-    m_cpsr = 0;
-    m_spsr = 0;
+#ifdef BUILD_WITH_QT
+uint64_t VirtualMachine<T>::load() {
 
-    return m_ram;
-}
-
-#ifdef QT_CORE_LIB
-uint64_t VirtualMachine::load() {
-
-    QFile    program(m_vmProperties->m_bin);
+    QFile    program(m_vmProperties.m_bin);
     uint64_t programSize = 0;
 
     if (program.open(QIODevice::ReadOnly)) {
@@ -108,17 +87,18 @@ uint64_t VirtualMachine::load() {
     return programSize;
 }
 #else
-uint64_t VirtualMachine::load() {
+template <typename T> uint64_t VirtualMachine<T>::load() {
 
     std::fstream program;
     std::streampos programSize = 0;
 
-    program.open(m_vmProperties->m_bin, std::ios::in | std::ios::binary | std::ios::ate);
+    program.open(m_vmProperties.m_bin, std::ios::in | std::ios::binary | std::ios::ate);
     if (program.is_open()) {
 
         programSize = program.tellg();
         program.seekg(0, std::ios::beg);
-        program.read(reinterpret_cast<char *>(m_ram), programSize);
+
+        program.read((char *)(uint8_t *)m_ram, programSize);
         program.close();
     } else {
         m_error     = E_LOAD_FAILED;
@@ -129,13 +109,16 @@ uint64_t VirtualMachine::load() {
 }
 #endif
 
-static uint32_t           stage1 = 0;
-VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
 
-    VirtualMachine::Interrupt result        = Undefined;
+template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::run(const uint32_t nbMaxIteration) {
+
+    VirtualMachine<T>::Interrupt result        = VirtualMachine<T>::Interrupt::Undefined;
+    int                       setJumpResult = 0;
+    static uint32_t              stage1        = 0;
     m_running = true;
 
     try {
+
         if (nbMaxIteration != 0) {
 
             for (uint32_t i = 0; i < nbMaxIteration; i++) {
@@ -161,17 +144,15 @@ VirtualMachine::Interrupt VirtualMachine::run(const uint32_t nbMaxIteration) {
     return result;
 }
 
-uint32_t VirtualMachine::fetch() {
+template <typename T> uint32_t VirtualMachine<T>::fetch() {
 
-    static uint32_t result;
-
-    result = *reinterpret_cast<uint32_t *>(m_ram + (*m_pc));
+    uint32_t result = readPointer<uint32_t>(m_ram + (*m_pc));
     *m_pc += 4;
 
     return result;
 }
 
-void VirtualMachine::decode(const uint32_t instruction) {
+template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction) {
 
     static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
@@ -213,6 +194,9 @@ void VirtualMachine::decode(const uint32_t instruction) {
     } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
+#ifdef DEBUG
+        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
     } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
@@ -260,7 +244,7 @@ void VirtualMachine::decode(const uint32_t instruction) {
     }
 }
 
-void VirtualMachine::evaluate() {
+template <typename T> void VirtualMachine<T>::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -318,27 +302,27 @@ void VirtualMachine::evaluate() {
 #define POS(i) ((~(i)) >> 31)
 #define NEG(i) ((i) >> 31)
 
-inline bool isOverflowAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isOverflowAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && NEG(op2) && POS(result)) || (POS(op1) && POS(op2) && NEG(result)));
 }
 
-inline bool isOverflowSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isOverflowSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && POS(op2) && POS(result)) || (POS(op1) && NEG(op2) && NEG(result)));
 }
 
-inline bool isCarryFromALUAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isCarryFromALUAdd(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && NEG(op2)) || (NEG(op1) && POS(result)) || (NEG(op2) && POS(result)));
 }
 
-inline bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
+inline static bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, const uint32_t result) {
 
     return ((NEG(op1) && POS(op2)) || (NEG(op1) && POS(result)) || (POS(op2) && POS(result)));
 }
 
-void VirtualMachine::dataProcessingEval() {
+template <typename T> void VirtualMachine<T>::dataProcessingEval() {
 
     enum OpCode {
 
@@ -452,8 +436,8 @@ void VirtualMachine::dataProcessingEval() {
     case TEQ:
         notWrittenResult = operand1 ^ operand2;
 #ifdef DEBUG
-        if(instruction.s == 0)
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        // if(instruction.s == 0)
+        //   qt_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
 
@@ -557,7 +541,7 @@ void VirtualMachine::dataProcessingEval() {
     }
 }
 
-void VirtualMachine::multiplyEval() {
+template <typename T> void VirtualMachine<T>::multiplyEval() {
 
     // clang-format off
     struct Multiply {
@@ -599,10 +583,11 @@ void VirtualMachine::multiplyEval() {
     }
 }
 
-inline int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
-inline uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
+inline static int64_t  signedCastTo64(const uint32_t value) { return static_cast<int64_t>(static_cast<int32_t>(value)); }
+inline static uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
-void VirtualMachine::multiplyLongEval() {
+
+template <typename T> void VirtualMachine<T>::multiplyLongEval() {
 
     // clang-format off
     static struct MultiplyLong {
@@ -666,7 +651,7 @@ void VirtualMachine::multiplyLongEval() {
     }
 }
 
-void VirtualMachine::singleDataTranferEval() {
+template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
 
     // clang-format off
     static struct SingleDataTranfer {
@@ -700,6 +685,8 @@ void VirtualMachine::singleDataTranferEval() {
 
     carry  = 0;
     offset = instruction.immediate ? shift(instruction.offset & 0xFEF, carry) : instruction.offset;
+
+    // § 4.9.4
     rd     = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 8; // et pas + 12
     rn     = instruction.rn != 15 ? m_registers[instruction.rn] : m_registers[instruction.rn] + 4; // et pas + 8
 
@@ -711,20 +698,20 @@ void VirtualMachine::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn + offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn - offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn - offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
                     }
                 }
             } else {
-                m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + rn) & 0x000000FF;
+                m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + rn) & 0x000000FF;
 
                 if (instruction.u) {
 
@@ -740,7 +727,7 @@ void VirtualMachine::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    value = *reinterpret_cast<uint32_t *>(m_ram + rn + offset);
+                    value = readPointer<uint32_t>(m_ram + rn + offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -749,7 +736,7 @@ void VirtualMachine::singleDataTranferEval() {
                     }
                 } else {
 
-                    value = *reinterpret_cast<uint32_t *>(m_ram + rn - offset);
+                    value = readPointer<uint32_t>(m_ram + rn - offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -759,7 +746,7 @@ void VirtualMachine::singleDataTranferEval() {
                 }
             } else {
 
-                value = *reinterpret_cast<uint32_t *>(m_ram + rn);
+                value = readPointer<uint32_t>(m_ram + rn);
 
                 m_registers[instruction.rd] = value;
                 if (instruction.u) {
@@ -781,14 +768,14 @@ void VirtualMachine::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    *reinterpret_cast<uint8_t *>(m_ram + rn + offset) = static_cast<uint8_t>(value);
+                    writePointer<uint8_t>(m_ram + rn + offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    *reinterpret_cast<uint8_t *>(m_ram + rn - offset) = static_cast<uint8_t>(value);
+                    writePointer<uint8_t>(m_ram + rn - offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -796,7 +783,7 @@ void VirtualMachine::singleDataTranferEval() {
                 }
             } else {
 
-                *reinterpret_cast<uint8_t *>(m_ram + rn) = static_cast<uint8_t>(value);
+                writePointer<uint8_t>(m_ram + rn) = static_cast<uint8_t>(value);
 
                 if (instruction.u) {
 
@@ -812,14 +799,14 @@ void VirtualMachine::singleDataTranferEval() {
 
                 if (instruction.u) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + rn + offset) = rd;
+                    writePointer<uint32_t>(m_ram + rn + offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + rn - offset) = rd;
+                    writePointer<uint32_t>(m_ram + rn - offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -827,7 +814,7 @@ void VirtualMachine::singleDataTranferEval() {
                 }
             } else {
 
-                *reinterpret_cast<uint32_t *>(m_ram + rn) = rd;
+                writePointer<uint32_t>(m_ram + rn) = rd;
 
                 if (instruction.u) {
 
@@ -846,7 +833,7 @@ void VirtualMachine::singleDataTranferEval() {
     // retained by setting the offset to zero.
 }
 
-void VirtualMachine::branchAndExchangeEval() {
+template <typename T> void VirtualMachine<T>::branchAndExchangeEval() {
 
     // clang-format off
     static struct BranchAndExchange {
@@ -868,7 +855,7 @@ void VirtualMachine::branchAndExchangeEval() {
     *m_pc = m_registers[instruction.rn];
 }
 
-void VirtualMachine::branchEval() {
+template <typename T> void VirtualMachine<T>::branchEval() {
 
     // clang-format off
     static struct Branch {
@@ -896,7 +883,7 @@ void VirtualMachine::branchEval() {
     (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
 }
 
-void VirtualMachine::blockDataTransferEval() {
+template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
@@ -939,7 +926,7 @@ void VirtualMachine::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset += 4;
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                     }
                 }
             } else {
@@ -949,7 +936,7 @@ void VirtualMachine::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                         offset += 4;
                     }
                 }
@@ -964,7 +951,7 @@ void VirtualMachine::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                     }
                 }
             } else {
@@ -974,7 +961,7 @@ void VirtualMachine::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = *reinterpret_cast<uint32_t *>(m_ram + offset);
+                        m_registers[i] = readPointer<uint32_t>(m_ram + offset);
                         offset -= 4;
                     }
                 }
@@ -1002,7 +989,7 @@ void VirtualMachine::blockDataTransferEval() {
                         offset += 4;
                         //* reinterpret_cast<uint32_t*>(m_ram + offset) =
                         // m_registers[i];
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                     }
                 }
 
@@ -1010,7 +997,7 @@ void VirtualMachine::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset += 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8; // et pas + 12
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4; // et pas + 12
                 }
             } else {
 
@@ -1019,7 +1006,7 @@ void VirtualMachine::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                         offset += 4;
                     }
                 }
@@ -1027,7 +1014,7 @@ void VirtualMachine::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                     offset += 4;
                 }
             }
@@ -1040,7 +1027,8 @@ void VirtualMachine::blockDataTransferEval() {
                 if (instruction.registerList & 0x8000) {
 
                     offset -= 4;
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    // readPointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                 }
 
                 // Registre 14, 13, 12, ...
@@ -1049,7 +1037,7 @@ void VirtualMachine::blockDataTransferEval() {
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                     }
                 }
             } else {
@@ -1058,7 +1046,7 @@ void VirtualMachine::blockDataTransferEval() {
                 // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[15] + 8;
+                    writePointer<uint32_t>(m_ram + offset) = m_registers[15] + 4;
                     offset -= 4;
                 }
 
@@ -1067,7 +1055,8 @@ void VirtualMachine::blockDataTransferEval() {
 
                     if (instruction.registerList & (1 << i)) {
 
-                        *reinterpret_cast<uint32_t *>(m_ram + offset) = m_registers[i];
+                        //m_registers[i]                         = readPointer<uint32_t>(m_ram + offset);
+                        writePointer<uint32_t>(m_ram + offset) = m_registers[i];
                         offset -= 4;
                     }
                 }
@@ -1089,7 +1078,7 @@ void VirtualMachine::blockDataTransferEval() {
     }
 }
 
-void VirtualMachine::halfwordDataTransferRegisterOffEval() {
+template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferRegisterOffset {
@@ -1112,9 +1101,9 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
     } instruction;
     // clang-format on
 
-    static uint32_t offset;
+    uint32_t offset;
 
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
+    // qt_assert(__FUNCTION__, __FILE__, __LINE__);
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1140,14 +1129,14 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1159,14 +1148,14 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1183,6 +1172,8 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
         }
     } else {
 
+        uint32_t rd = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 4;
+
         if (instruction.p) {
 
             if (instruction.u)
@@ -1195,8 +1186,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
                 offset += 2;
             }
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            writePointer<uint32_t>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1204,8 +1194,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
             }
         } else {
 
-            *reinterpret_cast<uint32_t *>(m_ram + offset) =
-                    (m_registers[instruction.rd] & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+            writePointer<uint32_t>(m_ram + offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1222,7 +1211,7 @@ void VirtualMachine::halfwordDataTransferRegisterOffEval() {
     }
 }
 
-void VirtualMachine::halfwordDataTransferImmediateOffEval() {
+template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferImmediateOffset {
@@ -1272,14 +1261,14 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1291,14 +1280,14 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned16(readPointer<uint32_t>(m_ram + offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(*reinterpret_cast<uint32_t *>(m_ram + offset));
+                    m_registers[instruction.rd] = getSigned8(readPointer<uint32_t>(m_ram + offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = *reinterpret_cast<uint32_t *>(m_ram + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = readPointer<uint32_t>(m_ram + offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1310,6 +1299,8 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
         }
     } else {
 
+        uint32_t rd = instruction.rd != 15 ? m_registers[instruction.rd] : m_registers[instruction.rd] + 4;
+
         if (instruction.p) {
 
             if (instruction.u)
@@ -1318,9 +1309,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+                writePointer<uint32_t>(m_ram + offset) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset-2) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                writePointer<uint32_t>(m_ram + offset - 2) =
+                    (readPointer<uint32_t>(m_ram + offset - 2) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1333,9 +1326,11 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
         } else {
 
             if((offset % 4) == 0)
-                *reinterpret_cast<uint32_t *>(m_ram + offset) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0xFFFF0000) | (m_registers[instruction.rd] & 0x0000FFFF);
+                writePointer<uint32_t>(m_ram + offset) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                *reinterpret_cast<uint32_t *>(m_ram + offset-2) = (*reinterpret_cast<uint32_t *>(m_ram + offset) & 0x0000FFFF) | (m_registers[instruction.rd] << 16);
+                writePointer<uint32_t>(m_ram + offset - 2) =
+                    (readPointer<uint32_t>(m_ram + offset) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
@@ -1352,7 +1347,7 @@ void VirtualMachine::halfwordDataTransferImmediateOffEval() {
     }
 }
 
-void VirtualMachine::softwareInterruptEval() {
+template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
 
     // clang-format off
     struct SoftwareInterrupt {
@@ -1369,11 +1364,10 @@ void VirtualMachine::softwareInterruptEval() {
 
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
 
-    //longjmp(m_runInterruptLongJump, instruction.comment);
     throw VmException(static_cast<VirtualMachine::Interrupt>(instruction.comment));
 }
 
-bool VirtualMachine::testCondition(const uint32_t instruction) const {
+template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {
 
     // N Z C V . . . . . .
     enum ConditionCode {
@@ -1448,7 +1442,7 @@ bool VirtualMachine::testCondition(const uint32_t instruction) const {
     }
 }
 
-uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const {
+template <typename T> uint32_t VirtualMachine<T>::rotate(const uint32_t operand2, uint32_t &carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
@@ -1459,7 +1453,7 @@ uint32_t VirtualMachine::rotate(const uint32_t operand2, uint32_t & carry) const
     return result;
 }
 
-uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
+template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2, uint32_t &carry) const {
 
     uint32_t              shiftResult     = 0;
     uint32_t              shiftValue      = 0;
@@ -1589,8 +1583,56 @@ uint32_t VirtualMachine::shift(const uint32_t operand2, uint32_t &carry) const {
     return shiftResult;
 }
 
-const std::array<uint32_t, 16> &VirtualMachine::getRegisters() const { return m_registers; }
+template<typename T>
+const std::array<uint32_t, 16> &VirtualMachine<T>::getRegisters() const { return m_registers; }
+#if 0
+template <typename T> const uint32_t *VirtualMachine<T>::getRegisters() const { return m_registers; }
+#endif
+template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { return m_cpsr; }
 
-uint32_t VirtualMachine::getCPSR() const { return m_cpsr; }
+
+template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
+
+    m_ram          = nullptr;
+    m_cpsr         = 0;
+    m_error        = E_NONE;
+    m_instructionSetFormat = unknown;
+    m_registers.fill(0);
+    m_spsr                 = 0;
+    m_vmProperties = *vmProperties;
+}
+
+template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
+
+    m_vmProperties = *vmProperties;
+}
+
+template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
+template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
+
+
+template <> uint8_t *VirtualMachine<uint8_t *>::init() {
+
+    m_ram = new uint8_t[m_vmProperties.m_memsize];
+    memset(m_ram, 0x00, m_vmProperties.m_memsize);
+    m_registers.fill(0);
+
+    m_cpsr = 0;
+    m_spsr = 0;
+
+    return m_ram;
+}
+
+template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
+
+    m_registers.fill(0);
+    m_cpsr = 0;
+    m_spsr = 0;
+
+    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
+
+    return m_ram.getMem();
+}
+
 
 } // namespace armv4vm

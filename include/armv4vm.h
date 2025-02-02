@@ -17,14 +17,10 @@
 
 #pragma once
 
-#include <array>
 
 #ifdef QT_CORE_LIB
 #include <QObject>
 #include <QTextStream>
-#else
-#include <cstdint>
-#include <string>
 #endif
 
 #if WIN32
@@ -32,14 +28,42 @@
 #pragma warning(disable : 4820 4514 4626 4324) 
 #endif
 
+#include "memoryhandler.h"
+#include <array>
+#include <algorithm>
+#include <csetjmp>
+#include <cstdint>
+#include <exception>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+
 namespace armv4vm {
 
+class MemoryProtected;
+
 struct VmProperties {
+
+    struct MemModel {
+
+        enum Type {
+            DIRECT,
+            PROTECTED,
+        };
+
+        MemModel(Type type = DIRECT) : m_type(type) { m_range.clear(); }
+
+        Type                        m_type;
+        std::vector<armv4vm::Range> m_range;
+    };
 
     VmProperties() {
         m_bin     = "";
         m_memsize = 0;
         m_debug   = 0;
+        m_memModel = MemModel::DIRECT;
     }
     ~VmProperties() { }
 
@@ -48,15 +72,23 @@ struct VmProperties {
         m_bin = other.m_bin;
         m_memsize = other.m_memsize;
         m_debug = other.m_debug;
+        m_memModel = other.m_memModel;
     }
 
-#ifdef QT_CORE_LIB
-    QString m_bin;
-#else
+    VmProperties operator=(const VmProperties &other) {
+
+        m_bin      = other.m_bin;
+        m_memsize  = other.m_memsize;
+        m_debug    = other.m_debug;
+        m_memModel = other.m_memModel;
+
+        return *this;
+    }
+
     std::string m_bin;
-#endif
     uint32_t m_memsize;
     bool m_debug;
+    MemModel m_memModel;
 
     void clear() {
 
@@ -66,51 +98,67 @@ struct VmProperties {
     }
 };
 
-class alignas(32) VirtualMachine
+class alignas(32) VirtualMachineBase {
+  public:
+    enum class Interrupt : int32_t {
 
-#ifdef QT_CORE_LIB
-    : public QObject
+        Resume     = 1,
+        Stop       = 2,
+        Suspend    = 3,
+        LockPop    = 4,
+        UnlockPop  = 5,
+        LockPush   = 6,
+        UnlockPush = 7,
+        Fatal      = 8,
+        Undefined  = 9,
+    };
+
+    virtual uint8_t  *init()                                 = 0;
+    virtual uint64_t  load()                                 = 0;
+    virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
+};
+
+template <typename T>
+class VirtualMachine : public VirtualMachineBase
+
+#ifdef BUILD_WITH_QT
+ , public QObject
 #endif
 {
 
   public:
-
-#ifdef QT_CORE_LIB
+#ifdef BUILD_WITH_QT
     explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
 #else
-    explicit VirtualMachine(struct VmProperties *);
+    explicit VirtualMachine(struct VmProperties * = nullptr);
 #endif
     ~VirtualMachine();
 
-    enum Interrupt : int {
 
-        Resume    = 1,
-        Stop      = 2,
-        Suspend   = 3,
-        Undefined = 4,
-    };
-
-    uint8_t *       init();
-    void            test();
-    void            loadTest();
-    uint64_t        load();
+    uint8_t *       init() override;
+    uint64_t        load() override;
     const std::array<uint32_t, 16> & getRegisters() const;
-    Interrupt       run(const uint32_t nbMaxIteration = 0);
+    Interrupt       run(const uint32_t nbMaxIteration = 0) override;
+
     uint32_t        getCPSR() const;
 
-#ifdef QT_CORE_LIB
+#ifdef BUILD_WITH_QT
     friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
-    friend class TestVm;
 #endif
+    friend class TestVm;
 
+    /*public slots:*/
+
+
+public:
     enum Error {
 
-        E_NO_ERROR,
+        E_NONE,
         E_LOAD_FAILED,
         E_UNDEFINED,
     };
 
-#ifdef QT_CORE_LIB
+#ifdef BUILD_WITH_QT    
   signals:
     void started();
     void finished();
@@ -120,8 +168,8 @@ class alignas(32) VirtualMachine
 #endif
 
   private:
-    struct VmProperties *m_vmProperties;
-    uint8_t *            m_ram;
+    struct VmProperties  m_vmProperties;
+    T                    m_ram;
     enum Error           m_error;
 
     inline uint32_t fetch();
@@ -176,11 +224,13 @@ class alignas(32) VirtualMachine
         coprocessor_data_operation,
         coprocessor_register_transfer,
         software_interrupt,
+        unknown,
     };
 
     FormatSummary m_instructionSetFormat;
-
-    //uint32_t m_registers[16];
+#if 0
+    uint32_t m_registers[16];
+#endif
     std::array<uint32_t, 16> m_registers;
 
     uint32_t m_cpsr;
@@ -192,25 +242,20 @@ class alignas(32) VirtualMachine
 
     uint32_t m_workingInstruction;
     bool     m_running;
-    //jmp_buf  m_runInterruptLongJump;
-
-    static const uint32_t NEGATE_FLAG     = 0x80000000;
-    static const uint32_t ZERO_FLAG       = 0x40000000;
-    static const uint32_t CARRIED_FLAG    = 0x20000000;
-    static const uint32_t OVERFLOWED_FLAG = 0x10000000;
-
-    static const uint32_t IRQ_FLAG   = 0x00000080;
-    static const uint32_t FIQ_FLAG   = 0x00000040;
-    static const uint32_t THUMB_FLAG = 0x00000020;
-
-    static const uint32_t MODE_FLAG = 0x0000001F;
 };
 
 class VmException : public std::exception {
   public:
-    VmException(VirtualMachine::Interrupt interrupt = VirtualMachine::Interrupt::Resume) : m_interrupt(interrupt) {}
-    VirtualMachine::Interrupt m_interrupt;
+    using Interrupt = VirtualMachineBase::Interrupt;
+
+    VmException(Interrupt interrupt = Interrupt::Resume)
+        : m_interrupt(interrupt) {}
+    Interrupt m_interrupt;
 };
+
+using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
+using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
+
 
 } // namespace armv4vm
 

@@ -23,9 +23,8 @@ SET(CMAKE_CXX_STANDARD 20)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-INCLUDE_DIRECTORIES(include)
 
-SET(ARMV4VM_HEADER_FILES include/armv4vm.h include/memoryhandler.h)
+SET(ARMV4VM_HEADER_FILES source/armv4vm.h source/memoryhandler.h)
 SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp src/test2.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
@@ -60,7 +59,9 @@ if(Qt6Core_FOUND)
     target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
 endif()
 
-set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "include/armv4vm.h")
+set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
+set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
+
 #install(TARGETS armv4vm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
 install(TARGETS armv4vm)
 

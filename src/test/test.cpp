@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "armv4vm.h"
+#include "../armv4vm.h"
 
 namespace armv4vm {
 
@@ -1915,7 +1915,7 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_registers[0] == -324);
+        QVERIFY(static_cast<int32_t>(vm.m_registers[0]) == -324);
         QVERIFY(vm.m_registers[1] == 45674233);
         QVERIFY(vm.m_registers[2] == 0xfffffffc);
         QVERIFY(vm.m_registers[3] == 0x8df18cdc);
@@ -2142,13 +2142,11 @@ private slots:
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
         uint8_t *mem           = nullptr;
-        uint8_t *uart          = nullptr;
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
 
         mem      = vm.init();
-        uart     = mem + UARTPOS;
 
         if (vm.load()) {
 

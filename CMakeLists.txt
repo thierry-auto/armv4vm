@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.11.4)
-project(armv4vm VERSION 1.0.1)
+# 29/08/2025
+
+cmake_minimum_required(VERSION 4.0.2)
+project(armv4vm VERSION 1.0.4)
 
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -24,9 +26,9 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-SET(ARMV4VM_HEADER_FILES source/armv4vm.h source/memoryhandler.h)
-SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp src/test2.cpp)
-SET(ARMV4VM_TEST_SOURCE_FILES test/test.cpp)
+SET(ARMV4VM_HEADER_FILES src/armv4vm.h src/memoryhandler.h)
+SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
+SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test2.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -63,5 +65,13 @@ set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
 set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
 
 #install(TARGETS armv4vm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
-install(TARGETS armv4vm)
 
+install(TARGETS armv4vm
+    ARCHIVE DESTINATION lib       # pour .a
+    LIBRARY DESTINATION lib       # pour .so (si librairie partagée)
+    RUNTIME DESTINATION bin       # pour Windows .dll si partagé
+)
+
+install(FILES include/myheader.h
+    DESTINATION include
+)

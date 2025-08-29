@@ -113,7 +113,6 @@ template <typename T> uint64_t VirtualMachine<T>::load() {
 template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::run(const uint32_t nbMaxIteration) {
 
     VirtualMachine<T>::Interrupt result        = VirtualMachine<T>::Interrupt::Undefined;
-    int                       setJumpResult = 0;
     static uint32_t              stage1        = 0;
     m_running = true;
 
@@ -136,7 +135,7 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
                 evaluate();
             }
         }
-    } catch (VmException exception) {
+    } catch (VmException &exception) {
 
         result = exception.m_interrupt;
     }

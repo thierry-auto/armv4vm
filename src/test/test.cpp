@@ -1979,7 +1979,7 @@ private slots:
         std::string data;
 
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/hello.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/hello.bin";
         unsigned char *mem     = nullptr;
         uint8_t *uart          = nullptr;
         bool           running = true;

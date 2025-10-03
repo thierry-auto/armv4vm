@@ -1582,13 +1582,7 @@ template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2,
     return shiftResult;
 }
 
-template<typename T>
-const std::array<uint32_t, 16> &VirtualMachine<T>::getRegisters() const { return m_registers; }
-#if 0
-template <typename T> const uint32_t *VirtualMachine<T>::getRegisters() const { return m_registers; }
-#endif
 template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { return m_cpsr; }
-
 
 template <> VirtualMachine<uint8_t *>::VirtualMachine(struct VmProperties *vmProperties) {
 

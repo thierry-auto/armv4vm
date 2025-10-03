@@ -116,6 +116,10 @@ class alignas(32) VirtualMachineBase {
     virtual uint8_t  *init()                                 = 0;
     virtual uint64_t  load()                                 = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
+    const std::array<uint32_t, 16> & getRegisters() const { return m_registers; }
+
+  protected:
+     std::array<uint32_t, 16> m_registers;
 };
 
 template <typename T>
@@ -137,7 +141,6 @@ class VirtualMachine : public VirtualMachineBase
 
     uint8_t *       init() override;
     uint64_t        load() override;
-    const std::array<uint32_t, 16> & getRegisters() const;
     Interrupt       run(const uint32_t nbMaxIteration = 0) override;
 
     uint32_t        getCPSR() const;
@@ -231,7 +234,7 @@ public:
 #if 0
     uint32_t m_registers[16];
 #endif
-    std::array<uint32_t, 16> m_registers;
+
 
     uint32_t m_cpsr;
     uint32_t m_spsr;

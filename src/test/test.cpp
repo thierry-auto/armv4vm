@@ -1968,6 +1968,48 @@ private slots:
         QVERIFY(*(uint32_t *)(vm.m_ram + 12) == 0x00000010);
     }
 
+    void testSWP_1() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe1020091); // SWP R0, R1, [R2]
+        seti(vm.m_ram + 0x10, 0xABCDEF01);
+        vm.m_registers[0] = 0x0000000a;
+        vm.m_registers[1] = 0x11112222;
+        vm.m_registers[2] = 0x00000010;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(1);
+
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0x11112222);
+        QVERIFY(vm.m_registers[0] == 0xABCDEF01);
+        QVERIFY(vm.m_registers[1] == 0x11112222);
+        QVERIFY(vm.m_registers[2] == 0x00000010);
+        QVERIFY(vm.m_cpsr == 0x60000000);
+    }
+
+    void testSWPB_1() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xe1420091); // SWPB R0, R1, [R2]
+        seti(vm.m_ram + 0x10, 0xABCDEF33);
+        vm.m_registers[0] = 0x11223344;
+        vm.m_registers[1] = 0x11112222;
+        vm.m_registers[2] = 0x00000010;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(1);
+
+        QVERIFY(*(uint32_t *)(vm.m_ram + 0x10) == 0xABCDEF22);
+        QVERIFY(vm.m_registers[0] == 0x00000033);
+        QVERIFY(vm.m_registers[1] == 0x11112222);
+        QVERIFY(vm.m_registers[2] == 0x00000010);
+        QVERIFY(vm.m_cpsr == 0x60000000);
+    }
+
     //#define MEMSIZE 128
 #define MEMSIZE 300
 #define UARTPOS 0x05000000

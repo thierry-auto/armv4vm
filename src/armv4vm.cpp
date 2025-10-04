@@ -194,7 +194,7 @@ template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction)
 
         m_instructionSetFormat = single_data_swap;
 #ifdef DEBUG
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        //qt_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
     } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
@@ -288,6 +288,9 @@ template <typename T> void VirtualMachine<T>::evaluate() {
         break;
 
     case single_data_swap:
+        singleDataSwapEval();
+        break;
+
     case coprocessor_data_transfer:
     case coprocessor_data_operation:
     case coprocessor_register_transfer:
@@ -1351,7 +1354,7 @@ template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
     // clang-format off
     struct SoftwareInterrupt {
 
-        int32_t  comment   : 24;
+        uint32_t comment   : 24;
         uint32_t           :  4;
         uint32_t condition :  4;
 
@@ -1364,6 +1367,42 @@ template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
 
     throw VmException(static_cast<VirtualMachine::Interrupt>(instruction.comment));
+}
+
+template <typename T> void VirtualMachine<T>::singleDataSwapEval() {
+
+    // clang-format off
+    struct SingleDataSwap {
+
+        uint32_t rm        :  4;
+        uint32_t           :  4;
+        uint32_t           :  4;
+        uint32_t rd        :  4;
+        uint32_t rn        :  4;
+        uint32_t           :  2;
+        uint32_t b         :  1;
+        uint32_t           :  5;
+        uint32_t condition :  4;
+
+    } instruction;
+    // clang-format on
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    instruction = cast<SingleDataSwap>(m_workingInstruction);
+
+    if(instruction.b == 0) {
+
+        const uint32_t copy = readPointer<uint32_t>(m_ram + m_registers[instruction.rn]);
+        writePointer<uint32_t>(m_ram + m_registers[instruction.rn]) = m_registers[instruction.rm];
+        m_registers[instruction.rd] = copy;
+    }
+    else {
+        const uint8_t copy = readPointer<uint8_t>(m_ram + m_registers[instruction.rn]);
+        writePointer<uint8_t>(m_ram + m_registers[instruction.rn]) = m_registers[instruction.rm];
+        m_registers[instruction.rd] = copy;
+    }
 }
 
 template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {

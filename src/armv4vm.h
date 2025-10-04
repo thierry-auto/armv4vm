@@ -189,6 +189,7 @@ public:
     void halfwordDataTransferRegisterOffEval();
     void halfwordDataTransferImmediateOffEval();
     void softwareInterruptEval();
+    void singleDataSwapEval();
 
     inline uint32_t rotate(const uint32_t operand2, uint32_t &carry) const;
     inline uint32_t shift(const uint32_t operand2, uint32_t &carry) const;

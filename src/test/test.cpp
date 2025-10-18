@@ -36,7 +36,10 @@ class TestVm : public QObject {
     Q_OBJECT
 
 public:
-    TestVm() { vmProperties.m_memsize = 512; }
+    TestVm() {
+        vmProperties.m_memsize = 512;
+        vmProperties.m_coproModel = "vfpv2";
+    }
 
 private slots:
 
@@ -2254,6 +2257,22 @@ private slots:
             }
         }
         QVERIFY(data == "4 11337 64624 74501 98671 149983 166011 167964 230031 276464 290271 343718 353417 378247 433098 443959 447113 449806 456279");
+    }
+
+    void testVLDR() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        seti(vm.m_ram + 0, 0xed937a00); // vldr.32 s14, [r3]
+        seti(vm.m_ram + 0x10, 0xABCDEF01);
+        vm.m_registers[3] = 0x0000000a;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[0] == 0xABCDEF01);
+        QVERIFY(vm.m_cpsr == 0x60000000);
     }
 };
 } // namespace armv4vm

@@ -26,9 +26,9 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-SET(ARMV4VM_HEADER_FILES src/armv4vm.h src/memoryhandler.h)
-SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp)
-SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test2.cpp)
+SET(ARMV4VM_HEADER_FILES src/armv4vm.h src/memoryhandler.h src/vfpv2.h src/assertcopro.h)
+SET(ARMV4VM_SOURCE_FILES src/armv4vm.cpp src/vfpv2.cpp src/assertcopro.cpp)
+SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp #[[src/test2.cpp]])
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

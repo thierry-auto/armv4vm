@@ -18,7 +18,7 @@
 
 #include "armv4vm.h"
 #include "memoryhandler.h"
-
+#include "vfpv2.h"
 
 long long debugHook = 0;
 
@@ -47,9 +47,6 @@ static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) 
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
-template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
-
-
 #ifdef BUILD_WITH_QT
 VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
@@ -58,16 +55,46 @@ VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *pa
     m_cpsr         = 0;
     m_error        = E_NO_ERROR;
     m_instructionSetFormat = undefined;
+    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel);
     m_registers.fill(0);
 }
 #endif
 template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_vmProperties = *vmProperties;
+    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
 }
 
-template <typename T> uint8_t *VirtualMachine<T>::init() { return nullptr; }
+template <typename T> uint8_t *VirtualMachine<T>::init() {
 
+    m_coprocessor = std::make_unique<CoprocessorBase>(this);
+    return nullptr;
+}
+
+template <> uint8_t *VirtualMachine<uint8_t *>::init() {
+
+    m_ram = new uint8_t[m_vmProperties.m_memsize];
+    memset(m_ram, 0x00, m_vmProperties.m_memsize);
+    m_registers.fill(0);
+
+    m_cpsr = 0;
+    m_spsr = 0;
+    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+
+    return m_ram;
+}
+
+template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
+
+    m_registers.fill(0);
+    m_cpsr = 0;
+    m_spsr = 0;
+
+    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
+    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+
+    return m_ram.getMem();
+}
 
 #ifdef BUILD_WITH_QT
 uint64_t VirtualMachine<T>::load() {
@@ -193,9 +220,6 @@ template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction)
     } else if ((instruction & MASK_SINGLE_DATA_SWAP) == SINGLE_DATA_SWAP) {
 
         m_instructionSetFormat = single_data_swap;
-#ifdef DEBUG
-        //qt_assert(__FUNCTION__, __FILE__, __LINE__);
-#endif
     } else if ((instruction & MASK_MULTIPLY) == MULTIPLY) {
 
         m_instructionSetFormat = multiply;
@@ -211,11 +235,9 @@ template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction)
     } else if ((instruction & MASK_COPROCESSOR_DATA_OPERATION) == COPROCESSOR_DATA_OPERATION) {
 
         m_instructionSetFormat = coprocessor_data_operation;
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
     } else if ((instruction & MASK_COPROCESSOR_REGISTER_TRANSFER) == COPROCESSOR_REGISTER_TRANSFER) {
 
         m_instructionSetFormat = coprocessor_register_transfer;
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
     } else if ((instruction & MASK_SOFTWARE_INTERRUPT) == SOFTWARE_INTERRUPT) {
 
         m_instructionSetFormat = software_interrupt;
@@ -230,8 +252,7 @@ template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction)
         m_instructionSetFormat = branch;
     } else if ((instruction & MASK_COPROCESSOR_DATA_TRANSFER) == COPROCESSOR_DATA_TRANSFER) {
 
-        m_instructionSetFormat = coprocessor_data_transfer;
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        m_instructionSetFormat = coprocessor_data_transfer;        
     } else if ((instruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
 
         m_instructionSetFormat = data_processing;
@@ -292,8 +313,17 @@ template <typename T> void VirtualMachine<T>::evaluate() {
         break;
 
     case coprocessor_data_transfer:
+        coprocessorDataTransfers();
+        break;
+
     case coprocessor_data_operation:
+        coprocessorDataOperations();
+        break;
+
     case coprocessor_register_transfer:
+        coprocessorRegisterTransfers();
+        break;
+
     case undefined:
     default:
         qt_assert(__FUNCTION__, __FILE__, __LINE__);
@@ -1405,6 +1435,30 @@ template <typename T> void VirtualMachine<T>::singleDataSwapEval() {
     }
 }
 
+template <typename T> void VirtualMachine<T>::coprocessorDataTransfers() {
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    m_coprocessor->coprocessorDataTransfers(m_workingInstruction);
+}
+
+template <typename T> void VirtualMachine<T>::coprocessorDataOperations() {
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    m_coprocessor->coprocessorDataOperations(m_workingInstruction);
+}
+
+template <typename T> void VirtualMachine<T>::coprocessorRegisterTransfers() {
+
+    if (false == testCondition(m_workingInstruction))
+        return;
+
+    m_coprocessor->coprocessorRegisterTransfers(m_workingInstruction);
+}
+
 template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {
 
     // N Z C V . . . . . .
@@ -1643,28 +1697,109 @@ template <> VirtualMachine<uint8_t *>::~VirtualMachine() { m_ram = nullptr; }
 template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
 
 
-template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
-    m_ram = new uint8_t[m_vmProperties.m_memsize];
-    memset(m_ram, 0x00, m_vmProperties.m_memsize);
-    m_registers.fill(0);
 
-    m_cpsr = 0;
-    m_spsr = 0;
+void CoprocessorBase::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
 
-    return m_ram;
+    // clang-format off
+    struct CoprocessorDataTransfers {
+
+        uint32_t immediateOffset                : 8;
+        uint32_t coproNumber                    : 4;
+        uint32_t coproSourceDestinationRegister : 4;
+        uint32_t baseRegister                   : 4;
+        uint32_t loadStoreBit                   : 1;
+        uint32_t writeBackBit                   : 1;
+        uint32_t transferLength                 : 1;
+        uint32_t upDownBit                      : 1;
+        uint32_t prePostIndexingBit             : 1;
+        uint32_t                                : 3;
+        uint32_t condition                      : 4;
+
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorDataTransfers>(m_workingInstruction);
+
+    // On leve une exception
+    qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
+void CoprocessorBase::coprocessorDataOperations(const uint32_t m_workingInstruction) {
 
-    m_registers.fill(0);
-    m_cpsr = 0;
-    m_spsr = 0;
+    // clang-format off
+    struct CoprocessorDataOperations {
 
-    m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
+        uint32_t operandRegisterM    : 4;
+        uint32_t                     : 1;
+        uint32_t information         : 3;
+        uint32_t number              : 4;
+        uint32_t destinationRegister : 4;
+        uint32_t operandRegisterN    : 4;
+        uint32_t operationCode       : 4;
+        uint32_t                     : 4;
+        uint32_t condition           : 4;
 
-    return m_ram.getMem();
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorDataOperations>(m_workingInstruction);
+
+    // On leve une exception
+    qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
+void CoprocessorBase::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
+
+    // clang-format off
+    struct CoprocessorRegisterTransfers {
+
+
+        uint32_t coproOperandRegister           : 4;
+        uint32_t                                : 1;
+        uint32_t coproInformation               : 3;
+        uint32_t coproNumber                    : 4;
+        uint32_t armSourceDestinationRegister   : 4;
+        uint32_t coproSourceDestinationRegister : 4;
+        uint32_t loadStoreBit                   : 1;
+        uint32_t coproOperationMode             : 3;
+        uint32_t                                : 4;
+        uint32_t condition                      : 4;
+
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorRegisterTransfers>(m_workingInstruction);
+
+    // On leve une exception
+    qt_assert(__FUNCTION__, __FILE__, __LINE__);
+}
+
+std::unordered_map<std::string, CoprocessorBase::Factory>& CoprocessorBase::registry() {
+
+    static std::unordered_map<std::string, Factory> instance;
+    return instance;
+}
+
+void CoprocessorBase::registerType(const std::string& name, Factory factory) {
+
+    registry()[name] = std::move(factory);
+}
+
+std::unique_ptr<CoprocessorBase> CoprocessorBase::create(const std::string& name, VirtualMachineBase *vm) {
+
+    auto it = registry().find(name);
+
+    if (it != registry().end()) {
+
+        return it->second(vm);
+    }
+    else if(name.empty()) {
+
+        return std::make_unique<CoprocessorBase>(vm);
+    }
+
+    throw std::runtime_error("Coprocesseur inconnu : " + name);
+}
 
 } // namespace armv4vm

@@ -112,8 +112,8 @@ class MemoryProtected {
 
   private:
     std::vector<uint8_t> m_mem;
-    uint32_t           m_size;
-    std::vector<Range> m_authorized;
+    uint32_t             m_size;
+    std::vector<Range>   m_authorized;
 };
 
 inline ByteRef operator+(MemoryProtected &mem, const uint32_t offset) {

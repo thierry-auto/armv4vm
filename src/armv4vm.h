@@ -29,6 +29,7 @@
 #endif
 
 #include "memoryhandler.h"
+
 #include <array>
 #include <algorithm>
 #include <csetjmp>
@@ -38,9 +39,45 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
+#include <any>
 
 namespace armv4vm {
+
+
+// --- interface RAM minimaliste ---
+struct InterfaceMemory {
+    virtual ~InterfaceMemory() = default;
+    // virtual uint8_t& at(std::size_t i) = 0;
+    // virtual const uint8_t* data() const = 0;
+    // virtual std::size_t size() const = 0;
+    virtual operator uint8_t *() = 0;
+};
+
+// --- Adapter pour uint8_t* (non propriétaire) ---
+class RawRamAdapter : public InterfaceMemory {
+  public:
+    RawRamAdapter(uint8_t* p, std::size_t n) : ptr(p), len(n) {}
+    // uint8_t& at(std::size_t i) override { return ptr[i]; }
+    // const uint8_t* data() const override { return ptr; }
+    // std::size_t size() const override { return len; }
+    operator uint8_t *() override { return ptr; }
+
+  private:
+    uint8_t* ptr;
+    std::size_t len;
+};
+
+// --- Adapter pour MemoryProtected (propriétaire) ---
+class ProtectedRamAdapter : public InterfaceMemory {
+  public:
+    ProtectedRamAdapter(MemoryProtected &m) : mp(&m) {}
+    // uint8_t& at(std::size_t i) override { return mp->m_mem.at(i); }
+    // const uint8_t* data() const override { return mp->m_mem.data(); }
+    // std::size_t size() const override { return mp->m_mem.size(); }
+     operator uint8_t *() override { return *mp; }
+  private:
+    MemoryProtected* mp;
+};
 
 class MemoryProtected;
 
@@ -64,6 +101,7 @@ struct VmProperties {
         m_memsize = 0;
         m_debug   = 0;
         m_memModel = MemModel::DIRECT;
+        m_coproModel = "assert";
     }
     ~VmProperties() { }
 
@@ -73,6 +111,7 @@ struct VmProperties {
         m_memsize = other.m_memsize;
         m_debug = other.m_debug;
         m_memModel = other.m_memModel;
+        m_coproModel = other.m_coproModel;
     }
 
     VmProperties operator=(const VmProperties &other) {
@@ -81,6 +120,7 @@ struct VmProperties {
         m_memsize  = other.m_memsize;
         m_debug    = other.m_debug;
         m_memModel = other.m_memModel;
+        m_coproModel = other.m_coproModel;
 
         return *this;
     }
@@ -89,6 +129,7 @@ struct VmProperties {
     uint32_t m_memsize;
     bool m_debug;
     MemModel m_memModel;
+    std::string m_coproModel;
 
     void clear() {
 
@@ -97,6 +138,10 @@ struct VmProperties {
         m_debug   = 0;
     }
 };
+
+//class alignas(32) VirtualMachineBase;
+
+class CoprocessorBase;
 
 class alignas(32) VirtualMachineBase {
   public:
@@ -113,14 +158,23 @@ class alignas(32) VirtualMachineBase {
         Undefined  = 9,
     };
 
-    virtual uint8_t  *init()                                 = 0;
-    virtual uint64_t  load()                                 = 0;
+    virtual uint8_t  *init() = 0;
+    virtual uint64_t  load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
     const std::array<uint32_t, 16> & getRegisters() const { return m_registers; }
 
+    virtual uint8_t* getRam() = 0;
+
   protected:
-     std::array<uint32_t, 16> m_registers;
+
+    std::array<uint32_t, 16> m_registers;
+    //std::unique_ptr<InterfaceMemory> m_ramView;
+    std::unique_ptr<CoprocessorBase> m_coprocessor;
+
+  public:
+    friend CoprocessorBase;
 };
+
 
 template <typename T>
 class VirtualMachine : public VirtualMachineBase
@@ -170,9 +224,12 @@ public:
     void crashed();
 #endif
 
+  protected:
+    T m_ram;
+
   private:
     struct VmProperties  m_vmProperties;
-    T                    m_ram;
+
     enum Error           m_error;
 
     inline uint32_t fetch();
@@ -186,10 +243,13 @@ public:
     void branchAndExchangeEval();
     void branchEval();
     void blockDataTransferEval();
+    void singleDataSwapEval();
     void halfwordDataTransferRegisterOffEval();
     void halfwordDataTransferImmediateOffEval();
     void softwareInterruptEval();
-    void singleDataSwapEval();
+    void coprocessorDataOperations();
+    void coprocessorDataTransfers();
+    void coprocessorRegisterTransfers();
 
     inline uint32_t rotate(const uint32_t operand2, uint32_t &carry) const;
     inline uint32_t shift(const uint32_t operand2, uint32_t &carry) const;
@@ -240,12 +300,45 @@ public:
     uint32_t m_cpsr;
     uint32_t m_spsr;
 
+    // todo use reference instead of ptr
     uint32_t *const m_sp = &m_registers[13];
     uint32_t *const m_lr = &m_registers[14];
     uint32_t *const m_pc = &m_registers[15];
 
     uint32_t m_workingInstruction;
     bool     m_running;
+
+
+  public:
+    uint8_t* getRam() { return m_ram; }
+
+};
+
+using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
+using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
+
+
+class CoprocessorBase {
+  public:
+    //CoprocessorBase(VirtualMachineUnprotected* vm) : m_vm(vm) {}
+    CoprocessorBase(VirtualMachineBase* vm) : m_vm(vm) { m_ram = vm->getRam(); }
+
+    virtual void coprocessorDataTransfers(const uint32_t m_workingInstruction);
+    virtual void coprocessorDataOperations(const uint32_t m_workingInstruction);
+    virtual void coprocessorRegisterTransfers(const uint32_t m_workingInstruction);
+
+    using Factory = std::function<std::unique_ptr<CoprocessorBase>(VirtualMachineBase* vm)>;
+
+    static void registerType(const std::string& name, Factory factory);
+    static std::unique_ptr<CoprocessorBase> create(const std::string& name, VirtualMachineBase *vm);
+
+  private:
+    static std::unordered_map<std::string, Factory>& registry();
+
+  protected:
+    //std::variant<VirtualMachineUnprotected*, VirtualMachineProtected*> m_vm;
+    VirtualMachineBase * m_vm;
+    uint8_t* m_ram;
 };
 
 class VmException : public std::exception {
@@ -257,8 +350,8 @@ class VmException : public std::exception {
     Interrupt m_interrupt;
 };
 
-using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
-using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
+
+template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
 
 } // namespace armv4vm

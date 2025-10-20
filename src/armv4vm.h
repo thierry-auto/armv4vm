@@ -43,42 +43,6 @@
 
 namespace armv4vm {
 
-
-// --- interface RAM minimaliste ---
-struct InterfaceMemory {
-    virtual ~InterfaceMemory() = default;
-    // virtual uint8_t& at(std::size_t i) = 0;
-    // virtual const uint8_t* data() const = 0;
-    // virtual std::size_t size() const = 0;
-    virtual operator uint8_t *() = 0;
-};
-
-// --- Adapter pour uint8_t* (non propriétaire) ---
-class RawRamAdapter : public InterfaceMemory {
-  public:
-    RawRamAdapter(uint8_t* p, std::size_t n) : ptr(p), len(n) {}
-    // uint8_t& at(std::size_t i) override { return ptr[i]; }
-    // const uint8_t* data() const override { return ptr; }
-    // std::size_t size() const override { return len; }
-    operator uint8_t *() override { return ptr; }
-
-  private:
-    uint8_t* ptr;
-    std::size_t len;
-};
-
-// --- Adapter pour MemoryProtected (propriétaire) ---
-class ProtectedRamAdapter : public InterfaceMemory {
-  public:
-    ProtectedRamAdapter(MemoryProtected &m) : mp(&m) {}
-    // uint8_t& at(std::size_t i) override { return mp->m_mem.at(i); }
-    // const uint8_t* data() const override { return mp->m_mem.data(); }
-    // std::size_t size() const override { return mp->m_mem.size(); }
-     operator uint8_t *() override { return *mp; }
-  private:
-    MemoryProtected* mp;
-};
-
 class MemoryProtected;
 
 struct VmProperties {
@@ -141,6 +105,7 @@ struct VmProperties {
 
 //class alignas(32) VirtualMachineBase;
 
+template<typename T>
 class CoprocessorBase;
 
 class alignas(32) VirtualMachineBase {
@@ -164,19 +129,17 @@ class alignas(32) VirtualMachineBase {
     const std::array<uint32_t, 16> & getRegisters() const { return m_registers; }
 
     virtual uint8_t* getRam() = 0;
+    //virtual std::unique_ptr<InterfaceMemory> createAdapter() = 0;
 
   protected:
 
     std::array<uint32_t, 16> m_registers;
     //std::unique_ptr<InterfaceMemory> m_ramView;
-    std::unique_ptr<CoprocessorBase> m_coprocessor;
 
-  public:
-    friend CoprocessorBase;
 };
 
 
-template <typename T>
+template <typename MemoryType>
 class VirtualMachine : public VirtualMachineBase
 
 #ifdef BUILD_WITH_QT
@@ -225,7 +188,7 @@ public:
 #endif
 
   protected:
-    T m_ram;
+    MemoryType m_ram;
 
   private:
     struct VmProperties  m_vmProperties;
@@ -307,23 +270,24 @@ public:
 
     uint32_t m_workingInstruction;
     bool     m_running;
-
+    std::unique_ptr<CoprocessorBase<T>> m_coprocessor;
 
   public:
+    friend CoprocessorBase<T>;
+  public:
     uint8_t* getRam() { return m_ram; }
-
 };
 
 using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
-
+template<typename T>
 class CoprocessorBase {
   public:
     //CoprocessorBase(VirtualMachineUnprotected* vm) : m_vm(vm) {}
-    CoprocessorBase(VirtualMachineBase* vm) : m_vm(vm) { m_ram = vm->getRam(); }
+    CoprocessorBase(VirtualMachineBase* vm) : m_vm(vm) { /*m_ram = vm->getRam();*/ }
 
-    virtual void coprocessorDataTransfers(const uint32_t m_workingInstruction);
+    virtual void exec(const uint32_t m_workingInstruction);
     virtual void coprocessorDataOperations(const uint32_t m_workingInstruction);
     virtual void coprocessorRegisterTransfers(const uint32_t m_workingInstruction);
 
@@ -332,13 +296,19 @@ class CoprocessorBase {
     static void registerType(const std::string& name, Factory factory);
     static std::unique_ptr<CoprocessorBase> create(const std::string& name, VirtualMachineBase *vm);
 
+    // void bindMemory(std::unique_ptr<InterfaceMemory> mem) {
+
+    //     m_mem = std::move(mem);
+    //     m_raw = m_mem ? m_mem->raw() : nullptr;
+    // }
+
   private:
     static std::unordered_map<std::string, Factory>& registry();
 
   protected:
-    //std::variant<VirtualMachineUnprotected*, VirtualMachineProtected*> m_vm;
     VirtualMachineBase * m_vm;
-    uint8_t* m_ram;
+    uint8_t* m_raw;
+
 };
 
 class VmException : public std::exception {

@@ -7,9 +7,10 @@
 
 namespace armv4vm {
 
-class Vfpv2 : public CoprocessorBase {
+template<typename T>
+class Vfpv2 : public CoprocessorBase<T> {
   public:
-    Vfpv2(VirtualMachineBase* vm) : CoprocessorBase(vm) {}
+    Vfpv2(VirtualMachineBase* vm) : CoprocessorBase<T>(vm) {}
     //Vfpv2(VirtualMachineProtected* vm) : CoprocessorBase(vm) {}
 
     void coprocessorDataTransfers(const uint32_t m_workingInstruction) override;

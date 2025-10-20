@@ -63,7 +63,12 @@ template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmP
 
     m_vmProperties = *vmProperties;
     m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+    m_coprocessor->bindMemory(createAdapter());
+
+
 }
+
+
 
 template <typename T> uint8_t *VirtualMachine<T>::init() {
 
@@ -1440,7 +1445,7 @@ template <typename T> void VirtualMachine<T>::coprocessorDataTransfers() {
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->coprocessorDataTransfers(m_workingInstruction);
+    m_coprocessor->exec(m_workingInstruction);
 }
 
 template <typename T> void VirtualMachine<T>::coprocessorDataOperations() {
@@ -1788,18 +1793,23 @@ void CoprocessorBase::registerType(const std::string& name, Factory factory) {
 
 std::unique_ptr<CoprocessorBase> CoprocessorBase::create(const std::string& name, VirtualMachineBase *vm) {
 
+    std::unique_ptr<CoprocessorBase> copro;
+
     auto it = registry().find(name);
 
     if (it != registry().end()) {
 
-        return it->second(vm);
+        copro = it->second(vm);
     }
     else if(name.empty()) {
 
-        return std::make_unique<CoprocessorBase>(vm);
+        copro = std::make_unique<CoprocessorBase>(vm);
+    }
+    else {
+        throw std::runtime_error("Coprocesseur inconnu : " + name);
     }
 
-    throw std::runtime_error("Coprocesseur inconnu : " + name);
+    return copro;
 }
 
 } // namespace armv4vm

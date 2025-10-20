@@ -33,7 +33,7 @@ void Vfpv2::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
     else {
 
         uint32_t address = instruction.u ? instruction.rn + instruction.immediate : instruction.rn - instruction.immediate;
-        m_sRegisters[(instruction.vd << 1) | instruction.d] = readPointer<uint32_t>(m_ram + address);
+        m_sRegisters[(instruction.vd << 1) | instruction.d] = readPointer<uint32_t>(*m_mem + address);
     }
 
 

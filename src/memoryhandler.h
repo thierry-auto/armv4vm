@@ -8,6 +8,27 @@
 
 namespace armv4vm {
 
+
+template<typename Derived>
+class MemoryInterface {
+  public:
+    inline uint8_t read(uint32_t addr) const {
+        return static_cast<const Derived*>(this)->readImpl(addr);
+    }
+
+    inline void write(uint32_t addr, uint8_t value) {
+        static_cast<Derived*>(this)->writeImpl(addr, value);
+    }
+};
+
+class RawMemory : public MemoryInterface<RawMemory> {
+  public:
+    uint8_t* data = nullptr;
+
+    inline uint8_t readImpl(uint32_t addr) const { return data[addr]; }
+    inline void writeImpl(uint32_t addr, uint8_t v) { data[addr] = v; }
+};
+
 using Range = std::pair<uint32_t, uint32_t>;
 
 template <typename T> class IsInAuthorizedRange {
@@ -133,5 +154,21 @@ inline ByteRef operator-(MemoryProtected &mem, const uint32_t offset) {
     (void)mem;
     return ByteRef(-1 * offset);
 }
+
+class MemoryProtected : public MemoryInterface<MemoryProtected> {
+  public:
+    uint8_t* data = nullptr;
+    size_t size = 0;
+
+    inline uint8_t readImpl(uint32_t addr) const {
+        if (addr >= size) throw std::out_of_range("Read OOB");
+        return data[addr];
+    }
+
+    inline void writeImpl(uint32_t addr, uint8_t v) {
+        if (addr >= size) throw std::out_of_range("Write OOB");
+        data[addr] = v;
+    }
+};
 
 } // namespace armv4vm

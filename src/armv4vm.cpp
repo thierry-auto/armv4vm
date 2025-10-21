@@ -62,8 +62,8 @@ VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *pa
 template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
 
     m_vmProperties = *vmProperties;
-    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
-    m_coprocessor->bindMemory(createAdapter());
+    //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+    //m_coprocessor->bindMemory(createAdapter());
 
 
 }
@@ -84,7 +84,7 @@ template <> uint8_t *VirtualMachine<uint8_t *>::init() {
 
     m_cpsr = 0;
     m_spsr = 0;
-    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+    //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
 
     return m_ram;
 }
@@ -96,9 +96,9 @@ template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
     m_spsr = 0;
 
     m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
-    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+    //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
 
-    return m_ram.getMem();
+    return m_ram;
 }
 
 #ifdef BUILD_WITH_QT
@@ -183,7 +183,7 @@ template <typename T> uint32_t VirtualMachine<T>::fetch() {
     return result;
 }
 
-template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction) {
+template <typename MemoryType> void VirtualMachine<MemoryType>::decode(const uint32_t instruction) {
 
     static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
@@ -269,7 +269,7 @@ template <typename T> void VirtualMachine<T>::decode(const uint32_t instruction)
     }
 }
 
-template <typename T> void VirtualMachine<T>::evaluate() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -359,7 +359,7 @@ inline static bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, con
     return ((NEG(op1) && POS(op2)) || (NEG(op1) && POS(result)) || (POS(op2) && POS(result)));
 }
 
-template <typename T> void VirtualMachine<T>::dataProcessingEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::dataProcessingEval() {
 
     enum OpCode {
 
@@ -578,7 +578,7 @@ template <typename T> void VirtualMachine<T>::dataProcessingEval() {
     }
 }
 
-template <typename T> void VirtualMachine<T>::multiplyEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::multiplyEval() {
 
     // clang-format off
     struct Multiply {
@@ -624,7 +624,7 @@ inline static int64_t  signedCastTo64(const uint32_t value) { return static_cast
 inline static uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
 
-template <typename T> void VirtualMachine<T>::multiplyLongEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::multiplyLongEval() {
 
     // clang-format off
     static struct MultiplyLong {
@@ -688,7 +688,7 @@ template <typename T> void VirtualMachine<T>::multiplyLongEval() {
     }
 }
 
-template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::singleDataTranferEval() {
 
     // clang-format off
     static struct SingleDataTranfer {
@@ -870,7 +870,7 @@ template <typename T> void VirtualMachine<T>::singleDataTranferEval() {
     // retained by setting the offset to zero.
 }
 
-template <typename T> void VirtualMachine<T>::branchAndExchangeEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::branchAndExchangeEval() {
 
     // clang-format off
     static struct BranchAndExchange {
@@ -892,7 +892,7 @@ template <typename T> void VirtualMachine<T>::branchAndExchangeEval() {
     *m_pc = m_registers[instruction.rn];
 }
 
-template <typename T> void VirtualMachine<T>::branchEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::branchEval() {
 
     // clang-format off
     static struct Branch {
@@ -920,7 +920,7 @@ template <typename T> void VirtualMachine<T>::branchEval() {
     (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
 }
 
-template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
@@ -1115,7 +1115,7 @@ template <typename T> void VirtualMachine<T>::blockDataTransferEval() {
     }
 }
 
-template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::halfwordDataTransferRegisterOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferRegisterOffset {
@@ -1248,7 +1248,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferRegisterOffEva
     }
 }
 
-template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::halfwordDataTransferImmediateOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferImmediateOffset {
@@ -1384,7 +1384,7 @@ template <typename T> void VirtualMachine<T>::halfwordDataTransferImmediateOffEv
     }
 }
 
-template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::softwareInterruptEval() {
 
     // clang-format off
     struct SoftwareInterrupt {
@@ -1404,7 +1404,7 @@ template <typename T> void VirtualMachine<T>::softwareInterruptEval() {
     throw VmException(static_cast<VirtualMachine::Interrupt>(instruction.comment));
 }
 
-template <typename T> void VirtualMachine<T>::singleDataSwapEval() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::singleDataSwapEval() {
 
     // clang-format off
     struct SingleDataSwap {
@@ -1440,28 +1440,32 @@ template <typename T> void VirtualMachine<T>::singleDataSwapEval() {
     }
 }
 
-template <typename T> void VirtualMachine<T>::coprocessorDataTransfers() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorDataTransfers() {
 
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->exec(m_workingInstruction);
+    //m_coprocessor->exec(m_workingInstruction);
+
+    //static Coprocessor<VirtualMachine<MemoryT>> copro;
+    m_coprocessor->coprocessorDataTransfers(m_ram, m_workingInstruction);
+
 }
 
-template <typename T> void VirtualMachine<T>::coprocessorDataOperations() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorDataOperations() {
 
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->coprocessorDataOperations(m_workingInstruction);
+    m_coprocessor->coprocessorDataOperations(m_ram, m_workingInstruction);
 }
 
-template <typename T> void VirtualMachine<T>::coprocessorRegisterTransfers() {
+template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorRegisterTransfers() {
 
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->coprocessorRegisterTransfers(m_workingInstruction);
+    m_coprocessor->coprocessorRegisterTransfers(m_ram, m_workingInstruction);
 }
 
 template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {
@@ -1703,8 +1707,8 @@ template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
 
 
 
-
-void CoprocessorBase::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
+template<typename MemoryType>
+void CoprocessorBase<MemoryType>::coprocessorDataTransfers(MemoryType &mem, const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorDataTransfers {
@@ -1730,7 +1734,8 @@ void CoprocessorBase::coprocessorDataTransfers(const uint32_t m_workingInstructi
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void CoprocessorBase::coprocessorDataOperations(const uint32_t m_workingInstruction) {
+template<typename MemoryType>
+void CoprocessorBase<MemoryType>::coprocessorDataOperations(MemoryType &mem, const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorDataOperations {
@@ -1754,7 +1759,8 @@ void CoprocessorBase::coprocessorDataOperations(const uint32_t m_workingInstruct
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void CoprocessorBase::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
+template<typename MemoryType>
+void CoprocessorBase<MemoryType>::coprocessorRegisterTransfers(MemoryType &mem, const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorRegisterTransfers {
@@ -1780,36 +1786,36 @@ void CoprocessorBase::coprocessorRegisterTransfers(const uint32_t m_workingInstr
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-std::unordered_map<std::string, CoprocessorBase::Factory>& CoprocessorBase::registry() {
+// std::unordered_map<std::string, CoprocessorBase::Factory>& CoprocessorBase::registry() {
 
-    static std::unordered_map<std::string, Factory> instance;
-    return instance;
-}
+//     static std::unordered_map<std::string, Factory> instance;
+//     return instance;
+// }
 
-void CoprocessorBase::registerType(const std::string& name, Factory factory) {
+// void CoprocessorBase::registerType(const std::string& name, Factory factory) {
 
-    registry()[name] = std::move(factory);
-}
+//     registry()[name] = std::move(factory);
+// }
 
-std::unique_ptr<CoprocessorBase> CoprocessorBase::create(const std::string& name, VirtualMachineBase *vm) {
+// std::unique_ptr<CoprocessorBase> CoprocessorBase::create(const std::string& name, VirtualMachineBase *vm) {
 
-    std::unique_ptr<CoprocessorBase> copro;
+//     std::unique_ptr<CoprocessorBase> copro;
 
-    auto it = registry().find(name);
+//     auto it = registry().find(name);
 
-    if (it != registry().end()) {
+//     if (it != registry().end()) {
 
-        copro = it->second(vm);
-    }
-    else if(name.empty()) {
+//         copro = it->second(vm);
+//     }
+//     else if(name.empty()) {
 
-        copro = std::make_unique<CoprocessorBase>(vm);
-    }
-    else {
-        throw std::runtime_error("Coprocesseur inconnu : " + name);
-    }
+//         copro = std::make_unique<CoprocessorBase>(vm);
+//     }
+//     else {
+//         throw std::runtime_error("Coprocesseur inconnu : " + name);
+//     }
 
-    return copro;
-}
+//     return copro;
+// }
 
 } // namespace armv4vm

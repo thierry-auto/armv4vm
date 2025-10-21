@@ -6,7 +6,8 @@
 
 namespace armv4vm {
 
-void Vfpv2::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
+template <typename VM>
+void Vfpv2<VM>::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorDataOperations {
@@ -33,7 +34,7 @@ void Vfpv2::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
     else {
 
         uint32_t address = instruction.u ? instruction.rn + instruction.immediate : instruction.rn - instruction.immediate;
-        m_sRegisters[(instruction.vd << 1) | instruction.d] = readPointer<uint32_t>(*m_mem + address);
+        //m_sRegisters[(instruction.vd << 1) | instruction.d] = readPointer<uint32_t>(*m_mem + address);
     }
 
 
@@ -41,31 +42,34 @@ void Vfpv2::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void Vfpv2::coprocessorDataOperations(const uint32_t m_workingInstruction) {
+template <typename VM>
+void Vfpv2<VM>::coprocessorDataOperations(const uint32_t m_workingInstruction) {
 
     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
 }
 
-void Vfpv2::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
+template <typename VM>
+void Vfpv2<VM>::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
 
     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
 }
 
-void Vfpv2::decodeAndExecute(const uint32_t &wokingInstruction) {
+template <typename VM>
+void Vfpv2<VM>::decodeAndExecute(const uint32_t &wokingInstruction) {
 
     const uint32_t DATA_PROCESSING      = 0x00000000;
     const uint32_t MASK_DATA_PROCESSING = 0x0C000000;
 
     if ((wokingInstruction & MASK_DATA_PROCESSING) == DATA_PROCESSING) {
 
-        vadd(wokingInstruction);
+        //vadd(wokingInstruction);
     } else {
         qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
     }
 }
 
-
-void Vfpv2::vadd(const uint32_t &wokingInstruction) {
+template <typename VM>
+void Vfpv2<VM>::vadd(const uint32_t &wokingInstruction) {
 
     // clang-format off
     struct Multiply {

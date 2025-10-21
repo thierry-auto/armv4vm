@@ -387,6 +387,30 @@ class TestMem : public QObject {
         QVERIFY(v1 == 0x12345678);
     }
 
+    void testReadSucced2() {
+
+        std::vector<Range> ranges;
+        MemoryProtected    pro;
+        uint32_t     v1 = 0;
+
+        bool exceptionRaised = false;
+        ranges.push_back({32, 64});
+        pro.init(128, ranges);
+        uint8_t *mem = pro.getMem();
+        *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
+
+        try {
+            v1 = readPointer<uint32_t>(pro+32);
+        } catch (std::exception &) {
+            exceptionRaised = true;
+        }
+
+        (void)v1;
+
+        QVERIFY(exceptionRaised == false);
+        QVERIFY(v1 == 0x12345678);
+    }
+
     void testReadFailed() {
 
         std::vector<Range> ranges;

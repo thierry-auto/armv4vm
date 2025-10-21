@@ -270,10 +270,10 @@ public:
 
     uint32_t m_workingInstruction;
     bool     m_running;
-    std::unique_ptr<CoprocessorBase<T>> m_coprocessor;
+    std::unique_ptr<CoprocessorBase<MemoryType>> m_coprocessor;
 
   public:
-    friend CoprocessorBase<T>;
+    friend CoprocessorBase<MemoryType>;
   public:
     uint8_t* getRam() { return m_ram; }
 };
@@ -281,20 +281,20 @@ public:
 using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
-template<typename T>
+template<typename MemoryType>
 class CoprocessorBase {
   public:
     //CoprocessorBase(VirtualMachineUnprotected* vm) : m_vm(vm) {}
-    CoprocessorBase(VirtualMachineBase* vm) : m_vm(vm) { /*m_ram = vm->getRam();*/ }
+    CoprocessorBase(/*VirtualMachineBase* vm*/) /*: m_vm(vm)*/ { /*m_ram = vm->getRam();*/ }
 
-    virtual void exec(const uint32_t m_workingInstruction);
-    virtual void coprocessorDataOperations(const uint32_t m_workingInstruction);
-    virtual void coprocessorRegisterTransfers(const uint32_t m_workingInstruction);
+    virtual void coprocessorDataTransfers(MemoryType &mem, const uint32_t m_workingInstruction);
+    virtual void coprocessorDataOperations(MemoryType &mem, const uint32_t m_workingInstruction);
+    virtual void coprocessorRegisterTransfers(MemoryType &mem, const uint32_t m_workingInstruction);
 
-    using Factory = std::function<std::unique_ptr<CoprocessorBase>(VirtualMachineBase* vm)>;
+    //using Factory = std::function<std::unique_ptr<CoprocessorBase>(VirtualMachineBase* vm)>;
 
-    static void registerType(const std::string& name, Factory factory);
-    static std::unique_ptr<CoprocessorBase> create(const std::string& name, VirtualMachineBase *vm);
+    //static void registerType(const std::string& name, Factory factory);
+    //static std::unique_ptr<CoprocessorBase> create(const std::string& name, VirtualMachineBase *vm);
 
     // void bindMemory(std::unique_ptr<InterfaceMemory> mem) {
 
@@ -303,10 +303,10 @@ class CoprocessorBase {
     // }
 
   private:
-    static std::unordered_map<std::string, Factory>& registry();
+    //static std::unordered_map<std::string, Factory>& registry();
 
   protected:
-    VirtualMachineBase * m_vm;
+    //VirtualMachineBase * m_vm;
     uint8_t* m_raw;
 
 };

@@ -7,10 +7,10 @@
 
 namespace armv4vm {
 
-template<typename T>
-class Vfpv2 : public CoprocessorBase<T> {
+template<typename VM>
+class Vfpv2 : public CoprocessorBase<VM> {
   public:
-    Vfpv2(VirtualMachineBase* vm) : CoprocessorBase<T>(vm) {}
+    Vfpv2(VirtualMachineBase* vm) : CoprocessorBase<VM>(vm) {}
     //Vfpv2(VirtualMachineProtected* vm) : CoprocessorBase(vm) {}
 
     void coprocessorDataTransfers(const uint32_t m_workingInstruction) override;
@@ -26,13 +26,13 @@ class Vfpv2 : public CoprocessorBase<T> {
 
 // Registre automatique à la construction du programme
 
-const bool registered = []{
+// const bool registered = []{
 
-    CoprocessorBase::Factory f1 = [](VirtualMachineBase* vm) { return std::make_unique<Vfpv2>(vm); };
-    CoprocessorBase::registerType("vfpv2", f1);
+//     CoprocessorBase::Factory f1 = [](VirtualMachineBase* vm) { return std::make_unique<Vfpv2>(vm); };
+//     CoprocessorBase::registerType("vfpv2", f1);
 
-    return true;
-}();
+//     return true;
+// }();
 
 
 

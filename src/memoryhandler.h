@@ -21,14 +21,6 @@ class MemoryInterface {
     }
 };
 
-class RawMemory : public MemoryInterface<RawMemory> {
-  public:
-    uint8_t* data = nullptr;
-
-    inline uint8_t readImpl(uint32_t addr) const { return data[addr]; }
-    inline void writeImpl(uint32_t addr, uint8_t v) { data[addr] = v; }
-};
-
 using Range = std::pair<uint32_t, uint32_t>;
 
 template <typename T> class IsInAuthorizedRange {
@@ -63,13 +55,11 @@ class ByteRef {
     }
 
     uint8_t operator*() { return *(m_origin + m_offset); }
-    // operator uint8_t() { return *(m_origin + m_offset); }
 
     friend ByteRef operator+(const ByteRef &left, const uint32_t right);
     friend ByteRef operator-(const ByteRef &left, const uint32_t right);
     friend ByteRef operator+(const ByteRef &left, const uint8_t right);
-    // friend ByteRef operator-(const ByteRef &left, const uint8_t right);
-    //  friend ByteRef                  operator-(const ByteRef &left, const uint32_t right);
+
     template <typename T> friend T  readPointer(const ByteRef &b);
     template <typename T> friend T &writePointer(ByteRef b);
 };
@@ -77,9 +67,6 @@ class ByteRef {
 inline ByteRef operator+(const ByteRef &left, const uint32_t right) { return ByteRef(left.m_offset + right); }
 inline ByteRef operator-(const ByteRef &left, const uint32_t right) { return ByteRef(left.m_offset - right); }
 inline ByteRef operator+(const ByteRef &left, const uint8_t right) { return ByteRef(left.m_offset + right); }
-// inline ByteRef operator-(const ByteRef &left, const uint8_t right) { return ByteRef(left.m_offset - right); }
-
-// inline ByteRef operator-(const ByteRef &left, const uint32_t right) { return ByteRef(left.m_offset - right); }
 
 template <typename T> inline T  readPointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
 template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
@@ -105,7 +92,16 @@ template <typename T> inline T &writePointer(ByteRef b) {
     return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
 }
 
-class MemoryProtected {
+class RawMemory : public MemoryInterface<RawMemory> {
+  public:
+    uint8_t* data = nullptr;
+
+    inline uint8_t* readImpl(uint32_t addr) const { return data + addr; }
+    inline void writeImpl(uint32_t addr, uint8_t v) { data[addr] = v; }
+};
+
+
+class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   public:
     MemoryProtected() : m_size(0) {}
@@ -131,6 +127,21 @@ class MemoryProtected {
 
     uint8_t *getMem() { return m_mem.data(); }
 
+    inline uint8_t readImpl(uint32_t addr) const {
+
+        // if (!std::any_of(b.m_authorized->begin(), b.m_authorized->end(), IsInAuthorizedRange<T>(b.m_origin, b.m_offset))) {
+
+        //     throw std::runtime_error("segmentation fault");
+        // }
+
+        // return *reinterpret_cast<T *>(b.m_origin + b.m_offset);
+    }
+
+    inline void writeImpl(uint32_t addr, uint8_t v) {
+        //if (addr >= size) throw std::out_of_range("Write OOB");
+        //data[addr] = v;
+    }
+
   private:
     std::vector<uint8_t> m_mem;
     uint32_t             m_size;
@@ -155,20 +166,6 @@ inline ByteRef operator-(MemoryProtected &mem, const uint32_t offset) {
     return ByteRef(-1 * offset);
 }
 
-class MemoryProtected : public MemoryInterface<MemoryProtected> {
-  public:
-    uint8_t* data = nullptr;
-    size_t size = 0;
 
-    inline uint8_t readImpl(uint32_t addr) const {
-        if (addr >= size) throw std::out_of_range("Read OOB");
-        return data[addr];
-    }
-
-    inline void writeImpl(uint32_t addr, uint8_t v) {
-        if (addr >= size) throw std::out_of_range("Write OOB");
-        data[addr] = v;
-    }
-};
 
 } // namespace armv4vm

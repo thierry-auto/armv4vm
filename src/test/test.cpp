@@ -138,7 +138,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        seti(vm.m_ram, 0xe1b00211);
+        vm.m_ram.writePointer32(0) = 0xe1b00211;
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0xFFFFFFFF; // -1
         vm.m_registers[2] = 0xFFFFFFFF; // -1

@@ -1,7 +1,6 @@
 
 #include <QObject>
 #include <QtTest>
-#include <vector>
 
 #include "armv4vm.h"
 
@@ -27,26 +26,25 @@ class TestMem : public QObject {
     void testReadWrite8() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
         MemoryProtected    pro;
         uint8_t            v1 = 0x11;
         uint8_t            v2 = 0;
         uint8_t            v3 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        mem = pro.init(64, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(512);
 
         try {
             writePointer<uint8_t>(mem + 10) = v1;
-            writePointer<uint8_t>(pro + 20) = v1;
+            pro.writePointer8(20) = v1;
             QVERIFY(mem[20] == 0x11);
             QVERIFY(mem[21] == 0x0);
             QVERIFY(mem[22] == 0x0);
             QVERIFY(mem[23] == 0x0);
 
             writePointer<uint8_t>(mem + 24) = v1;
-            writePointer<uint8_t>(pro + 28) = v1;
+            pro.writePointer8(28) = v1;
             QVERIFY(mem[24] == 0x11);
             QVERIFY(pro[28] == 0x11);
 
@@ -55,7 +53,7 @@ class TestMem : public QObject {
             QVERIFY(v2 == v3);
 
             writePointer<uint8_t>(&mem[32]) = 12;
-            writePointer<uint8_t>(pro + 33) = 12;
+            pro.writePointer8(33) = 12;
 
             v1      = mem[32];
             v2      = pro[33];
@@ -71,19 +69,18 @@ class TestMem : public QObject {
     void testReadWrite16() {
 
         uint8_t           *mem = nullptr;
-        std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
         uint16_t           v2 = 0;
         uint16_t           v3 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        mem = pro.init(64, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(512);
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            writePointer<uint8_t>(pro + 20) = static_cast<uint8_t>(v1);
+            pro.writePointer8(20) = static_cast<uint8_t>(v1);
 
             QVERIFY(mem[20] == 0x22);
             QVERIFY(mem[21] == 0x0);
@@ -110,7 +107,7 @@ class TestMem : public QObject {
             QVERIFY(v2 == v3);
 
             writePointer<uint8_t>(mem + 32) = 0xEB;
-            writePointer<uint8_t>(pro + 33) = 0xEB;
+            pro.writePointer8(33) = 0xEB;
 
             v2 = mem[32];
             v3 = pro[33];
@@ -126,22 +123,22 @@ class TestMem : public QObject {
     void testOutOfRange8() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint8_t      v1 = 0x11;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 32});
-        mem = pro.init(64, ranges);
+        pro.addAccessRangeImpl({0, 32, AccessPermission::READ_WRITE});
+        mem = pro.allocate(64);
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            writePointer<uint8_t>(pro + 20) = readPointer<uint8_t>(mem + 10);
+            pro.writePointer8(20) = readPointer<uint8_t>(mem + 10);
 
             QVERIFY(mem[20] == v1);
 
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            writePointer<uint8_t>(pro + 42) = readPointer<uint8_t>(mem + 10);
+            pro.writePointer8(42) = readPointer<uint8_t>(mem + 10);
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -154,13 +151,13 @@ class TestMem : public QObject {
     void testOutOfRange16() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 32});
-        mem = pro.init(64, ranges);
+        pro.addAccessRangeImpl({0, 32, AccessPermission::READ_WRITE});
+        mem = pro.allocate(64);
 
         try {
             writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
@@ -184,15 +181,14 @@ class TestMem : public QObject {
     void testOutOfRange32() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
         uint32_t           v2 = 0;
         uint32_t           v3 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({32, 32});
-        mem = pro.init(64, ranges);
+        pro.addAccessRangeImpl({32, 32, AccessPermission::READ_WRITE});
+        mem = pro.allocate(64);
 
         try {
             writePointer<uint32_t>(mem + 1)  = v1;
@@ -224,14 +220,14 @@ class TestMem : public QObject {
     void testOutOfRange32_2() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
         const uint32_t     v2 = 0x55667788;
 
         bool exceptionRaised = false;
-        ranges.push_back({4, 4});
-        mem = pro.init(8, ranges);
+        pro.addAccessRangeImpl({4, 4, AccessPermission::READ_WRITE});
+        mem = pro.allocate(8);
 
         try {
             writePointer<uint32_t>(pro + 4) = v1;
@@ -269,13 +265,13 @@ class TestMem : public QObject {
 
     void testMinus() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({64, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({64, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro - 3) = v1;
@@ -288,13 +284,13 @@ class TestMem : public QObject {
 
     void testMinus2() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({64, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({64, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
@@ -307,13 +303,13 @@ class TestMem : public QObject {
 
     void testMinus3() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
@@ -326,13 +322,13 @@ class TestMem : public QObject {
 
     void testMinus4() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro - 4) = v1;
@@ -345,13 +341,13 @@ class TestMem : public QObject {
 
     void testPlus4() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro + 4) = v1;
@@ -365,14 +361,13 @@ class TestMem : public QObject {
 
     void testReadSucced() {
 
-        std::vector<Range> ranges;
         MemoryProtected    pro;
         uint32_t     v1 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({32, 64});
-        pro.init(128, ranges);
-        uint8_t *mem = pro.getMem();
+        pro.addAccessRangeImpl({32, 64, AccessPermission::READ_WRITE});
+        uint8_t *mem = pro.allocate(128);
+
         *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
 
         try {
@@ -389,18 +384,18 @@ class TestMem : public QObject {
 
     void testReadSucced2() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         uint32_t     v1 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({32, 64});
-        pro.init(128, ranges);
-        uint8_t *mem = pro.getMem();
+        pro.addAccessRangeImpl({32, 64, AccessPermission::READ_WRITE});
+        uint8_t *mem = pro.allocate(128);
+
         *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
 
         try {
-            v1 = readPointer<uint32_t>(pro+32);
+            v1 = pro.readPointer32(32);
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -413,13 +408,13 @@ class TestMem : public QObject {
 
     void testReadFailed() {
 
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         uint32_t     v1 = 0;
 
         bool exceptionRaised = false;
-        ranges.push_back({0, 64});
-        pro.init(128, ranges);
+        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
+        pro.allocate(128);
 
         try {
             v1 = readPointer<uint32_t>(pro-1);
@@ -435,13 +430,13 @@ class TestMem : public QObject {
     void testMinusPlus() {
 
         uint8_t           *mem;
-        std::vector<Range> ranges;
+
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
 
         bool exceptionRaised = false;
-        ranges.push_back({64, 64});
-        mem = pro.init(128, ranges);
+        pro.addAccessRangeImpl({64, 64, AccessPermission::READ_WRITE});
+        mem = pro.allocate(128);
 
         try {
             writePointer<uint32_t>(pro + 112 - 3) = v1;
@@ -460,13 +455,13 @@ class TestMem : public QObject {
     //    void testPlusValue16() {
 
     //        uint8_t            mem[64] = {0};
-    //        std::vector<Range> ranges;
+    //
     //        MemoryProtected    pro;
     //        uint16_t           v1              = 0x1122;
     //        uint16_t           v2              = 0;
     //        uint16_t           v3              = 0;
     //        bool               exceptionRaised = false;
-    //        ranges.push_back({0, 64});
+    //        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
     //        pro.init(mem, 64, ranges);
 
     //        try {
@@ -500,13 +495,13 @@ class TestMem : public QObject {
     //    void testPlusValue32() {
 
     //        uint8_t            mem[64] = {0};
-    //        std::vector<Range> ranges;
+    //
     //        MemoryProtected    pro;
     //        uint32_t           v1              = 0x11223344;
     //        uint32_t           v2              = 0;
     //        uint32_t           v3              = 0;
     //        bool               exceptionRaised = false;
-    //        ranges.push_back({0, 64});
+    //        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
     //        pro.init(mem, 64, ranges);
 
     //        try {
@@ -546,7 +541,7 @@ class TestMem : public QObject {
     //    void testErrorBound() {
 
     //        uint8_t            mem[64] = {0};
-    //        std::vector<Range> ranges;
+    //
     //        MemoryProtected    pro;
     //        uint8_t            v1              = 0x11;
     //        bool               exceptionRaised = false;

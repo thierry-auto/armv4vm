@@ -54,10 +54,10 @@ struct VmProperties {
             PROTECTED,
         };
 
-        MemModel(Type type = DIRECT) : m_type(type) { m_range.clear(); }
+        MemModel(Type type = DIRECT) : m_type(type) { m_accessPermission.clear(); }
 
         Type                        m_type;
-        std::vector<armv4vm::Range> m_range;
+        std::vector<armv4vm::AccessPermission> m_accessPermission;
     };
 
     VmProperties() {
@@ -128,7 +128,7 @@ class alignas(32) VirtualMachineBase {
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
     const std::array<uint32_t, 16> & getRegisters() const { return m_registers; }
 
-    virtual uint8_t* getRam() = 0;
+    //virtual uint8_t* getRam() = 0;
     //virtual std::unique_ptr<InterfaceMemory> createAdapter() = 0;
 
   protected:
@@ -137,7 +137,6 @@ class alignas(32) VirtualMachineBase {
     //std::unique_ptr<InterfaceMemory> m_ramView;
 
 };
-
 
 template <typename MemoryType>
 class VirtualMachine : public VirtualMachineBase
@@ -275,10 +274,10 @@ public:
   public:
     friend CoprocessorBase<MemoryType>;
   public:
-    uint8_t* getRam() { return m_ram; }
+    //uint8_t* getRam() { return m_ram; }
 };
 
-using VirtualMachineUnprotected = VirtualMachine<uint8_t *>;
+using VirtualMachineUnprotected = VirtualMachine<MemoryRaw>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
 template<typename MemoryType>

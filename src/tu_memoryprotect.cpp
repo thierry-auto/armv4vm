@@ -6,7 +6,7 @@
 
 namespace armv4vm {
 
-using Test1Vm = VirtualMachine<MemoryProtected>;
+//using Test1Vm = VirtualMachine<MemoryProtected>;
 
 struct VmProperties vmProperties;
 
@@ -19,13 +19,13 @@ class TestMem : public QObject {
   private slots:
 
     void testInstance() {
-        struct VmProperties vmProperties;
-        Test1Vm             vm1(&vmProperties);
+        //struct VmProperties vmProperties;
+        //Test1Vm             vm1(&vmProperties);
     }
 
     void testReadWrite8() {
 
-        uint8_t           *mem;
+        uint8_t           *mem = nullptr;
         MemoryProtected    pro;
         uint8_t            v1 = 0x11;
         uint8_t            v2 = 0;
@@ -49,7 +49,7 @@ class TestMem : public QObject {
             QVERIFY(pro[28] == 0x11);
 
             v2 = readPointer<uint8_t>(mem + 24);
-            v3 = readPointer<uint8_t>(pro + 28);
+            v3 = pro.readPointer8(28);
             QVERIFY(v2 == v3);
 
             writePointer<uint8_t>(&mem[32]) = 12;
@@ -96,10 +96,10 @@ class TestMem : public QObject {
             QVERIFY(pro[29] == 0x11);
 
             writePointer<uint16_t>(mem + 24) = v1;
-            writePointer<uint16_t>(pro + 28) = v1;
+            pro.writePointer16(28) = v1;
 
             v2 = readPointer<uint8_t>(mem + 24);
-            v3 = readPointer<uint8_t>(pro + 28);
+            v3 = pro.readPointer8(28);
             QVERIFY(v2 == v3);
 
             v2 = readPointer<uint16_t>(mem + 24);
@@ -302,7 +302,6 @@ class TestMem : public QObject {
     }
 
     void testMinus3() {
-
 
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;

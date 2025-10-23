@@ -18,16 +18,15 @@
 
 #include "armv4vm.h"
 #include "memoryhandler.h"
-#include "vfpv2.h"
 
 long long debugHook = 0;
 
 #ifdef BUILD_WITH_QT
 #include <QDataStream>
 #include <QFile>
+qsd
 #else
 #include <cassert>
-#include <cstring>
 #include <fstream>
 #include <iostream>
 #endif
@@ -46,29 +45,30 @@ static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) 
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
-#ifdef BUILD_WITH_QT
-VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
+// #ifdef BUILD_WITH_QT
+// qsd
+// VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
 
-    m_ram          = nullptr;
-    m_vmProperties = vmProperties;
-    m_cpsr         = 0;
-    m_error        = E_NO_ERROR;
-    m_instructionSetFormat = undefined;
-    m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel);
-    m_registers.fill(0);
-}
-#endif
-template <typename T> VirtualMachine<T>::VirtualMachine(struct VmProperties *vmProperties) {
+//     m_ram          = nullptr;
+//     m_vmProperties = vmProperties;
+//     m_cpsr         = 0;
+//     m_error        = E_NO_ERROR;
+//     m_instructionSetFormat = undefined;
+//     m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel);
+//     m_registers.fill(0);
+// }
+// #endif
+// template <typename MemoryType> VirtualMachine<MemoryType>::VirtualMachine(struct VmProperties *vmProperties) {
 
-    m_vmProperties = *vmProperties;
-    //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
-    //m_coprocessor->bindMemory(createAdapter());
+//     //m_vmProperties = *vmProperties;
+//     //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+//     //m_coprocessor->bindMemory(createAdapter());
 
-    m_error = E_NONE;
-    m_instructionSetFormat = unknown;
-    m_registers.fill(0);
-    m_spsr = 0;
-}
+//     m_error = E_NONE;
+//     m_instructionSetFormat = unknown;
+//     m_registers.fill(0);
+//     m_spsr = 0;
+// }
 
 template<typename MemoryType> uint8_t* VirtualMachine<MemoryType>::init() {
 
@@ -1475,7 +1475,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorRegis
     m_coprocessor->coprocessorRegisterTransfers(m_ram, m_workingInstruction);
 }
 
-template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instruction) const {
+template <typename MemoryType> bool VirtualMachine<MemoryType>::testCondition(const uint32_t instruction) const {
 
     // N Z C V . . . . . .
     enum ConditionCode {
@@ -1550,7 +1550,7 @@ template <typename T> bool VirtualMachine<T>::testCondition(const uint32_t instr
     }
 }
 
-template <typename T> uint32_t VirtualMachine<T>::rotate(const uint32_t operand2, uint32_t &carry) const {
+template <typename MemoryType> uint32_t VirtualMachine<MemoryType>::rotate(const uint32_t operand2, uint32_t &carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
@@ -1561,7 +1561,7 @@ template <typename T> uint32_t VirtualMachine<T>::rotate(const uint32_t operand2
     return result;
 }
 
-template <typename T> uint32_t VirtualMachine<T>::shift(const uint32_t operand2, uint32_t &carry) const {
+template <typename MemoryType> uint32_t VirtualMachine<MemoryType>::shift(const uint32_t operand2, uint32_t &carry) const {
 
     uint32_t              shiftResult     = 0;
     uint32_t              shiftValue      = 0;
@@ -1704,10 +1704,10 @@ template <typename T> uint32_t        VirtualMachine<T>::getCPSR() const { retur
 //     m_vmProperties = *vmProperties;
 // }
 
-template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
+// template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
 
-    m_vmProperties = *vmProperties;
-}
+//     m_vmProperties = *vmProperties;
+// }
 
 template <> VirtualMachine<MemoryRaw>::~VirtualMachine() { }
 template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}

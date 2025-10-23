@@ -147,11 +147,17 @@ class VirtualMachine : public VirtualMachineBase
 {
 
   public:
-#ifdef BUILD_WITH_QT
-    explicit VirtualMachine(struct VmProperties *, QObject *parent = nullptr);
-#else
-    explicit VirtualMachine(struct VmProperties * = nullptr);
-#endif
+    VirtualMachine(struct VmProperties * = nullptr) {
+
+        //m_vmProperties = *vmProperties;
+        //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
+        //m_coprocessor->bindMemory(createAdapter());
+
+        m_error = E_NONE;
+        m_instructionSetFormat = unknown;
+        m_registers.fill(0);
+        m_spsr = 0;
+    }
     ~VirtualMachine();
 
 
@@ -162,7 +168,7 @@ class VirtualMachine : public VirtualMachineBase
     uint32_t        getCPSR() const;
 
 #ifdef BUILD_WITH_QT
-    friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
+   // friend QTextStream &operator<<(QTextStream &, const VirtualMachine &);
 #endif
     friend class TestVm;
 
@@ -277,8 +283,6 @@ public:
     //uint8_t* getRam() { return m_ram; }
 };
 
-using VirtualMachineUnprotected = VirtualMachine<MemoryRaw>;
-using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
 template<typename MemoryType>
 class CoprocessorBase {
@@ -321,6 +325,10 @@ class VmException : public std::exception {
 
 
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
+
+
+using VirtualMachineUnprotected = VirtualMachine<MemoryRaw>;
+using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
 
 } // namespace armv4vm

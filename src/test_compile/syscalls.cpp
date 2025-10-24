@@ -20,7 +20,7 @@ void stopMachine() {
 }
 
 
-extern unsigned char uart_base;
+extern unsigned char uart_base[2048];
 unsigned char *      UART0_ADDR = (unsigned char *)&uart_base;
 
 enum {
@@ -108,6 +108,11 @@ int __exidx_start;
 int __exidx_end;
 
 int _getpid(void) { return 1; }
+
+int _getentropy() {
+
+    return -1;
+}
 
 void _exit() {}
 

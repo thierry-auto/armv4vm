@@ -3,20 +3,25 @@
 // C++ program to print all primes smaller than or equal to
 // n using Sieve of Eratosthenes
 #include <bits/stdc++.h>
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
 using namespace std;
 
 #define UART_DR(baseaddr) (*(unsigned int *)(baseaddr))
-extern unsigned char uart_base;
+extern unsigned char uart_base[128];
 
 uint32_t SieveOfEratosthenes(int n)
 {
     // Create a boolean array "prime[0..n]" and initialize
     // all entries it as true. A value in prime[i] will
     // finally be false if i is Not a prime, else true.
-    bool prime[n+1] = {0};
+
+    std::vector<bool> prime(n+1);
     uint32_t lastPrimeNumber = 0;
 
-    memset(prime, true, sizeof(prime));
+    std::fill(prime.begin(), prime.end(), true);
 
     for (int p=2; p*p<=n; p++)
     {

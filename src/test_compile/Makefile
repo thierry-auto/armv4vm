@@ -6,9 +6,13 @@ CXX=$(CCPATH)/bin/arm-autoreverse-eabi-g++
 LD=$(CCPATH)/bin/arm-autoreverse-eabi-ld
 OBJCOPY=$(CCPATH)/bin/arm-autoreverse-eabi-objcopy
 
+# JE DOIS DESACTIVER -ffreestanding Il y a un bug dans GCC semble-t-il
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109814
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=113398
+
 OPTIONS=-O2 -Wall -marm -mcpu=arm7tdmi -mfloat-abi=soft -mlittle-endian -mno-unaligned-access -mno-thumb-interwork
-OPTIONSC=$(OPTIONS) -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
-OPTIONSCXX=$(OPTIONS) -std=c++17 -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
+OPTIONSC=$(OPTIONS) -fno-exceptions -fno-unwind-tables -fno-use-cxa-atexit -fomit-frame-pointer 
+OPTIONSCXX=$(OPTIONS) -std=c++17 -fno-exceptions -fno-unwind-tables -fno-use-cxa-atexit -fomit-frame-pointer
 LDFLAGS=-L$(CCPATH)/arm-autoreverse-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-autoreverse-eabi/15.2.0/ -lstdc++
 
 all:hello.bin primen.bin float.bin printf.bin bench.bin bitt.bin modulo.bin

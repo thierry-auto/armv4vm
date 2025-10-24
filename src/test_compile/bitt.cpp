@@ -2,35 +2,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <cstdint>
 
 extern unsigned char uart_base;
 
 extern "C" uint32_t myadd(uint32_t a, uint32_t b);
 extern "C" uint32_t mycount(uint32_t a);
 
-//uint32_t mycount32(uint32_t a) {
-
-//    uint32_t c = 0;
-
-//    for(; a; c++)
-//    {
-//      a &= a - 1; // clear the least significant bit set
-//    }
-
-//    return c;
-//}
-
-//uint64_t mycount(uint64_t a) {
-
-//    uint64_t c = 0;
-
-//    for(; a; c++)
-//    {
-//      a &= a - 1; // clear the least significant bit set
-//    }
-
-//    return 444;
-//}
 
 int main(void) {
 

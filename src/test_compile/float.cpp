@@ -2,7 +2,9 @@
 #include <cstdlib>
 #include <cstring>
 
-extern unsigned char uart_base;
+//extern unsigned char uart_base;
+//extern volatile unsigned char uart_base[];
+extern unsigned char uart_base[32]; // 32 octets devraient suffire pour ton exemple
 
 int main(void)
 {
@@ -16,7 +18,7 @@ int main(void)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
-    unsigned char * uart = &uart_base;
+    unsigned char * uart = uart_base;
 
     memcpy(uart, &i1, sizeof(int));
     uart += sizeof(int);

@@ -147,9 +147,9 @@ class VirtualMachine : public VirtualMachineBase
 {
 
   public:
-    VirtualMachine(struct VmProperties * = nullptr) {
+    VirtualMachine(struct VmProperties * vmProperties = nullptr) {
 
-        //m_vmProperties = *vmProperties;
+        m_vmProperties = *vmProperties;
         //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
         //m_coprocessor->bindMemory(createAdapter());
 
@@ -159,7 +159,6 @@ class VirtualMachine : public VirtualMachineBase
         m_spsr = 0;
     }
     ~VirtualMachine();
-
 
     uint8_t *       init() override;
     uint64_t        load() override;

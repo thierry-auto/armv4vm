@@ -2181,24 +2181,20 @@ private slots:
 
     void testProgramModulo() {
 
-
         std::string binPath(getBinPath());
-
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
-        uint8_t *mem           = nullptr;
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
 
-        mem      = vm.init();
+        vm.init();
 
         if (vm.load()) {
 
             while (running) {
 
                 switch (vm.run()) {
-
 
                 case VirtualMachineUnprotected::Interrupt::Resume:
                     break;

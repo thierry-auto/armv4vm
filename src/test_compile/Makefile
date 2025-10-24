@@ -1,17 +1,15 @@
-﻿#CCPATH=<path_to_your_toolchain>
-CCPATH="/home/th/armv4vm-cc-ct/arm-unknown-eabi/"
+CCPATH=/home/th/x-tools/arm-unknown-eabi/
+CCPATH=/home/th/x-tools/arm-autoreverse-eabi/
 
-CC=$(CCPATH)/bin/arm-unknown-eabi-gcc
-CXX=$(CCPATH)/bin/arm-unknown-eabi-g++
-LD=$(CCPATH)/bin/arm-unknown-eabi-ld
-OBJCOPY=$(CCPATH)/bin/arm-unknown-eabi-objcopy
+CC=$(CCPATH)/bin/arm-autoreverse-eabi-gcc
+CXX=$(CCPATH)/bin/arm-autoreverse-eabi-g++
+LD=$(CCPATH)/bin/arm-autoreverse-eabi-ld
+OBJCOPY=$(CCPATH)/bin/arm-autoreverse-eabi-objcopy
 
 OPTIONS=-O2 -Wall -marm -mcpu=arm7tdmi -mfloat-abi=soft -mlittle-endian -mno-unaligned-access -mno-thumb-interwork
 OPTIONSC=$(OPTIONS) -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
 OPTIONSCXX=$(OPTIONS) -std=c++17 -fno-exceptions -fno-unwind-tables -ffreestanding -fno-use-cxa-atexit -fomit-frame-pointer
-LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9.3.0/ -lstdc++
-#LDFLAGS=-L$(CCPATH)/arm-unknown-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-unknown-eabi/9.2.0/ -lstdc++
-#LDFLAGS=-lstdc++
+LDFLAGS=-L$(CCPATH)/arm-autoreverse-eabi/lib/ -L$(CCPATH)/lib/gcc/arm-autoreverse-eabi/15.2.0/ -lstdc++
 
 all:hello.bin primen.bin float.bin printf.bin bench.bin bitt.bin modulo.bin
 
@@ -20,7 +18,7 @@ hello.o:hello.cpp
 
 modulo.o:modulo.cpp
 	$(CXX) $(OPTIONSCXX) -c modulo.cpp -o modulo.o
-	
+
 syscalls.o:syscalls.cpp
 	$(CC) $(OPTIONSCXX) -c syscalls.cpp -o syscalls.o
 
@@ -38,7 +36,7 @@ modulo.elf:modulo.o startup.o syscalls.o
 
 modulo.bin:modulo.elf
 	$(OBJCOPY) -O binary $< $@
-	
+
 primen.o:primen.cpp
 	$(CXX) $(OPTIONSCXX) -c primen.cpp -o primen.o
 

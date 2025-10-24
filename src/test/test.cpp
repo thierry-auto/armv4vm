@@ -2061,7 +2061,7 @@ private slots:
 
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/primen.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/primen.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
@@ -2097,7 +2097,7 @@ private slots:
 
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/float.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/float.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
@@ -2141,7 +2141,7 @@ private slots:
 
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/printf.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/printf.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;
@@ -2183,7 +2183,7 @@ private slots:
 
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/modulo.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/modulo.bin";
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
@@ -2219,7 +2219,7 @@ private slots:
 
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
-        vmProperties.m_bin     = binPath + "/test_compile/bench.bin";
+        vmProperties.m_bin     = binPath + "/src/test_compile/bench.bin";
         uint8_t *mem           = nullptr;
         uint8_t *uart          = nullptr;
         bool     running       = true;

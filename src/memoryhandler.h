@@ -15,6 +15,17 @@ enum class AccessPermission {
     READ_WRITE = READ | WRITE,
 };
 
+
+inline constexpr AccessPermission operator | (const AccessPermission a, const AccessPermission b) {
+
+    return static_cast<AccessPermission>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline constexpr bool operator&(AccessPermission a, AccessPermission b) {
+
+    return (static_cast<int>(a) & static_cast<int>(b)) != 0;
+}
+
 class AccessRange {
   public:
     uint32_t         start;
@@ -117,11 +128,11 @@ template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret
 class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   private:
-    bool isAccessible(const uint32_t address, const AccessPermission &permission) const {
+    bool isAccessible(const uint32_t address, const size_t dataSize, const AccessPermission &permission) const {
 
         if (!std::any_of(m_accessRanges.begin(), m_accessRanges.end(), [&](AccessRange range) {
 
-                return (range.permission == permission && (address >= range.start) && (address < (range.start + range.size)));
+                return ((range.permission & permission) && (address >= range.start) && ((address + dataSize) < (range.start + range.size)));
             }))
         {
             throw std::runtime_error("segmentation fault");
@@ -139,21 +150,21 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     template <typename T>
     inline T readPointer(uint32_t address) const {
 
-        isAccessible(address, AccessPermission::READ);
+        isAccessible(address, sizeof(T), AccessPermission::READ);
         return *reinterpret_cast<T*>(m_ram.get()->data() + address);
     }
 
     template <typename T>
     inline T &writePointerImpl(uint32_t address) {
 
-        isAccessible(address, AccessPermission::WRITE);
+        isAccessible(address, sizeof(T), AccessPermission::WRITE);
         return *reinterpret_cast<T*>(m_ram.get()->data() + address);
     }
 
     template <typename T>
     inline void writePointerImpl(uint32_t address, const T value) {
 
-        isAccessible(address, AccessPermission::WRITE);
+        isAccessible(address, sizeof(T), AccessPermission::WRITE);
         *reinterpret_cast<T*>(m_ram.get()->data() + address) = value;
     }
 

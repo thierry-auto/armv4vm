@@ -6,8 +6,8 @@
 
 namespace armv4vm {
 
-template <typename VM>
-void Vfpv2<VM>::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
+template <typename MemoryType>
+void Vfpv2<MemoryType>::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorDataOperations {
@@ -42,20 +42,20 @@ void Vfpv2<VM>::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-template <typename VM>
-void Vfpv2<VM>::coprocessorDataOperations(const uint32_t m_workingInstruction) {
+// template <typename MemoryType>
+// void Vfpv2<MemoryType>::coprocessorDataOperations(const uint32_t m_workingInstruction) {
 
-    qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
-}
+//     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
+// }
 
-template <typename VM>
-void Vfpv2<VM>::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
+// template <typename MemoryType>
+// void Vfpv2<MemoryType>::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
 
-    qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
-}
+//     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
+// }
 
-template <typename VM>
-void Vfpv2<VM>::decodeAndExecute(const uint32_t &wokingInstruction) {
+template <typename MemoryType>
+void Vfpv2<MemoryType>::decodeAndExecute(const uint32_t &wokingInstruction) {
 
     const uint32_t DATA_PROCESSING      = 0x00000000;
     const uint32_t MASK_DATA_PROCESSING = 0x0C000000;
@@ -90,5 +90,8 @@ void Vfpv2<VM>::vadd(const uint32_t &wokingInstruction) {
            // 4.12
     instruction = cast<Multiply>(wokingInstruction);
 }
+
+template class Vfpv2<MemoryRaw>;
+template class Vfpv2<MemoryProtected>;
 
 } // namespace armv4vm

@@ -7,15 +7,15 @@
 
 namespace armv4vm {
 
-template<typename VM>
-class Vfpv2 : public CoprocessorBase<VM> {
+template<typename MemoryType>
+class Vfpv2 : public CoprocessorBase<MemoryType> {
   public:
-    Vfpv2(VirtualMachineBase* vm) : CoprocessorBase<VM>(vm) {}
+    Vfpv2(/*VirtualMachineBase* vm*/) : CoprocessorBase<MemoryType>() {}
     //Vfpv2(VirtualMachineProtected* vm) : CoprocessorBase(vm) {}
 
     void coprocessorDataTransfers(const uint32_t m_workingInstruction) override;
-    void coprocessorDataOperations(const uint32_t m_workingInstruction) override;
-    void coprocessorRegisterTransfers(const uint32_t m_workingInstruction) override;
+    // void coprocessorDataOperations(const uint32_t m_workingInstruction) override;
+    // void coprocessorRegisterTransfers(const uint32_t m_workingInstruction) override;
 
   private:
     std::array<float, 32> m_sRegisters;
@@ -28,13 +28,16 @@ class Vfpv2 : public CoprocessorBase<VM> {
 
 // const bool registered = []{
 
-//     CoprocessorBase::Factory f1 = [](VirtualMachineBase* vm) { return std::make_unique<Vfpv2>(vm); };
-//     CoprocessorBase::registerType("vfpv2", f1);
+//     registerCoprocessor<MemoryType, Vfpv2<MemoryType>>("vfpv2");
 
 //     return true;
 // }();
 
+extern template class Vfpv2<MemoryRaw>;
+extern template class Vfpv2<MemoryProtected>;
 
+//using Vfpv2Unprotected = Vfpv2<MemoryRaw>;
+//using Vfpv2Protected   = Vfpv2<MemoryProtected>;
 
 } // namespace armv4vm
 

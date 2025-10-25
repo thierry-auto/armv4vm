@@ -77,35 +77,11 @@ template<typename MemoryType> uint8_t* VirtualMachine<MemoryType>::init() {
     m_cpsr = 0;
     m_spsr = 0;
 
-    m_coprocessor = std::make_unique<CoprocessorBase<MemoryType>>(/*this*/);
+    //m_coprocessor = std::make_unique<CoprocessorBase<MemoryType>>(/*this->m_ram*/);
+    m_coprocessor = createCoprocessor<MemoryType>(m_vmProperties.m_coproModel);
+
     return m_ram.getAdressZero();
 }
-
-// template <> uint8_t *VirtualMachine<MemoryRaw>::init() {
-
-//     //m_ram = new uint8_t[m_vmProperties.m_memsize];
-//     m_ram.allocate(m_vmProperties.m_memsize);
-//     //memset(m_ram, 0x00, m_vmProperties.m_memsize);
-//     m_registers.fill(0);
-
-//     m_cpsr = 0;
-//     m_spsr = 0;
-//     m_coprocessor = std::make_unique<CoprocessorBase<MemoryRaw>>(/*this*/);
-
-//     return m_ram.getAdressZero();
-// }
-
-// template <> uint8_t *VirtualMachine<MemoryProtected>::init() {
-
-//     m_registers.fill(0);
-//     m_cpsr = 0;
-//     m_spsr = 0;
-
-//     m_ram.init(m_vmProperties.m_memsize, m_vmProperties.m_memModel.m_range);
-//     m_coprocessor = std::make_unique<CoprocessorBase<MemoryProtected>>(/*this*/);
-
-//     return m_ram.getAdressZero();
-// }
 
 #ifdef BUILD_WITH_QT
 uint64_t VirtualMachine<T>::load() {
@@ -184,8 +160,8 @@ template <typename T> typename VirtualMachine<T>::Interrupt VirtualMachine<T>::r
 
 template <typename MemoryType> uint32_t VirtualMachine<MemoryType>::fetch() {
 
-    uint32_t result = m_ram.readPointer32((*m_pc));
-    *m_pc += 4;
+    uint32_t result = m_ram.readPointer32((m_pc));
+    m_pc += 4;
 
     return result;
 }
@@ -896,7 +872,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::branchAndExchang
     instruction.condition = m_workingInstruction >> 28;
     instruction.rn        = m_workingInstruction >> 0;
 
-    *m_pc = m_registers[instruction.rn];
+    m_pc = m_registers[instruction.rn];
 }
 
 template <typename MemoryType> void VirtualMachine<MemoryType>::branchEval() {
@@ -920,7 +896,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::branchEval() {
     if (instruction.l) {
 
         // § 4.4.1
-        *m_lr = *m_pc;
+        m_lr = m_pc;
     }
 
            // Signed + Signed = Signed, Unsigned + Signed = Unsigned..
@@ -1455,7 +1431,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorDataT
            //m_coprocessor->exec(m_workingInstruction);
 
            //static Coprocessor<VirtualMachine<MemoryT>> copro;
-    m_coprocessor->coprocessorDataTransfers(m_ram, m_workingInstruction);
+    m_coprocessor->coprocessorDataTransfers(/*m_ram, */m_workingInstruction);
 
 }
 
@@ -1464,7 +1440,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorDataO
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->coprocessorDataOperations(m_ram, m_workingInstruction);
+    //m_coprocessor->coprocessorDataOperations(/*m_ram, */m_workingInstruction);
 }
 
 template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorRegisterTransfers() {
@@ -1472,7 +1448,7 @@ template <typename MemoryType> void VirtualMachine<MemoryType>::coprocessorRegis
     if (false == testCondition(m_workingInstruction))
         return;
 
-    m_coprocessor->coprocessorRegisterTransfers(m_ram, m_workingInstruction);
+    //m_coprocessor->coprocessorRegisterTransfers(/*m_ram, */m_workingInstruction);
 }
 
 template <typename MemoryType> bool VirtualMachine<MemoryType>::testCondition(const uint32_t instruction) const {
@@ -1715,7 +1691,7 @@ template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
 
 
 template<typename MemoryType>
-void CoprocessorBase<MemoryType>::coprocessorDataTransfers(MemoryType &mem, const uint32_t m_workingInstruction) {
+void CoprocessorBase<MemoryType>::coprocessorDataTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction) {
 
     // clang-format off
     struct CoprocessorDataTransfers {
@@ -1741,57 +1717,57 @@ void CoprocessorBase<MemoryType>::coprocessorDataTransfers(MemoryType &mem, cons
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-template<typename MemoryType>
-void CoprocessorBase<MemoryType>::coprocessorDataOperations(MemoryType &mem, const uint32_t m_workingInstruction) {
+// template<typename MemoryType>
+// void CoprocessorBase<MemoryType>::coprocessorDataOperations(/*MemoryType &mem, */const uint32_t m_workingInstruction) {
 
-    // clang-format off
-    struct CoprocessorDataOperations {
+//     // clang-format off
+//     struct CoprocessorDataOperations {
 
-        uint32_t operandRegisterM    : 4;
-        uint32_t                     : 1;
-        uint32_t information         : 3;
-        uint32_t number              : 4;
-        uint32_t destinationRegister : 4;
-        uint32_t operandRegisterN    : 4;
-        uint32_t operationCode       : 4;
-        uint32_t                     : 4;
-        uint32_t condition           : 4;
+//         uint32_t operandRegisterM    : 4;
+//         uint32_t                     : 1;
+//         uint32_t information         : 3;
+//         uint32_t number              : 4;
+//         uint32_t destinationRegister : 4;
+//         uint32_t operandRegisterN    : 4;
+//         uint32_t operationCode       : 4;
+//         uint32_t                     : 4;
+//         uint32_t condition           : 4;
 
-    } instruction;
-    // clang-format on
+//     } instruction;
+//     // clang-format on
 
-    instruction = cast<CoprocessorDataOperations>(m_workingInstruction);
+//     instruction = cast<CoprocessorDataOperations>(m_workingInstruction);
 
-           // On leve une exception
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
-}
+//            // On leve une exception
+//     qt_assert(__FUNCTION__, __FILE__, __LINE__);
+// }
 
-template<typename MemoryType>
-void CoprocessorBase<MemoryType>::coprocessorRegisterTransfers(MemoryType &mem, const uint32_t m_workingInstruction) {
+// template<typename MemoryType>
+// void CoprocessorBase<MemoryType>::coprocessorRegisterTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction) {
 
-    // clang-format off
-    struct CoprocessorRegisterTransfers {
+//     // clang-format off
+//     struct CoprocessorRegisterTransfers {
 
 
-        uint32_t coproOperandRegister           : 4;
-        uint32_t                                : 1;
-        uint32_t coproInformation               : 3;
-        uint32_t coproNumber                    : 4;
-        uint32_t armSourceDestinationRegister   : 4;
-        uint32_t coproSourceDestinationRegister : 4;
-        uint32_t loadStoreBit                   : 1;
-        uint32_t coproOperationMode             : 3;
-        uint32_t                                : 4;
-        uint32_t condition                      : 4;
+//         uint32_t coproOperandRegister           : 4;
+//         uint32_t                                : 1;
+//         uint32_t coproInformation               : 3;
+//         uint32_t coproNumber                    : 4;
+//         uint32_t armSourceDestinationRegister   : 4;
+//         uint32_t coproSourceDestinationRegister : 4;
+//         uint32_t loadStoreBit                   : 1;
+//         uint32_t coproOperationMode             : 3;
+//         uint32_t                                : 4;
+//         uint32_t condition                      : 4;
 
-    } instruction;
-    // clang-format on
+//     } instruction;
+//     // clang-format on
 
-    instruction = cast<CoprocessorRegisterTransfers>(m_workingInstruction);
+//     instruction = cast<CoprocessorRegisterTransfers>(m_workingInstruction);
 
-           // On leve une exception
-    qt_assert(__FUNCTION__, __FILE__, __LINE__);
-}
+//            // On leve une exception
+//     qt_assert(__FUNCTION__, __FILE__, __LINE__);
+// }
 
 // std::unordered_map<std::string, CoprocessorBase::Factory>& CoprocessorBase::registry() {
 
@@ -1824,5 +1800,8 @@ void CoprocessorBase<MemoryType>::coprocessorRegisterTransfers(MemoryType &mem, 
 
 //     return copro;
 // }
+
+template class CoprocessorBase<MemoryRaw>;
+template class CoprocessorBase<MemoryProtected>;
 
 } // namespace armv4vm

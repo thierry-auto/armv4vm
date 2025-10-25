@@ -31,15 +31,12 @@
 #include "memoryhandler.h"
 
 #include <array>
-#include <algorithm>
-#include <csetjmp>
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
-#include <any>
+#include <unordered_map>
 
 namespace armv4vm {
 
@@ -147,7 +144,11 @@ class VirtualMachine : public VirtualMachineBase
 {
 
   public:
-    VirtualMachine(struct VmProperties * vmProperties = nullptr) {
+    VirtualMachine(struct VmProperties * vmProperties = nullptr) :
+        m_sp(m_registers[13]),
+        m_lr(m_registers[14]),
+        m_pc(m_registers[15])
+    {
 
         m_vmProperties = *vmProperties;
         //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
@@ -157,6 +158,10 @@ class VirtualMachine : public VirtualMachineBase
         m_instructionSetFormat = unknown;
         m_registers.fill(0);
         m_spsr = 0;
+
+        m_sp = m_registers[13];
+        m_lr = m_registers[14];
+        m_pc = m_registers[15];
     }
     ~VirtualMachine();
 
@@ -266,11 +271,9 @@ public:
 
     uint32_t m_cpsr;
     uint32_t m_spsr;
-
-    // todo use reference instead of ptr
-    uint32_t *const m_sp = &m_registers[13];
-    uint32_t *const m_lr = &m_registers[14];
-    uint32_t *const m_pc = &m_registers[15];
+    uint32_t & m_sp;
+    uint32_t & m_lr;
+    uint32_t & m_pc;
 
     uint32_t m_workingInstruction;
     bool     m_running;
@@ -283,15 +286,18 @@ public:
 };
 
 
+
 template<typename MemoryType>
 class CoprocessorBase {
   public:
     //CoprocessorBase(VirtualMachineUnprotected* vm) : m_vm(vm) {}
-    CoprocessorBase(/*VirtualMachineBase* vm*/) /*: m_vm(vm)*/ { /*m_ram = vm->getRam();*/ }
+    CoprocessorBase() { }
 
-    virtual void coprocessorDataTransfers(MemoryType &mem, const uint32_t m_workingInstruction);
-    virtual void coprocessorDataOperations(MemoryType &mem, const uint32_t m_workingInstruction);
-    virtual void coprocessorRegisterTransfers(MemoryType &mem, const uint32_t m_workingInstruction);
+    virtual void coprocessorDataTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction);
+    // virtual void coprocessorDataOperations(/*MemoryType &mem, */const uint32_t m_workingInstruction);
+    // virtual void coprocessorRegisterTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction);
+
+    void initRam(MemoryType &ram) { m_ram = &ram; }
 
     //using Factory = std::function<std::unique_ptr<CoprocessorBase>(VirtualMachineBase* vm)>;
 
@@ -309,7 +315,7 @@ class CoprocessorBase {
 
   protected:
     //VirtualMachineBase * m_vm;
-    uint8_t* m_raw;
+    MemoryType *m_ram;
 
 };
 
@@ -329,6 +335,42 @@ template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_
 using VirtualMachineUnprotected = VirtualMachine<MemoryRaw>;
 using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
+
+// Type pour la fonction de création
+template<typename MemoryType>
+using CoprocessorCreator = std::function<std::unique_ptr<CoprocessorBase<MemoryType>>()>;
+
+// Map pour enregistrer les créateurs
+template<typename MemoryType>
+std::unordered_map<std::string, CoprocessorCreator<MemoryType>>& getCoprocessorRegistry() {
+
+    static std::unordered_map<std::string, CoprocessorCreator<MemoryType>> registry;
+    return registry;
+}
+
+// Enregistrement d'un coprocesseur
+template<typename MemoryType, typename Coprocessor>
+void registerCoprocessor(const std::string& name) {
+
+    auto& registry = getCoprocessorRegistry<MemoryType>();
+    registry[name] = []() { return std::make_unique<Coprocessor>(); };
+}
+
+// Factory
+template<typename MemoryType>
+std::unique_ptr<CoprocessorBase<MemoryType>> createCoprocessor(const std::string& name) {
+
+    auto& registry = getCoprocessorRegistry<MemoryType>();
+    auto it = registry.find(name);
+    if (it != registry.end()) {
+
+        return it->second();
+    }
+    return nullptr;
+}
+
+extern template class CoprocessorBase<MemoryRaw>;
+extern template class CoprocessorBase<MemoryProtected>;
 
 } // namespace armv4vm
 

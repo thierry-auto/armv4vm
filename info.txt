@@ -1,0 +1,161 @@
+#include <iostream>
+using namespace std;
+template<typename T>
+class CoproBase;
+
+template<typename T>
+class Alu {
+public:
+
+    T mem;
+    CoproBase<T> *copro;
+
+    void execute(const int&instruction);
+    
+    void init(CoproBase<T> &c) {
+        copro = &c;
+    }
+};
+
+template<typename T>
+void Alu<T>::execute(const int&instruction) {
+    
+    if(instruction & 0x80000000) {
+        
+        cout << "Instruction pass to copro.." << endl;
+        if(copro) {
+            
+            copro->execute(instruction);
+        }
+    }
+    else {
+        cout << "Alu instruction" << endl;
+        mem = instruction + 1;
+    }
+}
+
+template<typename T>
+class CoproBase {
+    public:
+    void init(Alu<T> &a) {
+        mem = a.mem;
+    }
+    private:
+    virtual void execute(const int&instruction) = 0;
+    /*{
+        cout << "Copro instruction" << endl;
+        mem = instruction + 2;
+    }*/
+    protected:
+    T mem;
+    friend Alu<T>;
+};
+
+template<typename T>
+class FPU : public CoproBase<T> {
+    public:
+    void execute(const int&instruction)
+    {
+        cout << "FPU instruction" << endl;
+        CoproBase<T>::mem = instruction + 2;
+    }
+};
+
+int main()
+{
+    FPU c1;
+    Alu<char> a1;
+
+    c1.init(a1);
+    a1.init(c1);
+    
+    a1.execute(0x00000045);
+    a1.execute(0x80000045);
+
+    return 0;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+#include <iostream>
+using namespace std;
+
+class CoproBase;
+
+class AluBase {
+public:
+    virtual void setMem(const int &) = 0;
+};
+
+template<typename T>
+class Alu : public AluBase {
+public:
+
+    T mem;
+    CoproBase *copro;
+
+    void execute(const int&instruction);
+    
+    void init(CoproBase &c) {
+        copro = &c;
+    }
+    
+    virtual void setMem(const int &instruction) {
+        mem = instruction;
+    }
+};
+
+
+class CoproBase {
+    public:
+    void init(AluBase &a) {
+        alubase = &a;
+    }
+    public:
+    virtual void execute(const int&instruction) = 0;
+
+    protected:
+    AluBase *alubase;
+    friend AluBase;
+};
+
+template<typename T>
+void Alu<T>::execute(const int&instruction) {
+    
+    if(instruction & 0x80000000) {
+        
+        cout << "Instruction pass to copro.." << endl;
+        if(copro) {
+            
+            copro->execute(instruction);
+        }
+    }
+    else {
+        cout << "Alu instruction" << endl;
+        setMem(instruction + 1);
+    }
+}
+
+class FPU : public CoproBase {
+    public:
+    void execute(const int&instruction)
+    {
+        cout << "FPU instruction" << endl;
+        alubase->setMem(instruction + 2);
+    }
+};
+
+int main()
+{
+    FPU c1;
+    Alu<char> a1;
+
+    c1.init(a1);
+    a1.init(c1);
+    
+    a1.execute(0x00000045);
+    a1.execute(0x80000045);
+
+    return 0;
+}

@@ -18,25 +18,35 @@
 #pragma once
 
 
-#ifdef QT_CORE_LIB
-#include <QObject>
-#include <QTextStream>
-#endif
 
 #if WIN32
 #pragma warning(push)
 #pragma warning(disable : 4820 4514 4626 4324) 
 #endif
 
-#include "memoryhandler.h"
+#include "memoryhandler.hpp"
+#include "coprocessor.hpp"
 
 #include <array>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
-#include <vector>
-#include <unordered_map>
+//#include <vector>
+//#include <unordered_map>
+#include <cassert>
+#include <fstream>
+#include <iostream>
+
+
+#ifndef BUILD_WITH_QT
+#define qt_assert(__FUNCTION__, __FILE__, __LINE__)                                                                    \
+{                                                                                                                  \
+        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;                                  \
+        assert(0);                                                                                                     \
+}
+#endif
+
 
 namespace armv4vm {
 
@@ -102,9 +112,6 @@ struct VmProperties {
 
 //class alignas(32) VirtualMachineBase;
 
-template<typename T>
-class CoprocessorBase;
-
 class alignas(32) VirtualMachineBase {
   public:
     enum class Interrupt : int32_t {
@@ -135,13 +142,15 @@ class alignas(32) VirtualMachineBase {
 
 };
 
-template <typename MemoryType>
-class VirtualMachine : public VirtualMachineBase
+template <typename T, template <typename> class MemoryInterface>
+concept MemDerived = std::derived_from<T, MemoryInterface<T>>;
 
-#ifdef BUILD_WITH_QT
- , public QObject
-#endif
-{
+template <typename T, template <typename> class CoprocessorInterface>
+concept CoproDerived = std::derived_from<T, CoprocessorInterface<T>>;
+
+
+template <typename MemoryHandler, typename CoproHandler>
+class VirtualMachine : public VirtualMachineBase {
 
   public:
     VirtualMachine(struct VmProperties * vmProperties = nullptr) :
@@ -162,6 +171,8 @@ class VirtualMachine : public VirtualMachineBase
         m_sp = m_registers[13];
         m_lr = m_registers[14];
         m_pc = m_registers[15];
+
+        m_coprocessor.init(this);
     }
     ~VirtualMachine();
 
@@ -187,17 +198,10 @@ public:
         E_UNDEFINED,
     };
 
-#ifdef BUILD_WITH_QT    
-  signals:
-    void started();
-    void finished();
-    void suspended();
-    void resumed();
-    void crashed();
-#endif
 
   protected:
-    MemoryType m_ram;
+    MemoryHandler m_ram;
+    CoproHandler m_coprocessor;
 
   private:
     struct VmProperties  m_vmProperties;
@@ -277,47 +281,14 @@ public:
 
     uint32_t m_workingInstruction;
     bool     m_running;
-    std::unique_ptr<CoprocessorBase<MemoryType>> m_coprocessor;
 
   public:
-    friend CoprocessorBase<MemoryType>;
+    //friend CoprocessorBase<MemoryType>;
   public:
     //uint8_t* getRam() { return m_ram; }
 };
 
 
-
-template<typename MemoryType>
-class CoprocessorBase {
-  public:
-    //CoprocessorBase(VirtualMachineUnprotected* vm) : m_vm(vm) {}
-    CoprocessorBase() { }
-
-    virtual void coprocessorDataTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction);
-    // virtual void coprocessorDataOperations(/*MemoryType &mem, */const uint32_t m_workingInstruction);
-    // virtual void coprocessorRegisterTransfers(/*MemoryType &mem, */const uint32_t m_workingInstruction);
-
-    void initRam(MemoryType &ram) { m_ram = &ram; }
-
-    //using Factory = std::function<std::unique_ptr<CoprocessorBase>(VirtualMachineBase* vm)>;
-
-    //static void registerType(const std::string& name, Factory factory);
-    //static std::unique_ptr<CoprocessorBase> create(const std::string& name, VirtualMachineBase *vm);
-
-    // void bindMemory(std::unique_ptr<InterfaceMemory> mem) {
-
-    //     m_mem = std::move(mem);
-    //     m_raw = m_mem ? m_mem->raw() : nullptr;
-    // }
-
-  private:
-    //static std::unordered_map<std::string, Factory>& registry();
-
-  protected:
-    //VirtualMachineBase * m_vm;
-    MemoryType *m_ram;
-
-};
 
 class VmException : public std::exception {
   public:
@@ -332,48 +303,69 @@ class VmException : public std::exception {
 template <typename T> inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
 
 
-using VirtualMachineUnprotected = VirtualMachine<MemoryRaw>;
-using VirtualMachineProtected   = VirtualMachine<MemoryProtected>;
 
 
-// Type pour la fonction de création
-template<typename MemoryType>
-using CoprocessorCreator = std::function<std::unique_ptr<CoprocessorBase<MemoryType>>()>;
+// // Type pour la fonction de création
+// template<typename MemoryType>
+// using CoprocessorCreator = std::function<std::unique_ptr<CoprocessorBase<MemoryType>>()>;
 
-// Map pour enregistrer les créateurs
-template<typename MemoryType>
-std::unordered_map<std::string, CoprocessorCreator<MemoryType>>& getCoprocessorRegistry() {
+// // Map pour enregistrer les créateurs
+// template<typename MemoryType>
+// std::unordered_map<std::string, CoprocessorCreator<MemoryType>>& getCoprocessorRegistry() {
 
-    static std::unordered_map<std::string, CoprocessorCreator<MemoryType>> registry;
-    return registry;
-}
+//     static std::unordered_map<std::string, CoprocessorCreator<MemoryType>> registry;
+//     return registry;
+// }
 
-// Enregistrement d'un coprocesseur
-template<typename MemoryType, typename Coprocessor>
-void registerCoprocessor(const std::string& name) {
+// // Enregistrement d'un coprocesseur
+// template<typename MemoryType, typename Coprocessor>
+// void registerCoprocessor(const std::string& name) {
 
-    auto& registry = getCoprocessorRegistry<MemoryType>();
-    registry[name] = []() { return std::make_unique<Coprocessor>(); };
-}
+//     auto& registry = getCoprocessorRegistry<MemoryType>();
+//     registry[name] = []() { return std::make_unique<Coprocessor>(); };
+// }
 
-// Factory
-template<typename MemoryType>
-std::unique_ptr<CoprocessorBase<MemoryType>> createCoprocessor(const std::string& name) {
+// // Factory
+// template<typename MemoryType>
+// std::unique_ptr<CoprocessorBase<MemoryType>> createCoprocessor(const std::string& name) {
 
-    auto& registry = getCoprocessorRegistry<MemoryType>();
-    auto it = registry.find(name);
-    if (it != registry.end()) {
+//     auto& registry = getCoprocessorRegistry<MemoryType>();
+//     auto it = registry.find(name);
+//     if (it != registry.end()) {
 
-        return it->second();
-    }
-    return nullptr;
-}
+//         return it->second();
+//     }
+//     return nullptr;
+// }
 
-extern template class CoprocessorBase<MemoryRaw>;
-extern template class CoprocessorBase<MemoryProtected>;
+//extern template class CoprocessorBase<MemoryRaw>;
+//extern template class CoprocessorBase<MemoryProtected>;
+
+// using VirtualMachineUnprotected = VirtualMachine<MemoryRaw, Vfpv2>;
+// using VirtualMachineProtected   = VirtualMachine<MemoryProtected, Vfpv2>;
+
 
 } // namespace armv4vm
+
 
 #if WIN32
 #pragma warning(pop)
 #endif
+
+//#ifdef ARMV4VM_IMPL A REMTTRE
+#if 1
+#include "armv4vm.tpp"
+#endif
+
+namespace armv4vm {
+
+// extern template class CoprocessorBase<MemoryRaw>;
+// extern template class CoprocessorBase<MemoryProtected>;
+
+extern template class VirtualMachine<MemoryRaw, Vfpv2>;
+extern template class VirtualMachine<MemoryProtected, Vfpv2>;
+
+using VirtualMachineUnprotected = VirtualMachine<MemoryRaw, Vfpv2>;
+using VirtualMachineProtected   = VirtualMachine<MemoryProtected, Vfpv2>;
+
+} // namespace armv4vm

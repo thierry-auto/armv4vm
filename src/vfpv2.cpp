@@ -1,4 +1,4 @@
-#include "vfpv2.h"
+#include "vfpv2.hpp"
 
 // VFPv2 ====
 // An optional extension to the ARM instruction set in the ARMv5TE, ARMv5TEJ and ARMv6 architectures. VFPv2 has 16 64-bit FPU registers.
@@ -42,17 +42,17 @@ void Vfpv2<MemoryType>::coprocessorDataTransfers(const uint32_t m_workingInstruc
     qt_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
-// template <typename MemoryType>
-// void Vfpv2<MemoryType>::coprocessorDataOperations(const uint32_t m_workingInstruction) {
+template <typename MemoryType>
+void Vfpv2<MemoryType>::coprocessorDataOperations(const uint32_t m_workingInstruction) {
 
-//     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
-// }
+    qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
+}
 
-// template <typename MemoryType>
-// void Vfpv2<MemoryType>::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
+template <typename MemoryType>
+void Vfpv2<MemoryType>::coprocessorRegisterTransfers(const uint32_t m_workingInstruction) {
 
-//     qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
-// }
+    qt_assert(__FUNCTION__, __FILE__, __LINE__); // remplacer par std::assert ou autre
+}
 
 template <typename MemoryType>
 void Vfpv2<MemoryType>::decodeAndExecute(const uint32_t &wokingInstruction) {

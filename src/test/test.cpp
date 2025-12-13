@@ -20,8 +20,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "../armv4vm.h"
-#include "../vfpv2.h"
+#include "../armv4vm.hpp"
 
 namespace armv4vm {
 
@@ -2104,7 +2103,7 @@ private slots:
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
-        registerCoprocessor<MemoryRaw, Vfpv2<MemoryRaw>>("vfpv2");
+        //registerCoprocessor<MemoryRaw, Vfpv2>("vfpv2");
 
         mem = vm.init();
         uart = mem + UARTPOS;

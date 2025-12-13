@@ -2,7 +2,7 @@
 #include <QObject>
 #include <QtTest>
 
-#include "armv4vm.h"
+#include "armv4vm.hpp"
 
 namespace armv4vm {
 

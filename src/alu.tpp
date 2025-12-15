@@ -23,30 +23,6 @@ static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) 
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
-// #ifdef BUILD_WITH_QT
-// qsd
-// VirtualMachine<MemoryHandler, CoproHandler>::VirtualMachine(struct VmProperties *vmProperties, QObject *parent) : QObject(parent) {
-
-//     m_ram          = nullptr;
-//     m_vmProperties = vmProperties;
-//     m_cpsr         = 0;
-//     m_error        = E_NO_ERROR;
-//     m_instructionSetFormat = undefined;
-//     m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel);
-//     m_registers.fill(0);
-// }
-// #endif
-// template <typename MemoryHandler, typename CoproHandler> VirtualMachine<MemoryHandler, CoproHandler>::VirtualMachine(struct VmProperties *vmProperties) {
-
-//     //m_vmProperties = *vmProperties;
-//     //m_coprocessor = CoprocessorBase::create(m_vmProperties.m_coproModel, this);
-//     //m_coprocessor->bindMemory(createAdapter());
-
-//     m_error = E_NONE;
-//     m_instructionSetFormat = unknown;
-//     m_registers.fill(0);
-//     m_spsr = 0;
-// }
 template <typename MemoryHandler, typename CoproHandler>
 uint8_t* VirtualMachine<MemoryHandler, CoproHandler>::init() {
 
@@ -227,7 +203,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
         m_instructionSetFormat = single_data_transfer;
     } else {
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -293,7 +269,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
     case undefined:
     default:
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         break;
     }
 }
@@ -428,7 +404,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         notWrittenResult = operand1 & operand2;
 #ifdef DEBUG
         if(instruction.s == 0)
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
 
@@ -436,7 +412,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         notWrittenResult = operand1 ^ operand2;
 #ifdef DEBUG
         // if(instruction.s == 0)
-        //   qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        //   armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
 
@@ -446,7 +422,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         overflow         = isOverflowSub(operand1, operand2, notWrittenResult);
 #ifdef DEBUG
         if(instruction.s == 0)
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
 
@@ -456,7 +432,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         overflow         = isOverflowAdd(operand1, operand2, notWrittenResult);
 #ifdef DEBUG
         if(instruction.s == 0)
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 #endif
         break;
     case ORR:
@@ -476,7 +452,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         break;
 
     default:
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         break;
     }
 
@@ -488,7 +464,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
         if (instruction.rd == 15) {
 
             m_cpsr = m_spsr;
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         }
 #endif
         switch (instruction.opcode) {
@@ -534,7 +510,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
             break;
 
         default:
-            qt_assert(__FUNCTION__, __FILE__, __LINE__);
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
             break;
         }
     }
@@ -1073,7 +1049,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
            // § 4.11.5
     if (instruction.s) {
 
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 }
 
@@ -1102,7 +1078,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
     uint32_t offset;
 
-           // qt_assert(__FUNCTION__, __FILE__, __LINE__);
+           // armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1113,7 +1089,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
     if (instruction.rn == 15) {
 
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 
     if (instruction.l) {
@@ -1243,7 +1219,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
     if (instruction.rn == 15) {
 
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
     }
 
     offset = m_registers[instruction.rn];
@@ -1500,7 +1476,7 @@ bool VirtualMachine<MemoryHandler, CoproHandler>::testCondition(const uint32_t i
         return (((m_cpsr >> 28) & 0x4) == 0x4) || (((m_cpsr >> 31) & 0x1) != ((m_cpsr >> 28) & 0x1));
 
     default: // What the hell is going on ?
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         return false;
     }
 }
@@ -1639,7 +1615,7 @@ template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine
         break;
 
     default:
-        qt_assert(__FUNCTION__, __FILE__, __LINE__);
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         break;
     }
 
@@ -1651,61 +1627,5 @@ uint32_t VirtualMachine<MemoryHandler, CoproHandler>::getCPSR() const { return m
 
 template <typename MemoryHandler, typename CoproHandler>
 VirtualMachine<MemoryHandler, CoproHandler>::~VirtualMachine() { }
-
-
-// template <typename MemoryHandler, typename CoproHandler> VirtualMachine<MemoryHandler, CoproHandler>::VirtualMachine(struct VmProperties *vmProperties) {
-
-//     m_ram          = nullptr;
-//     m_cpsr         = 0;
-//     m_error        = E_NONE;
-//     m_instructionSetFormat = unknown;
-//     m_registers.fill(0);
-//     m_spsr                 = 0;
-//     m_vmProperties = *vmProperties;
-// }
-
-// template <> VirtualMachine<MemoryProtected>::VirtualMachine(struct VmProperties *vmProperties) {
-
-//     m_vmProperties = *vmProperties;
-// }
-
-// template <> VirtualMachine<MemoryRaw>::~VirtualMachine() { }
-// template <> VirtualMachine<MemoryProtected>::~VirtualMachine() {}
-
-
-// std::unordered_map<std::string, CoprocessorBase::Factory>& CoprocessorBase::registry() {
-
-//     static std::unordered_map<std::string, Factory> instance;
-//     return instance;
-// }
-
-// void CoprocessorBase::registerType(const std::string& name, Factory factory) {
-
-//     registry()[name] = std::move(factory);
-// }
-
-// std::unique_ptr<CoprocessorBase> CoprocessorBase::create(const std::string& name, VirtualMachineBase *vm) {
-
-//     std::unique_ptr<CoprocessorBase> copro;
-
-//     auto it = registry().find(name);
-
-//     if (it != registry().end()) {
-
-//         copro = it->second(vm);
-//     }
-//     else if(name.empty()) {
-
-//         copro = std::make_unique<CoprocessorBase>(vm);
-//     }
-//     else {
-//         throw std::runtime_error("Coprocesseur inconnu : " + name);
-//     }
-
-//     return copro;
-// }
-
-// template class CoprocessorBase<MemoryRaw>;
-// template class CoprocessorBase<MemoryProtected>;
 
 } // namespace armv4vm

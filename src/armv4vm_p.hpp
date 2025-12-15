@@ -17,17 +17,14 @@
 
 #pragma once
 
-#include "armv4vm_p.hpp"
-#include "memoryhandler.hpp"
-#include "coprocessor.hpp"
-#include "alu.hpp"
+#include <cstdint>
+#include <iostream>
+#include <cassert>
 
-namespace armv4vm {
+#define armv4vm_assert(__FUNCTION__, __FILE__, __LINE__)                                \
+{                                                                                       \
+        std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;   \
+        assert(0);                                                                      \
+}
 
-extern template class VirtualMachine<MemoryRaw, Vfpv2>;
-extern template class VirtualMachine<MemoryProtected, Vfpv2>;
-
-using VirtualMachineUnprotected = VirtualMachine<MemoryRaw, Vfpv2>;
-using VirtualMachineProtected   = VirtualMachine<MemoryProtected, Vfpv2>;
-
-} // namespace armv4vm
+template <typename T> static inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }

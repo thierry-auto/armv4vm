@@ -26,7 +26,7 @@ SET(CMAKE_CXX_STANDARD 26)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm.tpp src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp src/assertcopro.hpp)
+SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm_p.hpp src/alu.hpp src/alu.tpp src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp src/assertcopro.hpp)
 SET(ARMV4VM_SOURCE_FILES #[[src/vfpv2.cpp]] src/armv4vm.cpp src/assertcopro.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp #[[src/test2.cpp]])
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)

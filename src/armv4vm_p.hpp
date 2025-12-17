@@ -27,4 +27,16 @@
         assert(0);                                                                      \
 }
 
-template <typename T> static inline T cast(uint32_t instruction) { return *reinterpret_cast<T *>(&instruction); }
+namespace armv4vm {
+
+template<typename T>
+inline constexpr T BITS(T x, unsigned int l, unsigned int h) {
+    return (x >> l) & ((T{1} << ((h - l) + 1)) - 1);
+}
+
+template <typename T>
+static inline T cast(uint32_t instruction) {
+    return *reinterpret_cast<T *>(&instruction);
+}
+
+}

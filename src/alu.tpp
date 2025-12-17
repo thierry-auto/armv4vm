@@ -24,7 +24,7 @@ static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) 
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename MemoryHandler, typename CoproHandler>
-uint8_t* VirtualMachine<MemoryHandler, CoproHandler>::init() {
+uint8_t* Alu<MemoryHandler, CoproHandler>::init() {
 
     m_ram.allocate(m_vmProperties.m_memsize);
     m_registers.fill(0);
@@ -38,7 +38,7 @@ uint8_t* VirtualMachine<MemoryHandler, CoproHandler>::init() {
 }
 
 #ifdef BUILD_WITH_QT
-uint64_t VirtualMachine<MemoryHandler, CoproHandler>::load() {
+uint64_t Alu<MemoryHandler, CoproHandler>::load() {
 
     QFile    program(m_vmProperties.m_bin);
     uint64_t programSize = 0;
@@ -55,7 +55,7 @@ uint64_t VirtualMachine<MemoryHandler, CoproHandler>::load() {
     return programSize;
 }
 #else
-template <typename MemoryHandler, typename CoproHandler> uint64_t VirtualMachine<MemoryHandler, CoproHandler>::load() {
+template <typename MemoryHandler, typename CoproHandler> uint64_t Alu<MemoryHandler, CoproHandler>::load() {
 
     std::fstream program;
     std::streampos programSize = 0;
@@ -80,9 +80,9 @@ template <typename MemoryHandler, typename CoproHandler> uint64_t VirtualMachine
 
 
 template <typename MemoryHandler, typename CoproHandler>
-typename VirtualMachine<MemoryHandler, CoproHandler>::Interrupt VirtualMachine<MemoryHandler, CoproHandler>::run(const uint32_t nbMaxIteration) {
+typename Alu<MemoryHandler, CoproHandler>::Interrupt Alu<MemoryHandler, CoproHandler>::run(const uint32_t nbMaxIteration) {
 
-    VirtualMachine<MemoryHandler, CoproHandler>::Interrupt result        = VirtualMachine<MemoryHandler, CoproHandler>::Interrupt::Undefined;
+    Alu<MemoryHandler, CoproHandler>::Interrupt result        = Alu<MemoryHandler, CoproHandler>::Interrupt::Undefined;
     static uint32_t              stage1        = 0;
     m_running = true;
 
@@ -113,7 +113,7 @@ typename VirtualMachine<MemoryHandler, CoproHandler>::Interrupt VirtualMachine<M
     return result;
 }
 
-template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine<MemoryHandler, CoproHandler>::fetch() {
+template <typename MemoryHandler, typename CoproHandler> uint32_t Alu<MemoryHandler, CoproHandler>::fetch() {
 
     uint32_t result = m_ram.readPointer32((m_pc));
     m_pc += 4;
@@ -121,7 +121,7 @@ template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine
     return result;
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::decode(const uint32_t instruction) {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::decode(const uint32_t instruction) {
 
     static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;
@@ -207,7 +207,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::evaluate() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::evaluate() {
 
     switch (m_instructionSetFormat) {
 
@@ -297,7 +297,7 @@ inline static bool isCarryFromALUSub(const uint32_t op1, const uint32_t op2, con
     return ((NEG(op1) && POS(op2)) || (NEG(op1) && POS(result)) || (POS(op2) && POS(result)));
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::dataProcessingEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::dataProcessingEval() {
 
     enum OpCode {
 
@@ -516,7 +516,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::multiplyEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::multiplyEval() {
 
     // clang-format off
     struct Multiply {
@@ -562,7 +562,7 @@ inline static int64_t  signedCastTo64(const uint32_t value) { return static_cast
 inline static uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::multiplyLongEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::multiplyLongEval() {
 
     // clang-format off
     static struct MultiplyLong {
@@ -626,7 +626,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::singleDataTranferEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::singleDataTranferEval() {
 
     // clang-format off
     static struct SingleDataTranfer {
@@ -808,7 +808,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
            // retained by setting the offset to zero.
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::branchAndExchangeEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::branchAndExchangeEval() {
 
     // clang-format off
     static struct BranchAndExchange {
@@ -830,7 +830,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     m_pc = m_registers[instruction.rn];
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::branchEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::branchEval() {
 
     // clang-format off
     static struct Branch {
@@ -858,7 +858,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::blockDataTransferEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::blockDataTransferEval() {
 
     static struct BlockDatatransfer {
 
@@ -1053,7 +1053,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::halfwordDataTransferRegisterOffEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::halfwordDataTransferRegisterOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferRegisterOffset {
@@ -1186,7 +1186,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::halfwordDataTransferImmediateOffEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::halfwordDataTransferImmediateOffEval() {
 
     // clang-format off
     struct HalfWordDataTransferImmediateOffset {
@@ -1322,7 +1322,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::softwareInterruptEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::softwareInterruptEval() {
 
     // clang-format off
     struct SoftwareInterrupt {
@@ -1339,10 +1339,10 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 
     instruction = cast<SoftwareInterrupt>(m_workingInstruction);
 
-    throw VmException(static_cast<VirtualMachine::Interrupt>(instruction.comment));
+    throw VmException(static_cast<Alu::Interrupt>(instruction.comment));
 }
 
-template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<MemoryHandler, CoproHandler>::singleDataSwapEval() {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::singleDataSwapEval() {
 
     // clang-format off
     struct SingleDataSwap {
@@ -1379,7 +1379,7 @@ template <typename MemoryHandler, typename CoproHandler> void VirtualMachine<Mem
 }
 
 template <typename MemoryHandler, typename CoproHandler>
-void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorDataTransfers() {
+void Alu<MemoryHandler, CoproHandler>::coprocessorDataTransfers() {
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1388,7 +1388,7 @@ void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorDataTransfers() {
 }
 
 template <typename MemoryHandler, typename CoproHandler>
-void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorDataOperations() {
+void Alu<MemoryHandler, CoproHandler>::coprocessorDataOperations() {
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1397,7 +1397,7 @@ void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorDataOperations() {
 }
 
 template <typename MemoryHandler, typename CoproHandler>
-void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorRegisterTransfers() {
+void Alu<MemoryHandler, CoproHandler>::coprocessorRegisterTransfers() {
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1406,7 +1406,7 @@ void VirtualMachine<MemoryHandler, CoproHandler>::coprocessorRegisterTransfers()
 }
 
 template <typename MemoryHandler, typename CoproHandler>
-bool VirtualMachine<MemoryHandler, CoproHandler>::testCondition(const uint32_t instruction) const {
+bool Alu<MemoryHandler, CoproHandler>::testCondition(const uint32_t instruction) const {
 
     // N Z C V . . . . . .
     enum ConditionCode {
@@ -1481,7 +1481,7 @@ bool VirtualMachine<MemoryHandler, CoproHandler>::testCondition(const uint32_t i
     }
 }
 
-template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine<MemoryHandler, CoproHandler>::rotate(const uint32_t operand2, uint32_t &carry) const {
+template <typename MemoryHandler, typename CoproHandler> uint32_t Alu<MemoryHandler, CoproHandler>::rotate(const uint32_t operand2, uint32_t &carry) const {
 
     // § 4.5.3
     // On shift de 7 et pas de 8 pour multiplier par 2 la valeur de rotation.
@@ -1492,7 +1492,7 @@ template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine
     return result;
 }
 
-template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine<MemoryHandler, CoproHandler>::shift(const uint32_t operand2, uint32_t &carry) const {
+template <typename MemoryHandler, typename CoproHandler> uint32_t Alu<MemoryHandler, CoproHandler>::shift(const uint32_t operand2, uint32_t &carry) const {
 
     uint32_t              shiftResult     = 0;
     uint32_t              shiftValue      = 0;
@@ -1622,10 +1622,14 @@ template <typename MemoryHandler, typename CoproHandler> uint32_t VirtualMachine
     return shiftResult;
 }
 
-template <typename MemoryHandler, typename CoproHandler>
-uint32_t VirtualMachine<MemoryHandler, CoproHandler>::getCPSR() const { return m_cpsr; }
+//template <typename MemoryHandler, typename CoproHandler>
+inline uint32_t /*Alu<MemoryHandler, CoproHandler>*/AluBase::getCPSR() const { return m_cpsr; }
+
+inline void AluBase::setCPSR(const uint32_t cpsr) {
+    m_cpsr = cpsr;
+}
 
 template <typename MemoryHandler, typename CoproHandler>
-VirtualMachine<MemoryHandler, CoproHandler>::~VirtualMachine() { }
+Alu<MemoryHandler, CoproHandler>::~Alu() { }
 
 } // namespace armv4vm

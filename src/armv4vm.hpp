@@ -24,10 +24,10 @@
 
 namespace armv4vm {
 
-extern template class VirtualMachine<MemoryRaw, Vfpv2>;
-extern template class VirtualMachine<MemoryProtected, Vfpv2>;
+extern template class Alu<MemoryRaw, Vfpv2>;
+extern template class Alu<MemoryProtected, Vfpv2>;
 
-using VirtualMachineUnprotected = VirtualMachine<MemoryRaw, Vfpv2>;
-using VirtualMachineProtected   = VirtualMachine<MemoryProtected, Vfpv2>;
+using VirtualMachineUnprotected = Alu<MemoryRaw, Vfpv2>;
+using VirtualMachineProtected   = Alu<MemoryProtected, Vfpv2>;
 
 } // namespace armv4vm

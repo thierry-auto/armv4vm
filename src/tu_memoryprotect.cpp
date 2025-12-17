@@ -6,7 +6,7 @@
 
 namespace armv4vm {
 
-//using Test1Vm = VirtualMachine<MemoryProtected>;
+//using Test1Vm = Alu<MemoryProtected>;
 
 struct VmProperties vmProperties;
 

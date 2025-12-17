@@ -18,19 +18,21 @@
 #pragma once
 
 #include "armv4vm_p.hpp"
+#include "alu.hpp"
 
 #include <cstdint>
 #include <array>
+#include <cmath>
 
 namespace armv4vm {
 
-class VirtualMachineBase;
-
+// On verra plus tard que finalement, CRTP ne sera peut-être pas nécessaire because tout est header.
+// et que donc on peut-être du polymorphisme classique..
 template<typename Derived>
 class CoprocessorBase {
   public:
     CoprocessorBase() {}
-    void init(VirtualMachineBase * vm) { m_vm = vm; }
+    void init(AluBase * alu) { m_alu = alu; }
 
     void coprocessorDataTransfers(const uint32_t workingInstruction) {
         static_cast<Derived *>(this)->coprocessorDataTransfersImpl(workingInstruction);
@@ -44,9 +46,96 @@ class CoprocessorBase {
         static_cast<Derived *>(this)->coprocessorRegisterTransfersImpl(workingInstruction);
     }
 
+    void coprocessorDataTransfersImpl(const uint32_t workingInstruction);
+    void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
+    void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
+
   protected:
-    VirtualMachineBase * m_vm;
+    AluBase * m_alu;
 };
+
+template<typename Derived>
+inline void CoprocessorBase<Derived>::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
+
+    // clang-format off
+    struct CoprocessorDataTransfers {
+
+        uint32_t immediateOffset                : 8;
+        uint32_t coproNumber                    : 4;
+        uint32_t coproSourceDestinationRegister : 4;
+        uint32_t baseRegister                   : 4;
+        uint32_t loadStoreBit                   : 1;
+        uint32_t writeBackBit                   : 1;
+        uint32_t transferLength                 : 1;
+        uint32_t upDownBit                      : 1;
+        uint32_t prePostIndexingBit             : 1;
+        uint32_t                                : 3;
+        uint32_t condition                      : 4;
+
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorDataTransfers>(workingInstruction);
+
+           // On leve une exception
+    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+}
+
+template<typename Derived>
+inline void CoprocessorBase<Derived>::coprocessorDataOperationsImpl(const uint32_t workingInstruction) {
+
+    // clang-format off
+    struct CoprocessorDataOperations {
+
+        uint32_t operandRegisterM    : 4;
+        uint32_t                     : 1;
+        uint32_t information         : 3;
+        uint32_t number              : 4;
+        uint32_t destinationRegister : 4;
+        uint32_t operandRegisterN    : 4;
+        uint32_t operationCode       : 4;
+        uint32_t                     : 4;
+        uint32_t condition           : 4;
+
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorDataOperations>(workingInstruction);
+
+           // On leve une exception
+    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+}
+
+template<typename Derived>
+inline void CoprocessorBase<Derived>::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
+
+    // clang-format off
+    struct CoprocessorRegisterTransfers {
+
+
+        uint32_t coproOperandRegister           : 4;
+        uint32_t                                : 1;
+        uint32_t coproInformation               : 3;
+        uint32_t coproNumber                    : 4;
+        uint32_t armSourceDestinationRegister   : 4;
+        uint32_t coproSourceDestinationRegister : 4;
+        uint32_t loadStoreBit                   : 1;
+        uint32_t coproOperationMode             : 3;
+        uint32_t                                : 4;
+        uint32_t condition                      : 4;
+
+    } instruction;
+    // clang-format on
+
+    instruction = cast<CoprocessorRegisterTransfers>(workingInstruction);
+
+           // On leve une exception
+    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+}
+
+// Obligé de faire mon propre trait. std::floating_point autorise long double.
+template <typename T>
+concept FloatingPoint = std::same_as<T, float> || std::same_as<T, double>;
 
 class Vfpv2 : public CoprocessorBase<Vfpv2> {
   public:
@@ -58,9 +147,25 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
 
   private:
     std::array<float, 32> m_sRegisters;
+    uint32_t m_fpscr;
 
     void decodeAndExecute(const uint32_t &wokingInstruction);
     void vadd(const uint32_t &wokingInstruction);
+
+    inline float& toSingle(uint32_t i) noexcept {
+        return *std::bit_cast<float*>(&m_sRegisters[i]);
+    }
+
+    inline double& toDouble(uint32_t i) noexcept {
+        return *std::bit_cast<double*>(&m_sRegisters[i * 2]);
+    }
+
+    static uint32_t getExtensionOpcode(const uint32_t instruction) noexcept;
+    void setNZCV(bool N, bool Z, bool C, bool V) noexcept;
+    void updateCPSR() const;
+
+    template <FloatingPoint T>
+    void setFPSCRCompare(const T a, const T b, const bool raiseException);
 };
 
 inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
@@ -89,55 +194,274 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
     armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
 }
 
+inline uint32_t Vfpv2::getExtensionOpcode(const uint32_t instruction) noexcept {
+
+    return (((instruction >> 16) & 0xF) << 1) | ((instruction >> 7) & 0x1);
+}
+
+inline void Vfpv2::setNZCV(bool N, bool Z, bool C, bool V) noexcept {
+
+    m_fpscr &= ~(0xF << 28);
+    m_fpscr |= (uint32_t(N) << 31) | (uint32_t(Z) << 30) | (uint32_t(C) << 29) | (uint32_t(V) << 28);
+}
+
+inline void Vfpv2::updateCPSR() const {
+    m_alu->setCPSR((m_alu->getCPSR() & ~(0xF << 28)) | (m_fpscr & (0xF << 28)));
+}
+
+template <FloatingPoint T>
+inline void Vfpv2::setFPSCRCompare(const T a, const T b, const bool raiseVFPV2Exception) {
+
+    if (std::isnan(a) || std::isnan(b)) {
+        setNZCV(0, 0, 0, 1);
+        if(raiseVFPV2Exception) {
+        }
+    } else if (a < b) {
+        setNZCV(1, 0, 0, 0);
+    } else if (a == b) {
+        setNZCV(0, 1, 1, 0);
+    } else {
+        setNZCV(0, 0, 1, 0);
+    }
+
+           // Update Alu CPSR from FPSCR
+    updateCPSR();
+}
+
 inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstruction) {
 
-    // clang-format off
-    struct CoprocessorDataOperations {
+    constexpr uint32_t MASK_SD     = 0x00000300; // bits 9:8
+    constexpr uint32_t SD_DOUBLE   = 0x00000200;
 
-        uint32_t operandRegisterM    : 4;
-        uint32_t                     : 1;
-        uint32_t information         : 3;
-        uint32_t number              : 4;
-        uint32_t destinationRegister : 4;
-        uint32_t operandRegisterN    : 4;
-        uint32_t operationCode       : 4;
-        uint32_t                     : 4;
-        uint32_t condition           : 4;
+           // Composition            0bpqrs
+    constexpr auto OP_FMAC  = 0b0000;
+    constexpr auto OP_FNMAC = 0b0001;
+    constexpr auto OP_FMSC  = 0b0010;
+    constexpr auto OP_FNMSC = 0b0011;
+    constexpr auto OP_FMUL  = 0b0100;
+    constexpr auto OP_FNMUL = 0b0101;
+    constexpr auto OP_FADD  = 0b0110;
+    constexpr auto OP_FSUB  = 0b0111;
+    constexpr auto OP_FDIV  = 0b1000;
+    constexpr auto OP_EXTE  = 0b1111;
 
-    } instruction;
-    // clang-format on
+           // Composition extension        0b-Fn-N
+    constexpr auto OP_EXTE_FCPY   = 0b00000;
+    constexpr auto OP_EXTE_FABS   = 0b00001;
+    constexpr auto OP_EXTE_FNEG   = 0b00010;
+    constexpr auto OP_EXTE_FSQRT  = 0b00011;
+    constexpr auto OP_EXTE_FCMP   = 0b01000;
+    constexpr auto OP_EXTE_FCMPE  = 0b01001;
+    constexpr auto OP_EXTE_FCMPZ  = 0b01010;
+    constexpr auto OP_EXTE_FCMPEZ = 0b01011;
+    constexpr auto OP_EXTE_FCVTD  = 0b01111;
+    constexpr auto OP_EXTE_FUITO  = 0b10000;
+    constexpr auto OP_EXTE_FSITO  = 0b10001;
+    constexpr auto OP_EXTE_FTOUI  = 0b11000;
+    constexpr auto OP_EXTE_FTOUIZ = 0b11001;
+    constexpr auto OP_EXTE_FTOSI  = 0b11010;
+    constexpr auto OP_EXTE_FTOSIZ = 0b11011;
 
-    instruction = cast<CoprocessorDataOperations>(workingInstruction);
+    const bool isDouble = (workingInstruction & MASK_SD) == SD_DOUBLE;
+    const uint32_t Fd = BITS(workingInstruction, 12, 15);
+    const uint32_t Fn = BITS(workingInstruction, 16, 19);
+    const uint32_t Fm = BITS(workingInstruction, 0, 3);
 
-           // On leve une exception
-    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    switch (BITS(workingInstruction, 24, 27)) {
+
+    case OP_FADD:
+        if (isDouble) toDouble(Fd) = toDouble(Fn) + toDouble(Fm);
+        else     toSingle(Fd) = toSingle(Fn) + toSingle(Fm);
+        break;
+
+    case OP_FSUB:
+        if (isDouble) toDouble(Fd) = toDouble(Fn) - toDouble(Fm);
+        else     toSingle(Fd) = toSingle(Fn) - toSingle(Fm);
+        break;
+
+    case OP_FMUL:
+        if (isDouble) toDouble(Fd) = toDouble(Fn) * toDouble(Fm);
+        else     toSingle(Fd) = toSingle(Fn) * toSingle(Fm);
+        break;
+
+    case OP_FNMUL:
+        if (isDouble) toDouble(Fd) = -(toDouble(Fn) * toDouble(Fm));
+        else     toSingle(Fd) = -(toSingle(Fn) * toSingle(Fm));
+        break;
+
+    case OP_FDIV:
+        if (isDouble) toDouble(Fd) = toDouble(Fn) / toDouble(Fm);
+        else     toSingle(Fd) = toSingle(Fn) / toSingle(Fm);
+        break;
+
+    case OP_FMAC:
+        if (isDouble) toDouble(Fd) = (toDouble(Fn) * toDouble(Fm)) + toDouble(Fd);
+        else     toSingle(Fd) = (toSingle(Fn) * toSingle(Fm)) + toSingle(Fd);
+        break;
+
+    case OP_FNMAC:
+        if (isDouble) toDouble(Fd) = -(toDouble(Fn) * toDouble(Fm)) + toDouble(Fd);
+        else     toSingle(Fd) = -(toSingle(Fn) * toSingle(Fm)) + toSingle(Fd);
+        break;
+
+    case OP_FMSC:
+        if (isDouble) toDouble(Fd) = toDouble(Fd) - (toDouble(Fn) * toDouble(Fm));
+        else     toSingle(Fd) = toSingle(Fd) - (toSingle(Fn) * toSingle(Fm));
+        break;
+
+    case OP_FNMSC:
+        if (isDouble) toDouble(Fd) = -(toDouble(Fn) * toDouble(Fm)) - toDouble(Fd);
+        else     toSingle(Fd) = -(toSingle(Fn) * toSingle(Fm)) - toSingle(Fd);
+        break;
+
+    case OP_EXTE:
+        switch(getExtensionOpcode(workingInstruction)) {
+
+        case OP_EXTE_FCPY:
+            if (isDouble) toDouble(Fd) = toDouble(Fm);
+            else toSingle(Fd) = toSingle(Fm);
+            break;
+
+        case OP_EXTE_FNEG:
+            if (isDouble) toDouble(Fd) = -toDouble(Fm);
+            else toSingle(Fd) = -toSingle(Fm);
+            break;
+
+        case OP_EXTE_FABS:
+            if (isDouble) toDouble(Fd) = std::fabs(toDouble(Fm));
+            else toSingle(Fd) = std::fabs(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FSQRT:
+            if (isDouble) toDouble(Fd) = std::sqrt(toDouble(Fm));
+            else toSingle(Fd) = std::sqrt(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FTOSIZ:
+            if (isDouble) toSingle(Fd) = static_cast<int32_t>(toDouble(Fm));
+            else toSingle(Fd) = static_cast<int32_t>(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FTOUIZ:
+            if (isDouble) toSingle(Fd) = static_cast<uint32_t>(toDouble(Fm));
+            else toSingle(Fd) = static_cast<uint32_t>(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FSITO:
+            if (isDouble) toDouble(Fd) = static_cast<int32_t>(BITS(workingInstruction, 0, 3));
+            else toSingle(Fd) = static_cast<int32_t>(BITS(workingInstruction, 0, 3));
+            break;
+
+        case OP_EXTE_FUITO:
+            if (isDouble) toDouble(Fd) = static_cast<uint32_t>(BITS(workingInstruction, 0, 3));
+            else toSingle(Fd) = static_cast<uint32_t>(BITS(workingInstruction, 0, 3));
+            break;
+
+        case OP_EXTE_FCMP:
+            isDouble ? setFPSCRCompare(toDouble(Fm), toDouble(Fd), false) : setFPSCRCompare(toSingle(Fm), toSingle(Fd), false);
+            break;
+
+        case OP_EXTE_FCMPE:
+            isDouble ? setFPSCRCompare(toDouble(Fm), toDouble(Fd), true) : setFPSCRCompare(toSingle(Fm), toSingle(Fd), true);
+            break;
+
+        case OP_EXTE_FCMPZ:
+            isDouble ? setFPSCRCompare(toDouble(Fm), 0.0, false) : setFPSCRCompare(toSingle(Fm), 0.0f, false);
+            break;
+
+        case OP_EXTE_FCMPEZ:
+            isDouble ? setFPSCRCompare(toDouble(Fm), 0.0, true) : setFPSCRCompare(toSingle(Fm), 0.0f, true);
+            break;
+
+        case OP_EXTE_FCVTD:
+            toDouble(Fd) = static_cast<double>(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FTOUI:
+            isDouble ? toSingle(Fd) = static_cast<uint32_t>(toDouble(Fm)) : toSingle(Fd) = static_cast<uint32_t>(toSingle(Fm));
+            break;
+
+        case OP_EXTE_FTOSI:
+            isDouble ? toSingle(Fd) = static_cast<int32_t>(toDouble(Fm)) : toSingle(Fd) = static_cast<int32_t>(toSingle(Fm));
+            break;
+
+        default:
+            armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+            break;
+        }
+        break;
+
+    default:
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    }
 }
 
 inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
 
-    // clang-format off
-    struct CoprocessorRegisterTransfers {
+    constexpr uint32_t OP_MASK  = 0x0FF00F00;
+    constexpr uint32_t OP_FMSR  = 0x0E000600;
+    constexpr uint32_t OP_FMRS  = 0x0E100600;
+    constexpr uint32_t OP_FMDLR = 0x0E000700;
+    constexpr uint32_t OP_FMRDL = 0x0E100700;
+    constexpr uint32_t OP_FMDHR = 0x0E200700;
+    constexpr uint32_t OP_FMRDH = 0x0E300700;
+    constexpr uint32_t OP_FMXR  = 0x0EE00600;
+    constexpr uint32_t OP_FMRX  = 0x0EF00600;
 
+    const uint32_t Rd = BITS(workingInstruction, 12, 15);
+    const uint32_t Fn = BITS(workingInstruction, 16, 19);
 
-        uint32_t coproOperandRegister           : 4;
-        uint32_t                                : 1;
-        uint32_t coproInformation               : 3;
-        uint32_t coproNumber                    : 4;
-        uint32_t armSourceDestinationRegister   : 4;
-        uint32_t coproSourceDestinationRegister : 4;
-        uint32_t loadStoreBit                   : 1;
-        uint32_t coproOperationMode             : 3;
-        uint32_t                                : 4;
-        uint32_t condition                      : 4;
+    auto setLower32BitsOfDouble = [&](const auto Fn, const auto Rd) {
+        m_sRegisters[Fn] = m_alu->getRegisters()[Rd];
+    };
 
-    } instruction;
-    // clang-format on
+    auto setAluOfLower32BitsOfDouble = [&](const auto Fn, const auto Rd) {
+        m_alu->getRegisters()[Rd] = m_sRegisters[Fn];
+    };
 
-    instruction = cast<CoprocessorRegisterTransfers>(workingInstruction);
+    auto setUpper32BitsOfDouble = [&](const auto Fn, const auto Rd) {
+        m_sRegisters[(Fn * 2) + 1] = m_alu->getRegisters()[Rd];
+    };
 
-           // On leve une exception
-    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    auto setAluOfUpper32BitsOfDouble = [&](const auto Fn, const auto Rd) {
+        m_alu->getRegisters()[Rd] = m_sRegisters[(Fn * 2) + 1];
+    };
+
+    switch (workingInstruction & OP_MASK) {
+
+    case OP_FMSR:
+        toSingle(Fn) = m_alu->getRegisters()[Rd];
+        break;
+
+    case OP_FMRS:
+        m_alu->getRegisters()[Rd] = toSingle(Fn);
+        break;
+
+    case OP_FMDLR:
+        setLower32BitsOfDouble(Fn, Rd);
+        break;
+
+    case OP_FMRDL:
+        setAluOfLower32BitsOfDouble(Fn, Rd);
+        break;
+
+    case OP_FMDHR:
+        setUpper32BitsOfDouble(Fn, Rd);
+        break;
+
+    case OP_FMRDH:
+        setAluOfUpper32BitsOfDouble(Fn, Rd);
+        break;
+
+    case OP_FMXR:
+        break;
+    case OP_FMRX:
+        break;
+
+    default:
+        // On leve une exception
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    }
 }
-
 
 } // namespace armv4vm

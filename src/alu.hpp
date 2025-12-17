@@ -24,7 +24,7 @@
 
 #include "armv4vm_p.hpp"
 #include "memoryhandler.hpp"
-#include "coprocessor.hpp"
+//#include "coprocessor.hpp"
 
 #include <array>
 #include <cstdint>
@@ -98,7 +98,7 @@ struct VmProperties {
     }
 };
 
-class alignas(32) VirtualMachineBase {
+class alignas(32) AluBase {
   public:
     enum class Interrupt : int32_t {
 
@@ -116,24 +116,28 @@ class alignas(32) VirtualMachineBase {
     virtual uint8_t  *init() = 0;
     virtual uint64_t  load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
-    const std::array<uint32_t, 16> & getRegisters() const { return m_registers; }
+    std::array<uint32_t, 16> & getRegisters() noexcept { return m_registers; }
+    uint32_t getCPSR() const;
+    void     setCPSR(const uint32_t);
 
   protected:
     std::array<uint32_t, 16> m_registers;
+    uint32_t m_cpsr;
+    uint32_t m_spsr;
 };
 
-template <typename T, template <typename> class MemoryInterface>
-concept MemDerived = std::derived_from<T, MemoryInterface<T>>;
+// template <typename T, template <typename> class MemoryInterface>
+// concept MemDerived = std::derived_from<T, MemoryInterface<T>>;
 
-template <typename T, template <typename> class CoprocessorInterface>
-concept CoproDerived = std::derived_from<T, CoprocessorInterface<T>>;
+// template <typename T, template <typename> class CoprocessorInterface>
+// concept CoproDerived = std::derived_from<T, CoprocessorInterface<T>>;
 
 
-template <typename MemoryHandler, typename CoproHandler>
-class VirtualMachine : public VirtualMachineBase {
+template <typename MemoryHandler, typename CoproHandler> // Remettre les concepts MemDerived CoproDerived
+class Alu : public AluBase {
 
   public:
-    VirtualMachine(struct VmProperties * vmProperties = nullptr) :
+    Alu(struct VmProperties * vmProperties = nullptr) :
         m_sp(m_registers[13]),
         m_lr(m_registers[14]),
         m_pc(m_registers[15])
@@ -150,15 +154,15 @@ class VirtualMachine : public VirtualMachineBase {
 
         m_coprocessor.init(this);
     }
-    ~VirtualMachine();
+    ~Alu();
 
     uint8_t *       init() override;
     uint64_t        load() override;
     Interrupt       run(const uint32_t nbMaxIteration = 0) override;
-    uint32_t        getCPSR() const;
+
 
     friend class TestVm;
-
+    friend class TestVfpv2;
 public:
     enum Error {
 
@@ -236,13 +240,7 @@ public:
     };
 
     FormatSummary m_instructionSetFormat;
-#if 0
-    uint32_t m_registers[16];
-#endif
 
-
-    uint32_t m_cpsr;
-    uint32_t m_spsr;
     uint32_t & m_sp;
     uint32_t & m_lr;
     uint32_t & m_pc;
@@ -252,7 +250,7 @@ public:
 
 class VmException : public std::exception {
   public:
-    using Interrupt = VirtualMachineBase::Interrupt;
+    using Interrupt = AluBase::Interrupt;
 
     VmException(Interrupt interrupt = Interrupt::Resume)
         : m_interrupt(interrupt) {}

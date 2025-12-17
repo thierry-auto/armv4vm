@@ -20,7 +20,7 @@
 namespace armv4vm {
 
 // instanciations des templates explicites
-template class VirtualMachine<MemoryRaw, Vfpv2>;
-template class VirtualMachine<MemoryProtected, Vfpv2>;
+template class Alu<MemoryRaw, Vfpv2>;
+template class Alu<MemoryProtected, Vfpv2>;
 
 } // namespace armv4vm

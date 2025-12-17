@@ -97,11 +97,8 @@ template <typename Derived> class MemoryInterface {
     }
 
     inline uint8_t *getAdressZero() { return static_cast<Derived *>(this)->getAdressZeroImpl(); }
-
     inline uint8_t *allocate(const size_t size) { return static_cast<Derived *>(this)->allocate(size); }
-
     inline uint8_t operator[](const size_t index) { return static_cast<Derived *>(this)->operator[](index); }
-
     inline void addAccessRange(const AccessRange &accessRange) {
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
     }

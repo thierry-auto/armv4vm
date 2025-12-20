@@ -855,7 +855,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
     }
 
            // Signed + Signed = Signed, Unsigned + Signed = Unsigned..
-    (*reinterpret_cast<uint32_t *>(m_pc)) += getSigned24((instruction.offset) << 2) + 4; // et pas + 8
+    m_pc += getSigned24((instruction.offset) << 2) + 4;
 }
 
 template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::blockDataTransferEval() {

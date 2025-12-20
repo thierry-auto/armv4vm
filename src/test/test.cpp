@@ -26,11 +26,11 @@ namespace armv4vm {
 
 struct VmProperties vmProperties;
 
-// static void seti(uint8_t *ram, uint32_t ii) {
+       //#define MEMSIZE 128
+#define MEMSIZE 300
+#define UARTPOS 0x01000000;
+                                  //#define UARTPOS 0x101f1000
 
-//     // Identical endianness x86/arm, no arrangement
-//     *reinterpret_cast<uint32_t *>(ram) = ii;
-// }
 
 class TestVm : public QObject {
     Q_OBJECT
@@ -2013,17 +2013,12 @@ private slots:
         QVERIFY(vm.m_cpsr == 0x60000000);
     }
 
-    //#define MEMSIZE 128
-#define MEMSIZE 300
-#define UARTPOS 0x05000000
-    //#define UARTPOS 0x101f1000
-
     void testProgramHello() {
 
         std::string binPath(getBinPath());
         std::string data;
 
-        vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
+        vmProperties.m_memsize = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/hello.bin";
         unsigned char *mem     = nullptr;
         uint8_t *uart          = nullptr;
@@ -2257,19 +2252,19 @@ private slots:
         QVERIFY(data == "4 11337 64624 74501 98671 149983 166011 167964 230031 276464 290271 343718 353417 378247 433098 443959 447113 449806 456279");
     }
 
-    void testVLDR() {
+    void testFMSR() {
 
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xed937a00); // vldr.32 s14, [r3]
+        vm.m_ram.writePointer32(0, 0xee002a90); // FMSR S1, R2
         vm.m_ram.writePointer32(0x10, 0xABCDEF01);
-        vm.m_registers[3] = 0x0000000a;
+        vm.m_registers[2] = 0xaabbccdd;
         vm.m_cpsr         = 0x60000000;
 
         vm.run(1);
 
-        QVERIFY(vm.m_registers[0] == 0xABCDEF01);
+        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == 0xaabbccdd);
         QVERIFY(vm.m_cpsr == 0x60000000);
     }
 };

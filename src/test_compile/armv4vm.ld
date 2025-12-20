@@ -1,12 +1,21 @@
 ENTRY(reset)
 
+/* MEMORY */
+/* { */
+/* rom       : ORIGIN = 0x00000000, LENGTH = 0x00400000 /\* 4 mio *\/ */
+/* ram       : ORIGIN = 0x00400000, LENGTH = 0x04000000 /\* 32 mio *\/ */
+/* stack     : ORIGIN = 0x04400000, LENGTH = 0x00600000 /\* 4 mio *\/ */
+/* uart      : ORIGIN = 0x05000000, LENGTH = 0x00100000 /\* 1 mio *\/ */
+/* } */
+
 MEMORY
 {
 rom       : ORIGIN = 0x00000000, LENGTH = 0x00400000 /* 4 mio */
-ram       : ORIGIN = 0x00400000, LENGTH = 0x04000000 /* 32 mio */
-stack     : ORIGIN = 0x04400000, LENGTH = 0x00600000 /* 4 mio */
-uart      : ORIGIN = 0x05000000, LENGTH = 0x00100000 /* 1 mio */
+ram       : ORIGIN = 0x00400000, LENGTH = 0x00800000 /* 8 mio */
+stack     : ORIGIN = 0x00C00000, LENGTH = 0x00400000 /* 4 mio */
+uart      : ORIGIN = 0x01000000, LENGTH = 0x00100000 /* 1 mio */
 }
+
 
 SECTIONS
 {

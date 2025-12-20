@@ -51,7 +51,7 @@ class AccessRange {
     AccessPermission permission;
 };
 
-// Depuis que tout est headers et template, je pense que le CRTP
+// Depuis que tout est headers et template, je pense que le CRTP suivant
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
 // du polymorphsime classique.. A voir.
 template <typename Derived> class MemoryInterface {

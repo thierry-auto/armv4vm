@@ -22,6 +22,15 @@
 #include "coprocessor.hpp"
 #include "alu.hpp"
 
+// todo : traiter les overflow
+constexpr std::uint64_t operator""_mb(const unsigned long long value) {
+    return value * 1024ULL * 1024ULL;
+}
+
+constexpr std::uint64_t operator""_gb(const unsigned long long value) {
+    return value * 1024ULL * 1024ULL * 1024ULL;
+}
+
 namespace armv4vm {
 
 extern template class Alu<MemoryRaw, Vfpv2>;

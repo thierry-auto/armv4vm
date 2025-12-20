@@ -4,8 +4,8 @@ MEMORY
 {
 rom       : ORIGIN = 0x00000000, LENGTH = 0x00400000 /* 4 mio */
 ram       : ORIGIN = 0x00400000, LENGTH = 0x00800000 /* 8 mio */
-stack     : ORIGIN = 0x00800000, LENGTH = 0x00400000 /* 4 mio */
-uart      : ORIGIN = 0x00C00000, LENGTH = 0x00100000 /* 1 mio */
+stack     : ORIGIN = 0x00C00000, LENGTH = 0x00400000 /* 4 mio */
+uart      : ORIGIN = 0x01000000, LENGTH = 0x00100000 /* 1 mio */
 }
 
 SECTIONS

@@ -139,7 +139,10 @@ concept FloatingPoint = std::same_as<T, float> || std::same_as<T, double>;
 
 class Vfpv2 : public CoprocessorBase<Vfpv2> {
   public:
-    Vfpv2() : m_fpscr(0), m_fpexc(0) {}
+    Vfpv2() : m_fpscr(0), m_fpexc(0) {
+
+        m_sRegisters.fill(0.0f);
+    }
 
     void coprocessorDataTransfersImpl(const uint32_t workingInstruction);
     void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
@@ -168,6 +171,8 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
 
     template <FloatingPoint T>
     void setFPSCRCompare(const T a, const T b, const bool raiseException);
+
+    friend class TestVm;
 };
 
 inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
@@ -420,8 +425,8 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
 inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
 
     constexpr uint32_t OP_MASK  = 0x0FF00F00;
-    constexpr uint32_t OP_FMSR  = 0x0E000600;
-    constexpr uint32_t OP_FMRS  = 0x0E100600;
+    constexpr uint32_t OP_FMSR  = 0x0E000a00;
+    constexpr uint32_t OP_FMRS  = 0x0E100a00;
     constexpr uint32_t OP_FMDLR = 0x0E000700;
     constexpr uint32_t OP_FMRDL = 0x0E100700;
     constexpr uint32_t OP_FMDHR = 0x0E200700;

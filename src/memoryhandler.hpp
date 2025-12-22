@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <cstring>
 
 namespace armv4vm {
 
@@ -60,16 +61,29 @@ template <typename Derived> class MemoryInterface {
     virtual ~MemoryInterface() = default;
 
   public:
-    inline uint32_t readPointer32(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointer<uint32_t>(addr);
+    using byte = std::byte;
+
+#if 0
+    template<typename T>
+    inline T &writePointer(const uint32_t addr) {
+        return static_cast<Derived *>(this)->template writePointerImpl<T>(addr);
+    }
+
+    template<typename T>
+    inline T readPointer(const uint32_t addr) const {
+        return static_cast<const Derived *>(this)->template readPointerImpl<T>(addr);
+    }
+#else
+    inline uint32_t readPointer32<uint32_t>(uint32_t addr) const {
+        return static_cast<const Derived *>(this)->template readPointerImpl<uint32_t>(addr);
     }
 
     inline uint16_t readPointer16(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointer<uint16_t>(addr);
+        return static_cast<const Derived *>(this)->template readPointerImpl<uint16_t>(addr);
     }
 
     inline uint8_t readPointer8(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointer<uint8_t>(addr);
+        return static_cast<const Derived *>(this)->template readPointerImpl<uint8_t>(addr);
     }
 
     inline uint32_t &writePointer32(uint32_t addr) {
@@ -95,9 +109,10 @@ template <typename Derived> class MemoryInterface {
     inline void writePointer8(uint32_t addr, const uint8_t value) {
         return static_cast<Derived *>(this)->template writePointerImpl<uint8_t>(addr, value);
     }
+#endif
 
-    inline uint8_t *getAdressZero() { return static_cast<Derived *>(this)->getAdressZeroImpl(); }
-    inline uint8_t *allocate(const size_t size) { return static_cast<Derived *>(this)->allocate(size); }
+    inline byte *getAdressZero() { return static_cast<Derived *>(this)->getAddressZeroImpl(); }
+    inline byte *allocate(const size_t size) { return static_cast<Derived *>(this)->allocate(size); }
     inline uint8_t operator[](const size_t index) { return static_cast<Derived *>(this)->operator[](index); }
     inline void addAccessRange(const AccessRange &accessRange) {
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
@@ -105,100 +120,169 @@ template <typename Derived> class MemoryInterface {
 };
 
 class MemoryRaw : public MemoryInterface<MemoryRaw> {
-
   public:
+    using byte = std::byte;
+
     MemoryRaw()  = default;
     ~MemoryRaw() = default;
 
-    template <typename T> inline T readPointer(uint32_t addr) const {
-        return *reinterpret_cast<T *>(m_ram.get() + addr);
-    }
+           // -------- Allocation --------
 
-    template <typename T> inline T &writePointerImpl(uint32_t addr) {
-        return *reinterpret_cast<T *>(m_ram.get() + addr);
-    }
-
-    template <typename T> inline void writePointerImpl(uint32_t addr, const T value) {
-        *reinterpret_cast<T *>(m_ram.get() + addr) = value;
-    }
-
-    inline uint8_t *getAdressZeroImpl() { return m_ram ? m_ram.get() : nullptr; }
-
-    inline uint8_t *allocate(const size_t size) {
-
-        m_ram  = std::make_unique<uint8_t[]>(size);
-        m_size = size;
+    byte* allocate(std::size_t size) {
+        m_ram  = std::make_unique<byte[]>(size);
+        m_size = static_cast<uint32_t>(size);
         return m_ram.get();
     }
 
-    inline uint8_t operator[](const size_t index) { return *reinterpret_cast<uint8_t *>(m_ram.get() + index); }
+    byte* getAddressZeroImpl() {
+        return m_ram.get();
+    }
 
-    void addAccessRangeImpl(const AccessRange &accessRange) { (void)accessRange; }
+    const byte* getAddressZeroImpl() const {
+        return m_ram.get();
+    }
+
+    std::size_t size() const {
+        return m_size;
+    }
+
+           // -------- Lecture --------
+
+    template <typename T>
+    T readPointerImpl(uint32_t addr) const {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "MemoryRaw::readPointerImpl requires trivially copyable T");
+
+        T value;
+        std::memcpy(&value, m_ram.get() + addr, sizeof(T));
+        return value;
+    }
+
+           // -------- Écriture --------
+
+    template <typename T>
+    void writePointerImpl(uint32_t addr, const T& value) {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "MemoryRaw::writePointerImpl requires trivially copyable T");
+
+        std::memcpy(m_ram.get() + addr, &value, sizeof(T));
+    }
+
+           // -------- Accès octet --------
+
+    byte operator[](std::size_t index) const {
+        return m_ram[index];
+    }
+
+    void setByte(std::size_t index, byte value) {
+        m_ram[index] = value;
+    }
+
+           // -------- Permissions / hooks --------
+
+    void addAccessRangeImpl(const AccessRange& accessRange) {
+        (void)accessRange;
+    }
 
   private:
-    std::unique_ptr<uint8_t[]> m_ram;
-    uint32_t                   m_size;
+    std::unique_ptr<byte[]> m_ram;
+    uint32_t                m_size = 0;
 };
 
-template <typename T> inline T  readPointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
-template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
+
 
 class MemoryProtected : public MemoryInterface<MemoryProtected> {
+  public:
+    using byte = std::byte;
 
-  private:
-    bool isAccessible(const uint32_t address, const size_t dataSize, const AccessPermission &permission) const {
+    MemoryProtected() = default;
+    ~MemoryProtected() = default;
 
-        if (!std::any_of(m_accessRanges.begin(), m_accessRanges.end(), [&](AccessRange range) {
+           // -------- Allocation --------
 
-                return ((range.permission & permission) && (address >= range.start) && ((address + dataSize) < (range.start + range.size)));
-            }))
-        {
-            throw std::runtime_error("segmentation fault");
-        }
-
-        return false;
+    byte* allocate(std::size_t size) {
+        m_ram = std::make_unique<std::vector<byte>>(size);
+        return m_ram->data();
     }
 
-  public:
-    MemoryProtected() = default;
+    byte* getAddressZeroImpl() {
+        return m_ram ? m_ram->data() : nullptr;
+    }
 
-    inline uint8_t operator[](const uint32_t offset) const { return *(m_ram.get()->data() + offset); }
-    operator uint8_t *() { return m_ram.get()->data(); }
+    const byte* getAddressZeroImpl() const {
+        return m_ram ? m_ram->data() : nullptr;
+    }
+
+    std::size_t size() const {
+        return m_ram ? m_ram->size() : 0;
+    }
+
+           // -------- Lecture --------
 
     template <typename T>
-    inline T readPointer(uint32_t address) const {
+    T readPointerImpl(uint32_t address) const {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "MemoryProtected::readPointerImpl requires trivially copyable T");
 
         isAccessible(address, sizeof(T), AccessPermission::READ);
-        return *reinterpret_cast<T*>(m_ram.get()->data() + address);
+
+        T value;
+        std::memcpy(&value, m_ram->data() + address, sizeof(T));
+        return value;
     }
+
+           // -------- Écriture --------
 
     template <typename T>
-    inline T &writePointerImpl(uint32_t address) {
+    void writePointerImpl(uint32_t address, const T& value) {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "MemoryProtected::writePointerImpl requires trivially copyable T");
 
         isAccessible(address, sizeof(T), AccessPermission::WRITE);
-        return *reinterpret_cast<T*>(m_ram.get()->data() + address);
+
+        std::memcpy(m_ram->data() + address, &value, sizeof(T));
     }
 
-    template <typename T>
-    inline void writePointerImpl(uint32_t address, const T value) {
+           // -------- Accès octet --------
 
-        isAccessible(address, sizeof(T), AccessPermission::WRITE);
-        *reinterpret_cast<T*>(m_ram.get()->data() + address) = value;
+    byte operator[](uint32_t offset) const {
+        return (*m_ram)[offset];
     }
 
-    inline uint8_t *allocate(const size_t size) {
-
-        m_ram = std::make_unique<std::vector<uint8_t>>(size);
-        return m_ram.get()->data();
+    void setByte(uint32_t offset, byte value) {
+        (*m_ram)[offset] = value;
     }
 
-    inline uint8_t *getAdressZeroImpl() { return m_ram.get()->data(); }
+           // -------- Permissions --------
 
-    void addAccessRangeImpl(const AccessRange &accessRange) { m_accessRanges.push_back(accessRange); }
+    void addAccessRangeImpl(const AccessRange& accessRange) {
+        m_accessRanges.push_back(accessRange);
+    }
 
   private:
-    std::unique_ptr<std::vector<uint8_t>> m_ram;
-    std::vector<AccessRange> m_accessRanges;
+    // -------- Vérification d'accès --------
+
+    void isAccessible(uint32_t address,
+                      std::size_t dataSize,
+                      const AccessPermission& permission) const
+    {
+        auto test = [&](const AccessRange& range) {
+            return  (range.permission & permission) &&
+                   (address >= range.start) &&
+                   ((address + dataSize) <= (range.start + range.size));
+        };
+
+        const bool allowed = std::any_of(m_accessRanges.begin(), m_accessRanges.end(), test);
+
+        if (!allowed) {
+            throw std::runtime_error("segmentation fault");
+        }
+    }
+
+  private:
+    std::unique_ptr<std::vector<byte>> m_ram;
+    std::vector<AccessRange>           m_accessRanges;
 };
+
 
 } // namespace armv4vm

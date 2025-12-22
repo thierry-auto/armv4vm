@@ -8,6 +8,10 @@ namespace armv4vm {
 
 //using Test1Vm = Alu<MemoryProtected>;
 
+template <typename T> inline T  readPointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
+template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
+
+
 struct VmProperties vmProperties;
 
 class TestMem : public QObject {

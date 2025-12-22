@@ -31,6 +31,7 @@
 #include <exception>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -113,7 +114,7 @@ class alignas(32) AluBase {
         Undefined  = 9,
     };
 
-    virtual uint8_t  *init() = 0;
+    virtual std::byte  *init() = 0;
     virtual uint64_t  load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
     std::array<uint32_t, 16> & getRegisters() noexcept { return m_registers; }
@@ -156,7 +157,7 @@ class Alu : public AluBase {
     }
     ~Alu();
 
-    uint8_t *       init() override;
+    std::byte *       init() override;
     uint64_t        load() override;
     Interrupt       run(const uint32_t nbMaxIteration = 0) override;
 

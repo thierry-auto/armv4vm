@@ -510,9 +510,9 @@ private slots:
         vm.m_registers[13] = 0x50;
         vm.run(1);
 
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 12) == 0x00000001);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 8) == 0x00000022);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 4) == 0x00000333);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 12) == 0x00000001);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 8) == 0x00000022);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 4) == 0x00000333);
         QVERIFY(vm.m_registers[13] == 0x44);
 
         QVERIFY(vm.m_cpsr == 0x00000000);
@@ -539,11 +539,11 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 20) == 0x00000001);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 16) == 0x00000022);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 12) == 0x00000333);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 8) == 0x00004444);
-        QVERIFY(vm.m_ram.readPointer32(0x50 - 4) == 0x00055555);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 20) == 0x00000001);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 16) == 0x00000022);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 12) == 0x00000333);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 8) == 0x00004444);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x50 - 4) == 0x00055555);
         QVERIFY(vm.m_registers[13] == 0x3c);
 
         QVERIFY(vm.m_cpsr == 0x00000000);
@@ -666,7 +666,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x0000010e);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x00220000);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x00220000);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -691,7 +691,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x0000010c);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x00000033);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x00000033);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -742,7 +742,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x00000110);
-        QVERIFY(vm.m_ram.readPointer32(0x110) == 0x00000011);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x110) == 0x00000011);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -768,7 +768,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x000000e4);
-        QVERIFY(vm.m_ram.readPointer32(0xfc) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0xfc) == 0x11223344);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -913,7 +913,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x0000010c);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x11223344);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -939,7 +939,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x000000e8);
-        QVERIFY(vm.m_ram.readPointer32(0xe8) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0xe8) == 0x11223344);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -965,7 +965,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x000000ec);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x11223344);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -991,8 +991,8 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[1] == 0x000000ff);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x55667788);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1097,7 +1097,7 @@ private slots:
         QVERIFY(vm.m_registers[0] == 0x99aabbcc);
         QVERIFY(vm.m_registers[1] == 0x00000104);
         QVERIFY(vm.m_registers[2] == 0x00000004);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x556677cc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x556677cc);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1113,7 +1113,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[0] == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x8) == 0x99aabbcc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x8) == 0x99aabbcc);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1130,7 +1130,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[0] == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x8) == 0x556677cc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x8) == 0x556677cc);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1149,9 +1149,9 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[0] == 0x99aabbee);
-        QVERIFY(vm.m_ram.readPointer32(0x4) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0x8) == 0x55667788);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xaabbccee);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x4) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x8) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xaabbccee);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1170,7 +1170,7 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0x00000044);
         QVERIFY(vm.m_registers[1] == 0x00000100);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x11223344);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1236,10 +1236,10 @@ private slots:
         vm.m_registers[13] = 0x00000110;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x55667788);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0xddee00ff);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x99aabbcc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0xddee00ff);
         QVERIFY(vm.m_registers[13] == 0x00000100);
     }
 
@@ -1258,10 +1258,10 @@ private slots:
         vm.m_ram.writePointer32(0xf4) = 0xABCDEF09;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0xf4) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0xf8) == 0x55667788);
-        QVERIFY(vm.m_ram.readPointer32(0xfc) == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xddee00ff);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0xf4) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0xf8) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0xfc) == 0x99aabbcc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xddee00ff);
         QVERIFY(vm.m_registers[13] == 0x000000f0);
     }
 
@@ -1279,10 +1279,10 @@ private slots:
         vm.m_registers[13] = 0x00000100;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x55667788);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0xddee00ff);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x99aabbcc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0xddee00ff);
         QVERIFY(vm.m_registers[13] == 0x00000110);
     }
 
@@ -1299,10 +1299,10 @@ private slots:
         vm.m_registers[13] = 0x00000100;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x11223344);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x55667788);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x99aabbcc);
-        QVERIFY(vm.m_ram.readPointer32(0x110) == 0xddee00ff);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x55667788);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x99aabbcc);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x110) == 0xddee00ff);
         QVERIFY(vm.m_registers[13] == 0x00000110);
     }
 
@@ -1321,10 +1321,10 @@ private slots:
         vm.m_registers[13] = 0x00000110;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x00000100);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x00004444);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x00055555);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x00000000);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x00000100);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(vm.m_registers[0] == 0x11223344);
         QVERIFY(vm.m_registers[1] == 0x55667788);
         QVERIFY(vm.m_registers[2] == 0x99aabbcc);
@@ -1349,9 +1349,9 @@ private slots:
         vm.m_registers[13] = 0x00000110;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x00004444);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x00055555);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x00000000);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x00004444);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x00055555);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x00000000);
         QVERIFY(vm.m_registers[0] == 0x11223344);
         QVERIFY(vm.m_registers[1] == 0x55667788);
         QVERIFY(vm.m_registers[2] == 0x99aabbcc);
@@ -1371,7 +1371,7 @@ private slots:
         vm.m_registers[1] = 0x00000080;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x84) == 0x11223344);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x84) == 0x11223344);
         QVERIFY(vm.m_registers[0] == 0x11223344);
         QVERIFY(vm.m_registers[1] == 0x00000084);
     }
@@ -1390,10 +1390,10 @@ private slots:
         vm.m_registers[6] = 0x00666666;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x00000022);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x00004444);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x00055555);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x00000000);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x00000022);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(vm.m_registers[2] == 0x00000022);
         QVERIFY(vm.m_registers[3] == 0x0000010c);
         QVERIFY(vm.m_registers[4] == 0x00004444);
@@ -1415,10 +1415,10 @@ private slots:
         vm.m_registers[6] = 0x00666666;
 
         vm.run(1);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0x00000100);
-        QVERIFY(vm.m_ram.readPointer32(0x104) == 0x00004444);
-        QVERIFY(vm.m_ram.readPointer32(0x108) == 0x00055555);
-        QVERIFY(vm.m_ram.readPointer32(0x10c) == 0x00000000);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0x00000100);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(vm.m_registers[2] == 0x00000022);
         QVERIFY(vm.m_registers[3] == 0x0000010c);
         QVERIFY(vm.m_registers[4] == 0x00004444);
@@ -1592,7 +1592,7 @@ private slots:
         QVERIFY(vm.m_registers[1] == 0x00000000);
         QVERIFY(vm.m_registers[2] == 0x00000000);
         QVERIFY(vm.m_registers[3] == 0x00000012);
-        QVERIFY(vm.m_ram.readPointer32(32) == 0x00000012);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(32) == 0x00000012);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1609,7 +1609,7 @@ private slots:
         vm.run(1);
 
         QVERIFY(vm.m_registers[3] == 0x00000014);
-        QVERIFY(vm.m_ram.readPointer32(0x20) == 0x0014c3d4);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x20) == 0x0014c3d4);
         QVERIFY(vm.m_cpsr == 0x00000000);
     }
 
@@ -1627,7 +1627,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x00000001);
         QVERIFY(vm.m_registers[3] == 0x00000048);
-        QVERIFY(vm.m_ram.readPointer32(0x54) == 0x0001e5b9);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x54) == 0x0001e5b9);
     }
 
     void testSTRH4() {
@@ -1644,7 +1644,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x00000001);
         QVERIFY(vm.m_registers[3] == 0x00000048);
-        QVERIFY(vm.m_ram.readPointer32(0x54) == 0x00010009);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x54) == 0x00010009);
     }
 
     void testSTRH5() {
@@ -1661,7 +1661,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0xaabbccdd);
         QVERIFY(vm.m_registers[3] == 0x00000102);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xaaaaccdd);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xaaaaccdd);
     }
 
     void testSTRH6() {
@@ -1678,7 +1678,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0xaabbccdd);
         QVERIFY(vm.m_registers[3] == 0x00000105);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xccddaaaa);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xccddaaaa);
     }
 
     void testLDRH1() {
@@ -1695,7 +1695,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x0000ccdd);
         QVERIFY(vm.m_registers[3] == 0x00000102);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xaabbccdd);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xaabbccdd);
     }
 
     void testLDRH2() {
@@ -1712,7 +1712,7 @@ private slots:
 
         QVERIFY(vm.m_registers[2] == 0x0000aabb);
         QVERIFY(vm.m_registers[3] == 0x00000105);
-        QVERIFY(vm.m_ram.readPointer32(0x100) == 0xaabbccdd);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x100) == 0xaabbccdd);
     }
 
     void testSTRB() {
@@ -1729,7 +1729,7 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0xeeeeeed4);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0xeeeeeed4);
     }
 
     void testSTRB2() {
@@ -1746,7 +1746,7 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0x11d41111);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0x11d41111);
     }
 
     void testSTRB3() {
@@ -1763,7 +1763,7 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0xd4111111);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0xd4111111);
     }
 
     void testSTRB4() {
@@ -1780,7 +1780,7 @@ private slots:
 
         QVERIFY(vm.m_registers[0] == 0xa1b2c3d4);
         QVERIFY(vm.m_registers[1] == 0x00000010);
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0x1111d411);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0x1111d411);
     }
 
     void testADCS() {
@@ -1968,7 +1968,7 @@ private slots:
 
         vm.run(2);
 
-        QVERIFY(vm.m_ram.readPointer32(12) == 0x00000010);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(12) == 0x00000010);
     }
 
     void testSWP_1() {
@@ -1985,7 +1985,7 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0x11112222);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0x11112222);
         QVERIFY(vm.m_registers[0] == 0xABCDEF01);
         QVERIFY(vm.m_registers[1] == 0x11112222);
         QVERIFY(vm.m_registers[2] == 0x00000010);
@@ -2006,7 +2006,7 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_ram.readPointer32(0x10) == 0xABCDEF22);
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x10) == 0xABCDEF22);
         QVERIFY(vm.m_registers[0] == 0x00000033);
         QVERIFY(vm.m_registers[1] == 0x11112222);
         QVERIFY(vm.m_registers[2] == 0x00000010);
@@ -2258,13 +2258,46 @@ private slots:
         vm.init();
 
         vm.m_ram.writePointer32(0, 0xee002a90); // FMSR S1, R2
+        vm.m_ram.writePointer32(0x10, 3.14159f);
+        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == std::bit_cast<float>(3.14159f));
+        QVERIFY(vm.m_cpsr == 0x60000000);
+    }
+
+    void testFMRS() {
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer32(0, 0xee002a90); // FMSR S1, R2
         vm.m_ram.writePointer32(0x10, 0xABCDEF01);
         vm.m_registers[2] = 0xaabbccdd;
         vm.m_cpsr         = 0x60000000;
 
         vm.run(1);
 
-        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == 0xaabbccdd);
+        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == std::bit_cast<float>(0xaabbccddU));
+        QVERIFY(vm.m_cpsr == 0x60000000);
+    }
+
+    void atestFMRS() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer32(0, 0xee123a10); // FMRS	R3, S4
+        vm.m_ram.writePointer32(0x10, 0xABCDEF01);
+        vm.m_registers[3] = 0xaabbccdd;
+        vm.m_coprocessor.m_sRegisters[4] = 3213.4393f;
+        vm.m_cpsr         = 0x60000000;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == 3213.4393f);
+        QVERIFY(vm.m_registers[3] == 3213.4393f);
         QVERIFY(vm.m_cpsr == 0x60000000);
     }
 };

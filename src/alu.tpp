@@ -16,6 +16,7 @@
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
+#include <cstring>
 
 namespace armv4vm {
 
@@ -24,7 +25,7 @@ static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) 
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
 
 template <typename MemoryHandler, typename CoproHandler>
-uint8_t* Alu<MemoryHandler, CoproHandler>::init() {
+std::byte* Alu<MemoryHandler, CoproHandler>::init() {
 
     m_ram.allocate(m_vmProperties.m_memsize);
     m_registers.fill(0);
@@ -70,6 +71,7 @@ template <typename MemoryHandler, typename CoproHandler> uint64_t Alu<MemoryHand
         program.read((char*) m_ram.getAdressZero(), programSize);
         program.close();
     } else {
+
         m_error     = E_LOAD_FAILED;
         programSize = -1;
     }

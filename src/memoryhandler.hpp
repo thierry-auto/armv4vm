@@ -45,6 +45,30 @@ inline constexpr bool operator&(AccessPermission a, AccessPermission b) {
     return (static_cast<int>(a) & static_cast<int>(b)) != 0;
 }
 
+template <typename T>
+class MemoryRef {
+  public:
+    MemoryRef(std::byte* base, uint32_t address)
+        : m_base(base), m_address(address) {}
+
+           // Lecture implicite
+    operator T() const {
+        T value;
+        std::memcpy(&value, m_base + m_address, sizeof(T));
+        return value;
+    }
+
+           // Affectation
+    MemoryRef& operator=(const T& value) {
+        std::memcpy(m_base + m_address, &value, sizeof(T));
+        return *this;
+    }
+
+  private:
+    std::byte* m_base;
+    uint32_t   m_address;
+};
+
 class AccessRange {
   public:
     uint32_t         start;
@@ -54,7 +78,7 @@ class AccessRange {
 
 // Depuis que tout est headers et template, je pense que le CRTP suivant
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
-// du polymorphsime classique.. A voir.
+// du polymorphsime classique qui serait effacé par le compilateur. A voir.
 template <typename Derived> class MemoryInterface {
   protected:
     MemoryInterface()          = default;
@@ -63,9 +87,9 @@ template <typename Derived> class MemoryInterface {
   public:
     using byte = std::byte;
 
-#if 0
+#if 1
     template<typename T>
-    inline T &writePointer(const uint32_t addr) {
+    inline MemoryRef<T> writePointer(const uint32_t addr) {
         return static_cast<Derived *>(this)->template writePointerImpl<T>(addr);
     }
 
@@ -160,12 +184,26 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
 
            // -------- Écriture --------
 
-    template <typename T>
-    void writePointerImpl(uint32_t addr, const T& value) {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "MemoryRaw::writePointerImpl requires trivially copyable T");
+    // template <typename T>
+    // void writePointerImpl(uint32_t addr, const T& value) {
+    //     static_assert(std::is_trivially_copyable_v<T>,
+    //                   "MemoryRaw::writePointerImpl requires trivially copyable T");
 
-        std::memcpy(m_ram.get() + addr, &value, sizeof(T));
+    //     std::memcpy(m_ram.get() + addr, &value, sizeof(T));
+    // }
+
+    // template <typename T>
+    // T& writePointerImpl(const uint32_t addr) {
+    //     static_assert(std::is_trivially_copyable_v<T>,
+    //                   "MemoryRaw::writePointerImpl requires trivially copyable T");
+
+    //     //std::memcpy(m_ram.get() + addr, &value, sizeof(T));
+    //     return m_ram.get();
+    // }
+    template <typename T>
+    MemoryRef<T> writePointerImpl(const uint32_t address) {
+
+        return MemoryRef<T>(m_ram.get(), address);
     }
 
            // -------- Accès octet --------
@@ -233,14 +271,32 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
            // -------- Écriture --------
 
+    // template <typename T>
+    // void writePointerImpl(uint32_t address, const T& value) {
+    //     static_assert(std::is_trivially_copyable_v<T>,
+    //                   "MemoryProtected::writePointerImpl requires trivially copyable T");
+
+    //     isAccessible(address, sizeof(T), AccessPermission::WRITE);
+
+    //     std::memcpy(m_ram->data() + address, &value, sizeof(T));
+    // }
+
+    // template <typename T>
+    // T& writePointerImpl(uint32_t address/*, const T& value*/) {
+    //     static_assert(std::is_trivially_copyable_v<T>,
+    //                   "MemoryProtected::writePointerImpl requires trivially copyable T");
+
+    //     isAccessible(address, sizeof(T), AccessPermission::WRITE);
+
+    //     //std::memcpy(m_ram->data() + address, &value, sizeof(T));
+    //     return m_ram->data();
+    // }
+
     template <typename T>
-    void writePointerImpl(uint32_t address, const T& value) {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "MemoryProtected::writePointerImpl requires trivially copyable T");
-
+    MemoryRef<T> writePointerImpl(const uint32_t address) {
+        static_assert(std::is_trivially_copyable_v<T>);
         isAccessible(address, sizeof(T), AccessPermission::WRITE);
-
-        std::memcpy(m_ram->data() + address, &value, sizeof(T));
+        return MemoryRef<T>(m_ram.get()->data(), address);
     }
 
            // -------- Accès octet --------

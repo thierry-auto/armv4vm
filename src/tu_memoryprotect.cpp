@@ -1,6 +1,7 @@
 
 #include <QObject>
-#include <QtTest>
+#include <QTest>
+#include <cstddef>
 
 #include "armv4vm.hpp"
 
@@ -8,9 +9,10 @@ namespace armv4vm {
 
 //using Test1Vm = Alu<MemoryProtected>;
 
-template <typename T> inline T  readPointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
-template <typename T> inline T &writePointer(uint8_t *mem) { return *reinterpret_cast<T *>(mem); }
+// template <typename T> inline T  readPointer(std::byte *mem) { return *reinterpret_cast<T *>(mem); }
+// template <typename T> inline T &writePointer(std::byte *mem) { return *reinterpret_cast<T *>(mem); }
 
+auto to_int = [](std::byte b) { return std::to_integer<int>(b); };
 
 struct VmProperties vmProperties;
 
@@ -29,7 +31,7 @@ class TestMem : public QObject {
 
     void testReadWrite8() {
 
-        uint8_t           *mem = nullptr;
+        std::byte           *mem = nullptr;
         MemoryProtected    pro;
         uint8_t            v1 = 0x11;
         uint8_t            v2 = 0;
@@ -41,26 +43,26 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint8_t>(mem + 10) = v1;
-            pro.writePointer8(20) = v1;
-            QVERIFY(mem[20] == 0x11);
-            QVERIFY(mem[21] == 0x0);
-            QVERIFY(mem[22] == 0x0);
-            QVERIFY(mem[23] == 0x0);
+            pro.writePointer<uint8_t>(20) = v1;
+            QVERIFY(to_int(mem[20]) == 0x11);
+            QVERIFY(to_int(mem[21]) == 0x0);
+            QVERIFY(to_int(mem[22]) == 0x0);
+            QVERIFY(to_int(mem[23]) == 0x0);
 
             writePointer<uint8_t>(mem + 24) = v1;
-            pro.writePointer8(28) = v1;
-            QVERIFY(mem[24] == 0x11);
+            pro.writePointer<uint8_t>(28) = v1;
+            QVERIFY(to_int(mem[24]) == 0x11);
             QVERIFY(pro[28] == 0x11);
 
             v2 = readPointer<uint8_t>(mem + 24);
-            v3 = pro.readPointer8(28);
+            v3 = pro.readPointer<uint8_t>(28);
             QVERIFY(v2 == v3);
 
             writePointer<uint8_t>(&mem[32]) = 12;
-            pro.writePointer8(33) = 12;
+            pro.writePointer<uint8_t>(33) = 12;
 
-            v1      = mem[32];
-            v2      = pro[33];
+            v1      = to_int(mem[32]);
+            v2      = to_int(pro[33]);
             QVERIFY(v1 == v2);
 
         } catch (std::exception &) {
@@ -72,7 +74,7 @@ class TestMem : public QObject {
 
     void testReadWrite16() {
 
-        uint8_t           *mem = nullptr;
+        std::byte           *mem = nullptr;
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
         uint16_t           v2 = 0;
@@ -84,7 +86,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            pro.writePointer8(20) = static_cast<uint8_t>(v1);
+            pro.writePointer<uint8_t>(20) = static_cast<uint8_t>(v1);
 
             QVERIFY(mem[20] == 0x22);
             QVERIFY(mem[21] == 0x0);
@@ -92,7 +94,7 @@ class TestMem : public QObject {
             QVERIFY(mem[23] == 0x0);
 
             writePointer<uint16_t>(mem + 24) = v1;
-            writePointer<uint16_t>(pro + 28) = v1;
+            pro.writePointer<uint16_t>(28) = v1;
 
             QVERIFY(mem[24] == 0x22);
             QVERIFY(mem[25] == 0x11);
@@ -100,18 +102,18 @@ class TestMem : public QObject {
             QVERIFY(pro[29] == 0x11);
 
             writePointer<uint16_t>(mem + 24) = v1;
-            pro.writePointer16(28) = v1;
+            pro.writePointer<uint16_t>(28) = v1;
 
             v2 = readPointer<uint8_t>(mem + 24);
-            v3 = pro.readPointer8(28);
+            v3 = pro.readPointer<uint8_t>(28);
             QVERIFY(v2 == v3);
 
             v2 = readPointer<uint16_t>(mem + 24);
-            v3 = pro.readPointer16(28);
+            v3 = pro.readPointer<uint16_t>(28);
             QVERIFY(v2 == v3);
 
             writePointer<uint8_t>(mem + 32) = 0xEB;
-            pro.writePointer8(33) = 0xEB;
+            pro.writePointer<uint8_t>(33) = 0xEB;
 
             v2 = mem[32];
             v3 = pro[33];
@@ -126,7 +128,7 @@ class TestMem : public QObject {
 
     void testOutOfRange8() {
 
-        uint8_t           *mem;
+        std::byte           *mem;
 
         MemoryProtected    pro;
         const uint8_t      v1 = 0x11;
@@ -137,12 +139,12 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            pro.writePointer8(20) = readPointer<uint8_t>(mem + 10);
+            pro.writePointer<uint8_t>(20) = readPointer<uint8_t>(mem + 10);
 
             QVERIFY(mem[20] == v1);
 
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
-            pro.writePointer8(42) = readPointer<uint8_t>(mem + 10);
+            pro.writePointer<uint8_t>(42) = readPointer<uint8_t>(mem + 10);
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -154,7 +156,7 @@ class TestMem : public QObject {
 
     void testOutOfRange16() {
 
-        uint8_t           *mem;
+        std::byte           *mem;
 
         MemoryProtected    pro;
         const uint16_t     v1 = 0x1122;
@@ -165,13 +167,13 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
-            pro.writePointer16(20) = readPointer<uint16_t>(mem + 10);
+            pro.writePointer<uint16_t>(20) = readPointer<uint16_t>(mem + 10);
 
             QVERIFY(mem[20] == 0x22);
             QVERIFY(mem[21] == 0x11);
 
             writePointer<uint16_t>(mem + 10) = static_cast<uint16_t>(v1);
-            pro.writePointer16(31) = readPointer<uint16_t>(mem + 10);
+            pro.writePointer<uint16_t>(31) = readPointer<uint16_t>(mem + 10);
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -184,7 +186,7 @@ class TestMem : public QObject {
 
     void testOutOfRange32() {
 
-        uint8_t           *mem;
+        std::byte           *mem;
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
         uint32_t           v2 = 0;
@@ -196,7 +198,7 @@ class TestMem : public QObject {
 
         try {
             writePointer<uint32_t>(mem + 1)  = v1;
-            pro.writePointer32(44) = readPointer<uint32_t>(mem + 1);
+            pro.writePointer<uint32_t>(44) = readPointer<uint32_t>(mem + 1);
 
             QVERIFY(mem[44] == 0x44);
             QVERIFY(mem[45] == 0x33);
@@ -204,11 +206,11 @@ class TestMem : public QObject {
             QVERIFY(mem[47] == 0x11);
 
             v2 = readPointer<uint16_t>(mem + 1);
-            v3 = pro.readPointer16(44);
+            v3 = pro.readPointer<uint16_t>(44);
 
             QVERIFY(v2 == v3);
 
-            pro.writePointer32(30) = pro.readPointer32(44);
+            pro.writePointer<uint32_t>(30) = pro.readPointer32(44);
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -223,7 +225,7 @@ class TestMem : public QObject {
 
     void testOutOfRange32_2() {
 
-        uint8_t           *mem;
+        std::byte           *mem;
 
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
@@ -234,14 +236,14 @@ class TestMem : public QObject {
         mem = pro.allocate(8);
 
         try {
-            pro.writePointer32(4) = v1;
+            pro.writePointer<uint32_t>(4) = v1;
 
             QVERIFY(mem[4] == 0x44);
             QVERIFY(mem[5] == 0x33);
             QVERIFY(mem[6] == 0x22);
             QVERIFY(mem[7] == 0x11);
 
-            pro.writePointer32(2) = v2;
+            pro.writePointer<uint32_t>(2) = v2;
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -256,7 +258,7 @@ class TestMem : public QObject {
         exceptionRaised = false;
 
         try {
-            pro.writePointer32(5) = v1;
+            pro.writePointer<uint32_t>(5) = v1;
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -277,7 +279,7 @@ class TestMem : public QObject {
         pro.allocate(256);
 
         try {
-            pro.writePointer32(-3) = v1;
+            pro.writePointer<uint32_t>(-3) = v1;
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -296,7 +298,7 @@ class TestMem : public QObject {
         pro.allocate(128);
 
         try {
-            pro.writePointer32(-4) = v1;
+            pro.writePointer<uint32_t>(-4) = v1;
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -314,7 +316,7 @@ class TestMem : public QObject {
         pro.allocate(128);
 
         try {
-            pro.writePointer32(4) = v1;
+            pro.writePointer<uint32_t>(4) = v1;
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -333,7 +335,7 @@ class TestMem : public QObject {
         pro.allocate(128);
 
         try {
-            pro.writePointer32(-4) = v1;
+            pro.writePointer<uint32_t>(-4) = v1;
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -352,7 +354,7 @@ class TestMem : public QObject {
         pro.allocate(128);
 
         try {
-            pro.writePointer32(4) = v1;
+            pro.writePointer<uint32_t>(4) = v1;
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -431,7 +433,7 @@ class TestMem : public QObject {
 
     void testMinusPlus() {
 
-        uint8_t           *mem;
+        std::byte           *mem;
 
         MemoryProtected    pro;
         const uint32_t     v1 = 0x11223344;
@@ -441,7 +443,7 @@ class TestMem : public QObject {
         mem = pro.allocate(128);
 
         try {
-            pro.writePointer32(109) = v1;
+            pro.writePointer<uint32_t>(109) = v1;
 
             QVERIFY(mem[109] == 0x44);
             QVERIFY(mem[110] == 0x33);

@@ -53,6 +53,7 @@ class MemoryRef {
 
            // Lecture implicite
     operator T() const {
+        static_assert(std::is_trivially_copyable_v<T>);
         T value;
         std::memcpy(&value, m_base + m_address, sizeof(T));
         return value;
@@ -60,9 +61,17 @@ class MemoryRef {
 
            // Affectation
     MemoryRef& operator=(const T& value) {
+        static_assert(std::is_trivially_copyable_v<T>);
         std::memcpy(m_base + m_address, &value, sizeof(T));
         return *this;
     }
+
+    template <typename U>
+    friend bool operator == (const MemoryRef<std::byte> &left, const U right);
+    template <typename U>
+    friend bool operator == (const U right, const MemoryRef<std::byte> &left);
+    //friend std::byte& operator = (std::byte &left, const MemoryRef<std::byte> &right);
+
 
   private:
     std::byte* m_base;
@@ -110,7 +119,7 @@ template <typename Derived> class MemoryInterface {
         return static_cast<const Derived *>(this)->template readPointerImpl<uint8_t>(addr);
     }
 
-    inline uint32_t &writePointer32(uint32_t addr) {
+    inline uint32_t &writePointer<uint32_t>(uint32_t addr) {
         return static_cast<Derived *>(this)->template writePointerImpl<uint32_t>(addr);
     }
 
@@ -122,7 +131,7 @@ template <typename Derived> class MemoryInterface {
         return static_cast<Derived *>(this)->template writePointerImpl<uint8_t>(addr);
     }
 
-    inline void writePointer32(uint32_t addr, const uint32_t value) {
+    inline void writePointer<uint32_t>(uint32_t addr, const uint32_t value) {
         return static_cast<Derived *>(this)->template writePointerImpl<uint32_t>(addr, value);
     }
 
@@ -301,8 +310,11 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
            // -------- Accès octet --------
 
-    byte operator[](uint32_t offset) const {
-        return (*m_ram)[offset];
+    MemoryRef<byte> operator[](const uint32_t index) const {
+        //return (*m_ram)[offset];
+        //static_assert(std::is_trivially_copyable_v<T>);
+        isAccessible(index, /*sizeof(T)*/1, AccessPermission::WRITE);
+        return MemoryRef<byte>(m_ram.get()->data(), index);
     }
 
     void setByte(uint32_t offset, byte value) {
@@ -335,10 +347,67 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         }
     }
 
+    friend MemoryRef<std::byte> operator + (MemoryProtected &left, const int right);
+
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<AccessRange>           m_accessRanges;
 };
 
+MemoryRef<std::byte> operator + (MemoryProtected &left, const int right) {
+
+    left.isAccessible(right, /*sizeof(T)*/1, AccessPermission::WRITE);
+    return MemoryRef<std::byte>(left.m_ram.get()->data(), right);
+}
+
+template <typename T>
+inline T readPointer(const std::byte* mem) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    T value;
+    std::memcpy(&value, mem, sizeof(T));
+    return value;
+}
+
+template <typename T>
+inline MemoryRef<T> writePointer(std::byte* mem) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    return MemRef<T>(mem);
+}
+
+template <typename T>
+inline T readPointer(const std::byte& mem) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    T value;
+    std::memcpy(&value, mem, sizeof(T));
+    return value;
+}
+
+template <typename T>
+inline MemoryRef<T> writePointer(std::byte& mem) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    return MemRef<T>(mem);
+}
+
+
+bool operator == (const std::byte &left, const int &right) {
+
+    return std::to_integer<int>(left) == right;
+}
+
+template <typename U>
+bool operator == (const MemoryRef<std::byte> &left, const U right) {
+
+    return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
+}
+template <typename U>
+bool operator == (const U right, const MemoryRef<std::byte> &left) {
+
+    return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
+}
+
+// std::byte& operator = (std::byte &left, const MemoryRef<std::byte> &right) {
+
+//     return left = *(right.m_base + right.m_address);
+// }
 
 } // namespace armv4vm

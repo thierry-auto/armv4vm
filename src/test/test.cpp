@@ -47,7 +47,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe3a0002d; // mov r0, #45
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe3a0002d; // mov r0, #45
 
         vm.run(1);
 
@@ -59,7 +59,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0900001; // add r0, r0, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
 
         vm.m_registers[0] = 0xFFFFFFFF;
         vm.m_registers[1] = 0x1;
@@ -75,7 +75,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0900001; // add r0, r0, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
 
         vm.m_registers[0] = 0xFFFFFFFF;
         vm.m_registers[1] = 0x4;
@@ -91,7 +91,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0510002; // subs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0510002; // subs r0, r1, r2
 
         vm.m_registers[0] = 0xFFFFFFFF;
         vm.m_registers[1] = 0x4;
@@ -107,7 +107,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0510002; // subs    r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
 
         vm.m_registers[0] = 0xFFFFFFFF;
         vm.m_registers[1] = 0xFFFFFFFF; // -1
@@ -123,7 +123,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0510002; // subs    r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0xFFFFFFFF; // -1
         vm.m_registers[2] = 0xFFFFFFFF; // -1
@@ -138,7 +138,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00211;
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00211;
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0xFFFFFFFF; // -1
         vm.m_registers[2] = 0xFFFFFFFF; // -1
@@ -153,7 +153,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00001;
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00001;
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x801200EF; // -1
 
@@ -167,7 +167,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00231; // lsrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00231; // lsrs r0, r1, r2
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x801200EF; // -1
         vm.m_registers[2] = 0x100;
@@ -182,7 +182,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x801200EF; // -1
@@ -199,7 +199,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x8012FFFF; // -1
@@ -215,7 +215,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x0012FFFF; // -1
         vm.m_registers[2] = 0x10;
@@ -230,7 +230,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x8012FFFF; // -1
@@ -246,7 +246,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x1012FFFF; // -1
@@ -262,7 +262,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00251; // asrs r0, r1, #0
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, #0
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x801200EF; // -1
         vm.m_registers[2] = 0;
@@ -277,7 +277,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00001; // asrs r0, r1, #0
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00001; // asrs r0, r1, #0
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x801200EF; // -1
 
@@ -291,7 +291,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00271; // rors r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x00000010; // -1
@@ -307,7 +307,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00271; // rors r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x00000010; // -1
@@ -323,7 +323,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00001; // rors r0, r1, #0
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00001; // rors r0, r1, #0
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x00000010; // -1
@@ -339,7 +339,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00061; // rrxs r0, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x00000010; // -1
@@ -355,7 +355,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00061; // rrxs r0, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
 
         vm.m_registers[0] = 0xABABABAB;
         vm.m_registers[1] = 0x00000010; // -1
@@ -371,7 +371,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00170; // rors r0, r0, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00170; // rors r0, r0, r1
 
         vm.m_registers[0] = 0x00000008;
         vm.m_registers[1] = 0x00000010; // -1
@@ -386,7 +386,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00260; // rors r0, #4
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00260; // rors r0, #4
         vm.m_registers[0] = 0x00080000;
 
         vm.run(1);
@@ -399,7 +399,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe1b00221; // movs r0, r1, lsr #4
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe1b00221; // movs r0, r1, lsr #4
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00010000;
@@ -414,7 +414,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe3800d7d; // ORR r0, r0, #8000
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe3800d7d; // ORR r0, r0, #8000
         vm.m_registers[0] = 0x00000001;
 
         vm.run(1);
@@ -427,7 +427,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
         vm.m_registers[0] = 0xF000000F;
 
         vm.run(1);
@@ -440,7 +440,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[0] = 0x800F0001;
 
@@ -454,7 +454,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe3810602; // ORR r0, r1, #2097152
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe3810602; // ORR r0, r1, #2097152
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x800f0001;
 
@@ -468,10 +468,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5910004; // ldr  r0, [r1, #4]
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5910004; // ldr  r0, [r1, #4]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x0000000c;
-        vm.m_ram.writePointer32(0xc + 0x4, 0x12345678);
+        vm.m_ram.writePointer<uint32_t>(0xc + 0x4, 0x12345678);
 
         vm.run(1);
 
@@ -484,7 +484,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5810004; // str     r0, [r1, #4]
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5810004; // str     r0, [r1, #4]
 
         vm.m_registers[0] = 0xabcdef02;
         vm.m_registers[1] = 0x0000000c;
@@ -503,7 +503,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe92d0007; // push     {r0, r1, r2}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe92d0007; // push     {r0, r1, r2}
         vm.m_registers[0]  = 0x00000001;
         vm.m_registers[1]  = 0x00000022;
         vm.m_registers[2]  = 0x00000333;
@@ -522,8 +522,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe92d001f; // push {r0, r1, r2, r3, r4}
-        vm.m_ram.writePointer32(4) = 0xe8bd03e0; // pop {r5, r6, r7, r8, r9}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe92d001f; // push {r0, r1, r2, r3, r4}
+        vm.m_ram.writePointer<uint32_t>(4) = 0xe8bd03e0; // pop {r5, r6, r7, r8, r9}
 
         vm.m_registers[0]  = 0x00000001;
         vm.m_registers[1]  = 0x00000022;
@@ -565,7 +565,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0810002; // add r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000444;
@@ -582,7 +582,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0910002; // adds r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0910002; // adds r0, r1, r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x7FFFFFFF;
@@ -599,7 +599,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0910002; // add r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x40000000;
@@ -616,7 +616,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0810002; // add r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x40000000;
@@ -633,7 +633,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0910002; // add r0, r1, r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x7FFFFFFF;
@@ -650,12 +650,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5f10002;     // ldrb r0, [r1, #2]!
-        vm.m_ram.writePointer32(4, 0xe5e1000c); // strb r0, [r1, #12]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5f10002;     // ldrb r0, [r1, #2]!
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5e1000c); // strb r0, [r1, #12]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
 
@@ -675,12 +675,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5f10001;     // ldrb r0, [r1, #1]!
-        vm.m_ram.writePointer32(4, 0xe5e1000b); // strb r0, [r1, #11]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5f10001;     // ldrb r0, [r1, #1]!
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5e1000b); // strb r0, [r1, #11]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
 
@@ -699,17 +699,17 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5d10000; // ldrb r0, [r1]
-        vm.m_ram.writePointer32(4, 0xe5d20000);
-        vm.m_ram.writePointer32(8, 0xe5d30000);
-        vm.m_ram.writePointer32(12, 0xe5d40000);
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5d10000; // ldrb r0, [r1]
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5d20000);
+        vm.m_ram.writePointer<uint32_t>(8, 0xe5d30000);
+        vm.m_ram.writePointer<uint32_t>(12, 0xe5d40000);
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
         vm.m_registers[2] = 0x00000101;
         vm.m_registers[3] = 0x00000102;
         vm.m_registers[4] = 0x00000103;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
         QVERIFY(vm.m_registers[0] == 0x00000044);
@@ -726,12 +726,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5f10003;     // ldrb r0, [r1, #3]!
-        vm.m_ram.writePointer32(4, 0xe5e1000d); // strb r0, [r1, #13]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5f10003;     // ldrb r0, [r1, #3]!
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5e1000d); // strb r0, [r1, #13]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
 
@@ -751,13 +751,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe4110004;     // ldr r0, [r1], #-4
-        vm.m_ram.writePointer32(4, 0xe4010018); // str r0, [r1], #-24
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe4110004;     // ldr r0, [r1], #-4
+        vm.m_ram.writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -776,10 +776,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5910000; // ldr r0, [r1]
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5910000; // ldr r0, [r1]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
         QVERIFY(vm.m_registers[0] == 0x11223344);
@@ -789,7 +789,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0020190; // mul r2,r0,r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0020190; // mul r2,r0,r1
         vm.m_registers[0] = 0xffffff0f;
         vm.m_registers[1] = 0x00000002;
 
@@ -802,7 +802,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0203291; // mla r0,r1,r2,r3
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000012;
         vm.m_registers[2] = 0x0000007f;
@@ -820,7 +820,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0203291; // mla r0,r1,r2,r3
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0xFFFFFFF6;
         vm.m_registers[2] = 0x00000014;
@@ -838,7 +838,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x7FFFEFF6;
         vm.m_registers[2] = 0x70070014;
@@ -857,7 +857,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x7FFFEFF6;
         vm.m_registers[2] = 0x00000000;
@@ -876,7 +876,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0xfffffff6;
         vm.m_registers[2] = 0x00000002;
@@ -896,13 +896,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5b10000;     // ldr r0, [r1, #0]!
-        vm.m_ram.writePointer32(4, 0xe5a1000c); // str r0, [r1, #12]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5b10000;     // ldr r0, [r1, #0]!
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5a1000c); // str r0, [r1, #12]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -922,13 +922,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5310004;     // ldr r0, [r1, #-4]!
-        vm.m_ram.writePointer32(4, 0xe5210018); // str r0, [r1, #-24]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5310004;     // ldr r0, [r1, #-4]!
+        vm.m_ram.writePointer<uint32_t>(4, 0xe5210018); // str r0, [r1, #-24]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000104;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -948,13 +948,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe4910004;     // ldr r0, [r1], #4
-        vm.m_ram.writePointer32(4, 0xe4010018); // str r0, [r1], #-24
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe4910004;     // ldr r0, [r1], #4
+        vm.m_ram.writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -974,13 +974,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe4910000;     // ldr r0, [r1], #0
-        vm.m_ram.writePointer32(4, 0xe4010001); // str r0, [r1], #-24! -> str r0, [r1], #-1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe4910000;     // ldr r0, [r1], #0
+        vm.m_ram.writePointer<uint32_t>(4, 0xe4010001); // str r0, [r1], #-24! -> str r0, [r1], #-1
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1001,12 +1001,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe491f000; // ldr r15, [r1], #0
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe491f000; // ldr r15, [r1], #0
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1021,13 +1021,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe6910002; // ldr r0, [r1], r2
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe6910002; // ldr r0, [r1], r2
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
         vm.m_registers[2] = 0x00000004;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1042,13 +1042,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe7b10002; // ldr r0, [r1, r2]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe7b10002; // ldr r0, [r1, r2]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
         vm.m_registers[2] = 0x00000004;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1063,13 +1063,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe7f10002; // ldrb r0, [r1, r2]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1, r2]!
 
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000100;
         vm.m_registers[2] = 0x00000004;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1084,13 +1084,13 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe7e10002; // strb r0, [r1, r2]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe7e10002; // strb r0, [r1, r2]!
 
         vm.m_registers[0] = 0x99aabbcc;
         vm.m_registers[1] = 0x00000100;
         vm.m_registers[2] = 0x00000004;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
 
         vm.run(1);
 
@@ -1106,7 +1106,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe58f0000; // str r0, [r15]
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe58f0000; // str r0, [r15]
 
         vm.m_registers[0] = 0x99aabbcc;
 
@@ -1122,9 +1122,9 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5cf0000; // strb r0, [r15]
-        vm.m_ram.writePointer32(4, 0x11223344);
-        vm.m_ram.writePointer32(8, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5cf0000; // strb r0, [r15]
+        vm.m_ram.writePointer<uint32_t>(4, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(8, 0x55667788);
         vm.m_registers[0] = 0x99aabbcc;
 
         vm.run(1);
@@ -1139,12 +1139,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5c10000; // strb r0, [r1]
-        vm.m_ram.writePointer32(4, 0x11223344);
-        vm.m_ram.writePointer32(8, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5c10000; // strb r0, [r1]
+        vm.m_ram.writePointer<uint32_t>(4, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(8, 0x55667788);
         vm.m_registers[0] = 0x99aabbee;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0xaabbccdd);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         vm.run(1);
 
@@ -1160,11 +1160,11 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe7f10002; // ldrb r0, [r1]
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1]
 
         vm.m_registers[0] = 0xdeadbeaf;
         vm.m_registers[1] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
 
         vm.run(1);
 
@@ -1178,17 +1178,17 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8bd000f; // LDMFD r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8bd000f; // LDMFD r13!, {r0-r3}
         vm.m_registers[0]  = 0x00000000;
         vm.m_registers[1]  = 0x00000000;
         vm.m_registers[2]  = 0x00000000;
         vm.m_registers[3]  = 0x00000000;
         vm.m_registers[13] = 0x00000100;
 
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
-        vm.m_ram.writePointer32(0x108, 0x99aabbcc);
-        vm.m_ram.writePointer32(0x10c, 0xddee00ff);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x108, 0x99aabbcc);
+        vm.m_ram.writePointer<uint32_t>(0x10c, 0xddee00ff);
 
         vm.run(1);
         QVERIFY(vm.m_registers[0] == 0x11223344);
@@ -1202,7 +1202,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe83d000f; // LDMFA r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe83d000f; // LDMFA r13!, {r0-r3}
 
         vm.m_registers[0]  = 0x00000000;
         vm.m_registers[1]  = 0x00000000;
@@ -1210,10 +1210,10 @@ private slots:
         vm.m_registers[3]  = 0x00000000;
         vm.m_registers[13] = 0x0000010c;
 
-        vm.m_ram.writePointer32(0x100, 0x11223344);
-        vm.m_ram.writePointer32(0x104, 0x55667788);
-        vm.m_ram.writePointer32(0x108, 0x99aabbcc);
-        vm.m_ram.writePointer32(0x10c, 0xddee00ff);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0x11223344);
+        vm.m_ram.writePointer<uint32_t>(0x104, 0x55667788);
+        vm.m_ram.writePointer<uint32_t>(0x108, 0x99aabbcc);
+        vm.m_ram.writePointer<uint32_t>(0x10c, 0xddee00ff);
 
         vm.run(1);
         QVERIFY(vm.m_registers[0] == 0x11223344);
@@ -1227,7 +1227,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe92d000f; // STMFA r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe92d000f; // STMFA r13!, {r0-r3}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1247,7 +1247,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe82d000f; // STMED r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe82d000f; // STMED r13!, {r0-r3}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1255,7 +1255,7 @@ private slots:
         vm.m_registers[3]  = 0xddee00ff;
         vm.m_registers[13] = 0x00000100;
 
-        vm.m_ram.writePointer32(0xf4) = 0xABCDEF09;
+        vm.m_ram.writePointer<uint32_t>(0xf4) = 0xABCDEF09;
 
         vm.run(1);
         QVERIFY(vm.m_ram.readPointer<uint32_t>(0xf4) == 0x11223344);
@@ -1270,7 +1270,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8ad000f; // STMEA r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8ad000f; // STMEA r13!, {r0-r3}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1290,7 +1290,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe9ad000f; // STMFA r13!, {r0-r3}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe9ad000f; // STMFA r13!, {r0-r3}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1310,7 +1310,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8a30038; // STM r3!, {r3-r5}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8a30038; // STM r3!, {r3-r5}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1338,7 +1338,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8a30030; // STM r3!, {r4-r5}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8a30030; // STM r3!, {r4-r5}
 
         vm.m_registers[0]  = 0x11223344;
         vm.m_registers[1]  = 0x55667788;
@@ -1366,7 +1366,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe5a10004; // str r0, [r1, #4]!
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe5a10004; // str r0, [r1, #4]!
         vm.m_registers[0] = 0x11223344;
         vm.m_registers[1] = 0x00000080;
 
@@ -1381,7 +1381,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8a30034; // stm	r3!,{r2,r4,r5}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8a30034; // stm	r3!,{r2,r4,r5}
 
         vm.m_registers[2] = 0x00000022;
         vm.m_registers[3] = 0x00000100;
@@ -1406,7 +1406,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe8a30038; // stm	r3!,{r3,r4,r5}
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe8a30038; // stm	r3!,{r3,r4,r5}
 
         vm.m_registers[2] = 0x00000022;
         vm.m_registers[3] = 0x00000100;
@@ -1431,8 +1431,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0902001;     // adds r2, r0, r1
-        vm.m_ram.writePointer32(4, 0x50823001); // addpl r3, r2, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
+        vm.m_ram.writePointer<uint32_t>(4, 0x50823001); // addpl r3, r2, r1
         vm.m_registers[0] = 0xFFFFFF0F;
         vm.m_registers[1] = 0x00000002;
         vm.m_registers[2] = 0x00000000;
@@ -1453,8 +1453,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0) = 0xe0902001;     // adds r2, r0, r1
-        vm.m_ram.writePointer32(4, 0x70823001); // addvc r3, r2, r1
+        vm.m_ram.writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
+        vm.m_ram.writePointer<uint32_t>(4, 0x70823001); // addvc r3, r2, r1
         vm.m_registers[0] = 0xFFFFFF0F;
         vm.m_registers[1] = 0x000F0000;
         vm.m_registers[2] = 0x00000000;
@@ -1475,10 +1475,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1540002);  // cmp   r4,r2
-        vm.m_ram.writePointer32(4, 0x33a0600f);  // movcc r6,#15
-        vm.m_ram.writePointer32(8, 0xe1540002);  // cmp   r4,r2
-        vm.m_ram.writePointer32(12, 0x33a0600f); // movcc r6,#15
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1540002);  // cmp   r4,r2
+        vm.m_ram.writePointer<uint32_t>(4, 0x33a0600f);  // movcc r6,#15
+        vm.m_ram.writePointer<uint32_t>(8, 0xe1540002);  // cmp   r4,r2
+        vm.m_ram.writePointer<uint32_t>(12, 0x33a0600f); // movcc r6,#15
         vm.m_registers[2] = 0x0000000A;
         vm.m_registers[4] = 0x0000000F;
         vm.m_registers[6] = 0x00004444;
@@ -1510,15 +1510,15 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
-        vm.m_ram.writePointer32(4, 0xe1d140fe);  // ldrsh   r4, [r1, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
+        vm.m_ram.writePointer<uint32_t>(4, 0xe1d140fe);  // ldrsh   r4, [r1, #14]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000000;
         vm.m_registers[2] = 0x00000000;
         vm.m_registers[3] = 0x00000000;
         vm.m_registers[4] = 0x00000000;
         vm.m_cpsr         = 0x00000000;
-        vm.m_ram.writePointer32(12, 0x9a8b7c6d);
+        vm.m_ram.writePointer<uint32_t>(12, 0x9a8b7c6d);
 
         vm.run(2);
 
@@ -1535,14 +1535,14 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000000;
         vm.m_registers[2] = 0x00000000;
         vm.m_registers[3] = 0x00000048;
         vm.m_registers[4] = 0x00000000;
         vm.m_cpsr         = 0x00000000;
-        vm.m_ram.writePointer32(0x54, 0x1a2b3c4d);
+        vm.m_ram.writePointer<uint32_t>(0x54, 0x1a2b3c4d);
 
         vm.run(1);
 
@@ -1559,12 +1559,12 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000000;
         vm.m_registers[2] = 0x00000000;
         vm.m_cpsr         = 0x00000000;
-        vm.m_ram.writePointer32(12, 0x9a8b7c6d);
+        vm.m_ram.writePointer<uint32_t>(12, 0x9a8b7c6d);
 
         vm.run(1);
 
@@ -1579,7 +1579,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1c330be);  // strh   r3, [r3, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
         vm.m_registers[0] = 0x00000000;
         vm.m_registers[1] = 0x00000000;
         vm.m_registers[2] = 0x00000000;
@@ -1601,10 +1601,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1c330be);  // strh   r3, [r3, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
         vm.m_registers[3] = 0x00000014;
         vm.m_cpsr         = 0x00000000;
-        vm.m_ram.writePointer32(0x20, 0xa1b2c3d4);
+        vm.m_ram.writePointer<uint32_t>(0x20, 0xa1b2c3d4);
 
         vm.run(1);
 
@@ -1618,10 +1618,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1c320be);  // strh r2, [r3, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
         vm.m_registers[2] = 0x00000001;
         vm.m_registers[3] = 0x00000048;
-        vm.m_ram.writePointer32(0x54, 0xf3d7e5b9);
+        vm.m_ram.writePointer<uint32_t>(0x54, 0xf3d7e5b9);
 
         vm.run(1);
 
@@ -1635,10 +1635,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1c320be);  // strh r2, [r3, #14]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
         vm.m_registers[2] = 0x00000001;
         vm.m_registers[3] = 0x00000048;
-        vm.m_ram.writePointer32(0x54, 0x00000009);
+        vm.m_ram.writePointer<uint32_t>(0x54, 0x00000009);
 
         vm.run(1);
 
@@ -1652,10 +1652,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0c320b2);  // strh r2, [r3], #2
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0c320b2);  // strh r2, [r3], #2
         vm.m_registers[2] = 0xaabbccdd;
         vm.m_registers[3] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0xaaaaaaaa);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0xaaaaaaaa);
 
         vm.run(1);
 
@@ -1669,10 +1669,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0c320b3);  // strh r2, [r3], #3
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0c320b3);  // strh r2, [r3], #3
         vm.m_registers[2] = 0xaabbccdd;
         vm.m_registers[3] = 0x00000102;
-        vm.m_ram.writePointer32(0x100, 0xaaaaaaaa);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0xaaaaaaaa);
 
         vm.run(1);
 
@@ -1686,10 +1686,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0d320b2);  // ldrh r2, [r3], #2
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0d320b2);  // ldrh r2, [r3], #2
         vm.m_registers[2] = 0x11223344;
         vm.m_registers[3] = 0x00000100;
-        vm.m_ram.writePointer32(0x100, 0xaabbccdd);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         vm.run(1);
 
@@ -1703,10 +1703,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0d320b3);  // ldrh r2, [r3], #3
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0d320b3);  // ldrh r2, [r3], #3
         vm.m_registers[2] = 0x11223344;
         vm.m_registers[3] = 0x00000102;
-        vm.m_ram.writePointer32(0x100, 0xaabbccdd);
+        vm.m_ram.writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         vm.run(1);
 
@@ -1720,10 +1720,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe5c10000);  // strb r0, [r1]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe5c10000);  // strb r0, [r1]
         vm.m_registers[0] = 0xa1b2c3d4;
         vm.m_registers[1] = 0x00000010;
-        vm.m_ram.writePointer32(0x10, 0xeeeeeeee);
+        vm.m_ram.writePointer<uint32_t>(0x10, 0xeeeeeeee);
 
         vm.run(1);
 
@@ -1737,10 +1737,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe5c10002);  // strb r0, [r1, #2]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe5c10002);  // strb r0, [r1, #2]
         vm.m_registers[0] = 0xa1b2c3d4;
         vm.m_registers[1] = 0x00000010;
-        vm.m_ram.writePointer32(0x10, 0x11111111);
+        vm.m_ram.writePointer<uint32_t>(0x10, 0x11111111);
 
         vm.run(1);
 
@@ -1754,10 +1754,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe5c10003);  // strb r0, [r1, #3]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe5c10003);  // strb r0, [r1, #3]
         vm.m_registers[0] = 0xa1b2c3d4;
         vm.m_registers[1] = 0x00000010;
-        vm.m_ram.writePointer32(0x10, 0x11111111);
+        vm.m_ram.writePointer<uint32_t>(0x10, 0x11111111);
 
         vm.run(1);
 
@@ -1771,10 +1771,10 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe5c10001);  // strb r0, [r1, #1]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe5c10001);  // strb r0, [r1, #1]
         vm.m_registers[0] = 0xa1b2c3d4;
         vm.m_registers[1] = 0x00000010;
-        vm.m_ram.writePointer32(0x10, 0x11111111);
+        vm.m_ram.writePointer<uint32_t>(0x10, 0x11111111);
 
         vm.run(1);
 
@@ -1788,7 +1788,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
         vm.m_registers[1] = 0x00148fbe;
         vm.m_registers[3] = 0xffe80000;
         vm.m_registers[5] = 0x00000000;
@@ -1806,7 +1806,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe2100003);  // ands r0, r0, #3
+        vm.m_ram.writePointer<uint32_t>(0, 0xe2100003);  // ands r0, r0, #3
         vm.m_registers[0] = 0x00055820;
         vm.m_cpsr = 0x60000000;
 
@@ -1821,7 +1821,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1340005);  // teq r4, r5
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1340005);  // teq r4, r5
         vm.m_registers[4] = 0x7fe91f7c;
         vm.m_registers[5] = 0x7ff00000;
         vm.m_cpsr = 0x20000000;
@@ -1838,7 +1838,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
+        vm.m_ram.writePointer<uint32_t>(0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
         vm.m_registers[1] = 0x3ff48fbe;
         vm.m_cpsr = 0x80000000;
 
@@ -1853,7 +1853,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe2e33000);  // rsc r3, r3, #0
+        vm.m_ram.writePointer<uint32_t>(0, 0xe2e33000);  // rsc r3, r3, #0
         vm.m_registers[3] = 0x00180000;
         vm.m_cpsr = 0x60000000;
 
@@ -1868,7 +1868,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe08ec290);  // umull   ip, lr, r0, r2
+        vm.m_ram.writePointer<uint32_t>(0, 0xe08ec290);  // umull   ip, lr, r0, r2
         vm.m_registers[0] = 0x49ba5e38;
         vm.m_registers[2] = 0x636f4361;
         vm.m_registers[12] = 0x000007ff;
@@ -1889,7 +1889,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0c23290); // smull   r3, r2, r0, r2
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0c23290); // smull   r3, r2, r0, r2
         vm.m_registers[0] = 0x17;
         vm.m_registers[2] = 0xd;
         vm.m_registers[3] = 0x7;
@@ -1909,7 +1909,7 @@ private slots:
 
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe0c23190); // smull   r3, r2, r0, r1
+        vm.m_ram.writePointer<uint32_t>(0, 0xe0c23190); // smull   r3, r2, r0, r1
         vm.m_registers[0] = -324;       // fffffebc
         vm.m_registers[1] = 45674233;   // 2b8eef9
         vm.m_registers[2] = 0x7213;
@@ -1930,7 +1930,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe2722000);  // rsbs r2,r2,#0
+        vm.m_ram.writePointer<uint32_t>(0, 0xe2722000);  // rsbs r2,r2,#0
         vm.m_registers[2] = 0xe2f3f618;
         vm.m_cpsr = 0xa0000000;
 
@@ -1945,7 +1945,7 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
+        vm.m_ram.writePointer<uint32_t>(0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
         vm.m_registers[1] = 0x00000000;
         vm.m_cpsr = 0x60000000;
 
@@ -1960,8 +1960,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe320f000); // nop
-        vm.m_ram.writePointer32(4, 0xe780f001); // STR    R15, [R0, R1]
+        vm.m_ram.writePointer<uint32_t>(0, 0xe320f000); // nop
+        vm.m_ram.writePointer<uint32_t>(4, 0xe780f001); // STR    R15, [R0, R1]
         vm.m_registers[0] = 0x0000000a;
         vm.m_registers[1] = 0x00000002;
         vm.m_cpsr         = 0x60000000;
@@ -1976,8 +1976,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1020091); // SWP R0, R1, [R2]
-        vm.m_ram.writePointer32(0x10, 0xABCDEF01);
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1020091); // SWP R0, R1, [R2]
+        vm.m_ram.writePointer<uint32_t>(0x10, 0xABCDEF01);
         vm.m_registers[0] = 0x0000000a;
         vm.m_registers[1] = 0x11112222;
         vm.m_registers[2] = 0x00000010;
@@ -1997,8 +1997,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xe1420091); // SWPB R0, R1, [R2]
-        vm.m_ram.writePointer32(0x10, 0xABCDEF33);
+        vm.m_ram.writePointer<uint32_t>(0, 0xe1420091); // SWPB R0, R1, [R2]
+        vm.m_ram.writePointer<uint32_t>(0x10, 0xABCDEF33);
         vm.m_registers[0] = 0x11223344;
         vm.m_registers[1] = 0x11112222;
         vm.m_registers[2] = 0x00000010;
@@ -2257,8 +2257,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xee002a90); // FMSR S1, R2
-        vm.m_ram.writePointer32(0x10, 3.14159f);
+        vm.m_ram.writePointer<uint32_t>(0, 0xee002a90); // FMSR S1, R2
+        vm.m_ram.writePointer<uint32_t>(0x10, 3.14159f);
         vm.m_registers[2] = 0xaabbccdd;
         vm.m_cpsr         = 0x60000000;
 
@@ -2272,8 +2272,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xee002a90); // FMSR S1, R2
-        vm.m_ram.writePointer32(0x10, 0xABCDEF01);
+        vm.m_ram.writePointer<uint32_t>(0, 0xee002a90); // FMSR S1, R2
+        vm.m_ram.writePointer<uint32_t>(0x10, 0xABCDEF01);
         vm.m_registers[2] = 0xaabbccdd;
         vm.m_cpsr         = 0x60000000;
 
@@ -2288,8 +2288,8 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer32(0, 0xee123a10); // FMRS	R3, S4
-        vm.m_ram.writePointer32(0x10, 0xABCDEF01);
+        vm.m_ram.writePointer<uint32_t>(0, 0xee123a10); // FMRS	R3, S4
+        vm.m_ram.writePointer<uint32_t>(0x10, 0xABCDEF01);
         vm.m_registers[3] = 0xaabbccdd;
         vm.m_coprocessor.m_sRegisters[4] = 3213.4393f;
         vm.m_cpsr         = 0x60000000;

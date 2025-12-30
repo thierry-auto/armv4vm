@@ -6,11 +6,13 @@ project(armv4vm VERSION 1.0.4)
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	set (CMAKE_PREFIX_PATH "C:\\Qt\\6.8.1\\msvc2022_64\\")
-	set(Qt6_DIR "C:\\Qt\\6.8.1\\msvc2022_64\\lib\\cmake\\")
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Core Test)
+
+    qt_standard_project_setup()
+
 endif()
 
-FIND_PACKAGE(Qt6 COMPONENTS Core Test)
+# FIND_PACKAGE(Qt6 COMPONENTS Core Test)
 
 if(Qt6Core_FOUND)
 	SET(CMAKE_AUTOMOC ON)
@@ -28,7 +30,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm_p.hpp src/alu.hpp src/alu.tpp src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp src/assertcopro.hpp)
 SET(ARMV4VM_SOURCE_FILES #[[src/vfpv2.cpp]] src/armv4vm.cpp src/assertcopro.cpp)
-SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test/testvfpv2.cpp #[[src/test2.cpp]])
+SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test/testvfpv2.cpp src/test2.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -53,12 +55,16 @@ else()
 endif()
 
 if(Qt6Core_FOUND)
+
+
     add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES})
     add_test(tu ${ARMV4VM_TEST_SOURCE_FILES})
     add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
     add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
     target_link_libraries(tu Qt6::Core Qt6::Test armv4vm)
     target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
+
+    #target_link_libraries(test_qt PRIVATE Qt::Core )
 endif()
 
 set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")

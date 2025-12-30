@@ -1,4 +1,7 @@
 #include "vfpv2.hpp"
+#include "coprocessor.hpp"
+
+#include <cstdint>
 
 // VFPv2 ====
 // An optional extension to the ARM instruction set in the ARMv5TE, ARMv5TEJ and ARMv6 architectures. VFPv2 has 16 64-bit FPU registers.
@@ -6,7 +9,7 @@
 
 namespace armv4vm {
 
-template <typename MemoryType>
+// template <typename MemoryType>
 void Vfpv2<MemoryType>::coprocessorDataTransfers(const uint32_t m_workingInstruction) {
 
     // clang-format off

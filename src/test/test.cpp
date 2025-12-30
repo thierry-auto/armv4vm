@@ -2020,8 +2020,8 @@ private slots:
 
         vmProperties.m_memsize = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/hello.bin";
-        unsigned char *mem     = nullptr;
-        uint8_t *uart          = nullptr;
+        std::byte *mem     = nullptr;
+        std::byte *uart    = nullptr;
         bool           running = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
@@ -2057,8 +2057,8 @@ private slots:
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/src/test_compile/primen.bin";
-        uint8_t *mem           = nullptr;
-        uint8_t *uart          = nullptr;
+        std::byte *mem           = nullptr;
+        std::byte *uart          = nullptr;
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
@@ -2093,8 +2093,8 @@ private slots:
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/src/test_compile/float.bin";
-        uint8_t *mem           = nullptr;
-        uint8_t *uart          = nullptr;
+        std::byte *mem           = nullptr;
+        std::byte *uart          = nullptr;
         bool     running       = true;
 
         VirtualMachineUnprotected vm(&vmProperties);
@@ -2139,8 +2139,8 @@ private slots:
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/src/test_compile/printf.bin";
-        uint8_t *mem           = nullptr;
-        uint8_t *uart          = nullptr;
+        std::byte *mem           = nullptr;
+        std::byte *uart          = nullptr;
         bool     running       = true;
         QString data;
 
@@ -2217,8 +2217,8 @@ private slots:
         std::string binPath(getBinPath());
         vmProperties.m_memsize = 1024 * 1024 * MEMSIZE;
         vmProperties.m_bin     = binPath + "/src/test_compile/bench.bin";
-        uint8_t *mem           = nullptr;
-        uint8_t *uart          = nullptr;
+        std::byte *mem           = nullptr;
+        std::byte *uart          = nullptr;
         bool     running       = true;
         QString data;
 

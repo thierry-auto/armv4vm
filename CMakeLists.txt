@@ -5,11 +5,12 @@ project(armv4vm VERSION 1.0.4)
 
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_package(Qt6 6.5 REQUIRED COMPONENTS Core Test)
-
     qt_standard_project_setup()
-
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Core Test)
+    qt_standard_project_setup()
 endif()
 
 # FIND_PACKAGE(Qt6 COMPONENTS Core Test)
@@ -28,7 +29,7 @@ SET(CMAKE_CXX_STANDARD 26)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm_p.hpp src/alu.hpp src/alu.tpp src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp src/assertcopro.hpp)
+SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm_p.hpp src/alu.hpp #[[src/alu.tpp]] src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp src/assertcopro.hpp)
 SET(ARMV4VM_SOURCE_FILES #[[src/vfpv2.cpp]] src/armv4vm.cpp src/assertcopro.cpp)
 SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test/testvfpv2.cpp src/test2.cpp)
 SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)

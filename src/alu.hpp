@@ -258,7 +258,7 @@ class VmException : public std::exception {
     Interrupt m_interrupt;
 };
 
-} // namespace armv4vm
+//} // namespace armv4vm
 
 
 #if WIN32
@@ -266,3 +266,6 @@ class VmException : public std::exception {
 #endif
 
 #include "alu.tpp"
+
+} // namespace armv4vm
+

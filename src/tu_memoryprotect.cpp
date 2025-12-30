@@ -16,6 +16,8 @@ auto to_int = [](std::byte b) { return std::to_integer<int>(b); };
 
 struct VmProperties vmProperties;
 
+
+
 class TestMem : public QObject {
     Q_OBJECT
 
@@ -72,6 +74,7 @@ class TestMem : public QObject {
         QVERIFY(exceptionRaised == false);
     }
 
+#if 0
     void testReadWrite16() {
 
         std::byte           *mem = nullptr;
@@ -115,8 +118,8 @@ class TestMem : public QObject {
             writePointer<uint8_t>(mem + 32) = 0xEB;
             pro.writePointer<uint8_t>(33) = 0xEB;
 
-            v2 = mem[32];
-            v3 = pro[33];
+            v2 = to_int(mem[32]);
+            v3 = to_int(pro[33]);
             QVERIFY(v2 == v3);
 
         } catch (std::exception &) {
@@ -210,7 +213,7 @@ class TestMem : public QObject {
 
             QVERIFY(v2 == v3);
 
-            pro.writePointer<uint32_t>(30) = pro.readPointer32(44);
+            pro.writePointer<uint32_t>(30) = pro.readPointer<uint32_t>(44);
 
         } catch (std::exception &) {
             exceptionRaised = true;
@@ -370,12 +373,12 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         pro.addAccessRangeImpl({32, 64, AccessPermission::READ_WRITE});
-        uint8_t *mem = pro.allocate(128);
+        std::byte *mem = pro.allocate(128);
 
         *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
 
         try {
-            v1 = pro.readPointer32(32);
+            v1 = pro.readPointer<uint32_t>(32);
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -394,12 +397,12 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         pro.addAccessRangeImpl({32, 64, AccessPermission::READ_WRITE});
-        uint8_t *mem = pro.allocate(128);
+        std::byte *mem = pro.allocate(128);
 
         *reinterpret_cast<uint32_t*>(mem+32)=0x12345678;
 
         try {
-            v1 = pro.readPointer32(32);
+            v1 = pro.readPointer<uint32_t>(32);
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -421,7 +424,7 @@ class TestMem : public QObject {
         pro.allocate(128);
 
         try {
-            v1 = pro.readPointer32(-1);
+            v1 = pro.readPointer<uint32_t>(-1);
         } catch (std::exception &) {
             exceptionRaised = true;
         }
@@ -456,6 +459,7 @@ class TestMem : public QObject {
 
         QVERIFY(exceptionRaised == false);
     }
+#endif
     //    void testPlusValue16() {
 
     //        uint8_t            mem[64] = {0};

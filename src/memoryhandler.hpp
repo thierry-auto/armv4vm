@@ -103,6 +103,11 @@ template <typename Derived> class MemoryInterface {
     }
 
     template<typename T>
+    inline MemoryRef<T> writePointer(const uint32_t addr, const T& value) {
+        return static_cast<Derived *>(this)->template writePointerImpl<T>(addr, value);
+    }
+
+    template<typename T>
     inline T readPointer(const uint32_t addr) const {
         return static_cast<const Derived *>(this)->template readPointerImpl<T>(addr);
     }
@@ -215,6 +220,13 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         return MemoryRef<T>(m_ram.get(), address);
     }
 
+    template <typename T>
+    MemoryRef<T> writePointerImpl(const uint32_t address, const T& value) {
+        static_assert(std::is_trivially_copyable_v<T>, "MemoryRaw::writePointerImpl requires trivially copyable T");
+        std::memcpy(m_ram.get() + address, &value, sizeof(T));
+        return MemoryRef<T>(m_ram.get(), address);
+    }
+
            // -------- Accès octet --------
 
     byte operator[](std::size_t index) const {
@@ -247,8 +259,9 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
            // -------- Allocation --------
 
-    byte* allocate(std::size_t size) {
+    byte* allocate(std::size_t size/*, const std::byte &fillingValue*/) {
         m_ram = std::make_unique<std::vector<byte>>(size);
+        //std::fill(m_ram.get(), fillingValue);
         return m_ram->data();
     }
 
@@ -347,18 +360,18 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         }
     }
 
-    friend MemoryRef<std::byte> operator + (MemoryProtected &left, const int right);
+    //friend MemoryRef<std::byte> operator + (MemoryProtected &left, const int right);
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<AccessRange>           m_accessRanges;
 };
 
-MemoryRef<std::byte> operator + (MemoryProtected &left, const int right) {
+// MemoryRef<std::byte> operator + (MemoryProtected &left, const int right) {
 
-    left.isAccessible(right, /*sizeof(T)*/1, AccessPermission::WRITE);
-    return MemoryRef<std::byte>(left.m_ram.get()->data(), right);
-}
+//     left.isAccessible(right, /*sizeof(T)*/1, AccessPermission::WRITE);
+//     return MemoryRef<std::byte>(left.m_ram.get()->data(), right);
+// }
 
 template <typename T>
 inline T readPointer(const std::byte* mem) {
@@ -371,25 +384,25 @@ inline T readPointer(const std::byte* mem) {
 template <typename T>
 inline MemoryRef<T> writePointer(std::byte* mem) {
     static_assert(std::is_trivially_copyable_v<T>);
-    return MemRef<T>(mem);
+    return MemoryRef<T>(mem, 0);
 }
 
-template <typename T>
-inline T readPointer(const std::byte& mem) {
-    static_assert(std::is_trivially_copyable_v<T>);
-    T value;
-    std::memcpy(&value, mem, sizeof(T));
-    return value;
-}
+// template <typename T>
+// inline T readPointer(const std::byte& mem) {
+//     static_assert(std::is_trivially_copyable_v<T>);
+//     T value;
+//     std::memcpy(&value, mem, sizeof(T));
+//     return value;
+// }
 
-template <typename T>
-inline MemoryRef<T> writePointer(std::byte& mem) {
-    static_assert(std::is_trivially_copyable_v<T>);
-    return MemRef<T>(mem);
-}
+// template <typename T>
+// inline MemoryRef<T> writePointer(std::byte& mem) {
+//     static_assert(std::is_trivially_copyable_v<T>);
+//     return MemRef<T>(mem);
+// }
 
 
-bool operator == (const std::byte &left, const int &right) {
+inline bool operator == (const std::byte &left, const int &right) {
 
     return std::to_integer<int>(left) == right;
 }

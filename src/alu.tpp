@@ -15,10 +15,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <cstdint>
-#include <cstring>
+//#include "src/alu.hpp"
+//#include <cstdint>
+//#include <cstring>
 
-namespace armv4vm {
+//namespace armv4vm {
 
 static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
@@ -117,7 +118,7 @@ typename Alu<MemoryHandler, CoproHandler>::Interrupt Alu<MemoryHandler, CoproHan
 
 template <typename MemoryHandler, typename CoproHandler> uint32_t Alu<MemoryHandler, CoproHandler>::fetch() {
 
-    uint32_t result = m_ram.readPointer<uint32_t>((m_pc));
+    uint32_t result = m_ram.template readPointer<uint32_t>(m_pc);
     m_pc += 4;
 
     return result;
@@ -564,7 +565,8 @@ inline static int64_t  signedCastTo64(const uint32_t value) { return static_cast
 inline static uint64_t unsignedCastTo64(const uint32_t value) { return static_cast<uint64_t>(value); }
 
 
-template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::multiplyLongEval() {
+template <typename MemoryHandler, typename CoproHandler>
+void Alu<MemoryHandler, CoproHandler>::multiplyLongEval() {
 
     // clang-format off
     static struct MultiplyLong {
@@ -675,20 +677,20 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                 if (instruction.u) {
 
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(rn + offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(rn + offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(rn - offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(rn - offset) & 0x000000FF;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
                     }
                 }
             } else {
-                m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(rn) & 0x000000FF;
+                m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(rn) & 0x000000FF;
 
                 if (instruction.u) {
 
@@ -704,7 +706,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                 if (instruction.u) {
 
-                    value = m_ram.readPointer<uint32_t>(rn + offset);
+                    value = m_ram.template readPointer<uint32_t>(rn + offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -713,7 +715,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                     }
                 } else {
 
-                    value = m_ram.readPointer<uint32_t>(rn - offset);
+                    value = m_ram.template readPointer<uint32_t>(rn - offset);
 
                     m_registers[instruction.rd] = value;
                     if (instruction.w) {
@@ -723,7 +725,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 }
             } else {
 
-                value = m_ram.readPointer<uint32_t>(rn);
+                value = m_ram.template readPointer<uint32_t>(rn);
 
                 m_registers[instruction.rd] = value;
                 if (instruction.u) {
@@ -745,14 +747,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                 if (instruction.u) {
 
-                    m_ram.writePointer<uint8_t>(rn + offset) = static_cast<uint8_t>(value);
+                    m_ram.template writePointer<uint8_t>(rn + offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    m_ram.writePointer<uint8_t>(rn - offset) = static_cast<uint8_t>(value);
+                    m_ram.template writePointer<uint8_t>(rn - offset) = static_cast<uint8_t>(value);
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -760,7 +762,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 }
             } else {
 
-                m_ram.writePointer<uint8_t>(rn) = static_cast<uint8_t>(value);
+                m_ram.template writePointer<uint8_t>(rn) = static_cast<uint8_t>(value);
 
                 if (instruction.u) {
 
@@ -776,14 +778,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                 if (instruction.u) {
 
-                    m_ram.writePointer<uint32_t>(rn + offset) = rd;
+                    m_ram.template writePointer<uint32_t>(rn + offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn + offset;
                     }
                 } else {
 
-                    m_ram.writePointer<uint32_t>(rn - offset) = rd;
+                    m_ram.template writePointer<uint32_t>(rn - offset) = rd;
                     if (instruction.w) {
 
                         m_registers[instruction.rn] = rn - offset;
@@ -791,7 +793,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 }
             } else {
 
-                m_ram.writePointer<uint32_t>(rn) = rd;
+                m_ram.template writePointer<uint32_t>(rn) = rd;
 
                 if (instruction.u) {
 
@@ -903,7 +905,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                     if (instruction.registerList & (1 << i)) {
 
                         offset += 4;
-                        m_registers[i] = m_ram.readPointer<uint32_t>(offset);
+                        m_registers[i] = m_ram.template readPointer<uint32_t>(offset);
                     }
                 }
             } else {
@@ -913,7 +915,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = m_ram.readPointer<uint32_t>(offset);
+                        m_registers[i] = m_ram.template readPointer<uint32_t>(offset);
                         offset += 4;
                     }
                 }
@@ -928,7 +930,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        m_registers[i] = m_ram.readPointer<uint32_t>(offset);
+                        m_registers[i] = m_ram.template readPointer<uint32_t>(offset);
                     }
                 }
             } else {
@@ -938,7 +940,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_registers[i] = m_ram.readPointer<uint32_t>(offset);
+                        m_registers[i] = m_ram.template readPointer<uint32_t>(offset);
                         offset -= 4;
                     }
                 }
@@ -966,7 +968,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                         offset += 4;
                         //* reinterpret_cast<uint32_t*>(m_ram + offset) =
                         // m_registers[i];
-                        m_ram.writePointer<uint32_t>(offset) = m_registers[i];
+                        m_ram.template writePointer<uint32_t>(offset) = m_registers[i];
                     }
                 }
 
@@ -974,7 +976,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 if (instruction.registerList & 0x8000) {
 
                     offset += 4;
-                    m_ram.writePointer<uint32_t>(offset) = m_registers[15] + 4; // et pas + 12
+                    m_ram.template writePointer<uint32_t>(offset) = m_registers[15] + 4; // et pas + 12
                 }
             } else {
 
@@ -983,7 +985,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                     if (instruction.registerList & (1 << i)) {
 
-                        m_ram.writePointer<uint32_t>(offset) = m_registers[i];
+                        m_ram.template writePointer<uint32_t>(offset) = m_registers[i];
                         offset += 4;
                     }
                 }
@@ -991,7 +993,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                        // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    m_ram.writePointer<uint32_t>(offset) = m_registers[15] + 4;
+                    m_ram.template writePointer<uint32_t>(offset) = m_registers[15] + 4;
                     offset += 4;
                 }
             }
@@ -1004,8 +1006,8 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 if (instruction.registerList & 0x8000) {
 
                     offset -= 4;
-                    // m_ram.readPointer<uint32_t>(offset) = m_registers[15] + 4;
-                    m_ram.writePointer<uint32_t>(offset) = m_registers[15] + 4;
+                    // m_ram.template readPointer<uint32_t>(offset) = m_registers[15] + 4;
+                    m_ram.template writePointer<uint32_t>(offset) = m_registers[15] + 4;
                 }
 
                        // Registre 14, 13, 12, ...
@@ -1014,7 +1016,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                     if (instruction.registerList & (1 << i)) {
 
                         offset -= 4;
-                        m_ram.writePointer<uint32_t>(offset) = m_registers[i];
+                        m_ram.template writePointer<uint32_t>(offset) = m_registers[i];
                     }
                 }
             } else {
@@ -1023,7 +1025,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                        // Registre 15
                 if (instruction.registerList & 0x8000) {
 
-                    m_ram.writePointer<uint32_t>(offset) = m_registers[15] + 4;
+                    m_ram.template writePointer<uint32_t>(offset) = m_registers[15] + 4;
                     offset -= 4;
                 }
 
@@ -1032,8 +1034,8 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
                     if (instruction.registerList & (1 << i)) {
 
-                        //m_registers[i]                         = m_ram.readPointer<uint32_t>(offset);
-                        m_ram.writePointer<uint32_t>(offset) = m_registers[i];
+                        //m_registers[i]                         = m_ram.template readPointer<uint32_t>(offset);
+                        m_ram.template writePointer<uint32_t>(offset) = m_registers[i];
                         offset -= 4;
                     }
                 }
@@ -1106,14 +1108,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned16(m_ram.template readPointer<uint32_t>(offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned8(m_ram.template readPointer<uint32_t>(offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1125,14 +1127,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned16(m_ram.template readPointer<uint32_t>(offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned8(m_ram.template readPointer<uint32_t>(offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1163,7 +1165,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 offset += 2;
             }
 
-            m_ram.writePointer<uint32_t>(offset) = (rd & 0x0000FFFF) | (rd << 16);
+            m_ram.template writePointer<uint32_t>(offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1171,7 +1173,7 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
             }
         } else {
 
-            m_ram.writePointer<uint32_t>(offset) = (rd & 0x0000FFFF) | (rd << 16);
+            m_ram.template writePointer<uint32_t>(offset) = (rd & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + m_registers[instruction.rm];
@@ -1238,14 +1240,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned16(m_ram.template readPointer<uint32_t>(offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned8(m_ram.template readPointer<uint32_t>(offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x000000FF;
             }
 
             if (instruction.w) {
@@ -1257,14 +1259,14 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
             if (instruction.s) {
 
                 if (instruction.h)
-                    m_registers[instruction.rd] = getSigned16(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned16(m_ram.template readPointer<uint32_t>(offset));
                 else
-                    m_registers[instruction.rd] = getSigned8(m_ram.readPointer<uint32_t>(offset));
+                    m_registers[instruction.rd] = getSigned8(m_ram.template readPointer<uint32_t>(offset));
             } else {
                 if (instruction.h)
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x0000FFFF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x0000FFFF;
                 else
-                    m_registers[instruction.rd] = m_ram.readPointer<uint32_t>(offset) & 0x000000FF;
+                    m_registers[instruction.rd] = m_ram.template readPointer<uint32_t>(offset) & 0x000000FF;
             }
 
             if (instruction.u)
@@ -1286,11 +1288,11 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                 offset = offset - ((instruction.offset2 << 4) | instruction.offset1);
 
             if((offset % 4) == 0)
-                m_ram.writePointer<uint32_t>(offset) =
-                    (m_ram.readPointer<uint32_t>(offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
+                m_ram.template writePointer<uint32_t>(offset) =
+                    (m_ram.template readPointer<uint32_t>(offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                m_ram.writePointer<uint32_t>(offset - 2) =
-                    (m_ram.readPointer<uint32_t>(offset - 2) & 0x0000FFFF) | (rd << 16);
+                m_ram.template writePointer<uint32_t>(offset - 2) =
+                    (m_ram.template readPointer<uint32_t>(offset - 2) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.w) {
 
@@ -1303,11 +1305,11 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
         } else {
 
             if((offset % 4) == 0)
-                m_ram.writePointer<uint32_t>(offset) =
-                    (m_ram.readPointer<uint32_t>(offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
+                m_ram.template writePointer<uint32_t>(offset) =
+                    (m_ram.template readPointer<uint32_t>(offset) & 0xFFFF0000) | (rd & 0x0000FFFF);
             else
-                m_ram.writePointer<uint32_t>(offset - 2) =
-                    (m_ram.readPointer<uint32_t>(offset) & 0x0000FFFF) | (rd << 16);
+                m_ram.template writePointer<uint32_t>(offset - 2) =
+                    (m_ram.template readPointer<uint32_t>(offset) & 0x0000FFFF) | (rd << 16);
 
             if (instruction.u)
                 offset = offset + ((instruction.offset2 << 4) | instruction.offset1);
@@ -1369,13 +1371,13 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
     if(instruction.b == 0) {
 
-        const uint32_t copy = m_ram.readPointer<uint32_t>(m_registers[instruction.rn]);
-        m_ram.writePointer<uint32_t>(m_registers[instruction.rn]) = m_registers[instruction.rm];
+        const uint32_t copy = m_ram.template readPointer<uint32_t>(m_registers[instruction.rn]);
+        m_ram.template writePointer<uint32_t>(m_registers[instruction.rn]) = m_registers[instruction.rm];
         m_registers[instruction.rd] = copy;
     }
     else {
-        const uint8_t copy = m_ram.readPointer<uint8_t>(m_registers[instruction.rn]);
-        m_ram.writePointer<uint8_t>(m_registers[instruction.rn]) = m_registers[instruction.rm];
+        const uint8_t copy = m_ram.template readPointer<uint8_t>(m_registers[instruction.rn]);
+        m_ram.template writePointer<uint8_t>(m_registers[instruction.rn]) = m_registers[instruction.rm];
         m_registers[instruction.rd] = copy;
     }
 }
@@ -1634,4 +1636,4 @@ inline void AluBase::setCPSR(const uint32_t cpsr) {
 template <typename MemoryHandler, typename CoproHandler>
 Alu<MemoryHandler, CoproHandler>::~Alu() { }
 
-} // namespace armv4vm
+//} // namespace armv4vm

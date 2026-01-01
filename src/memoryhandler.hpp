@@ -24,6 +24,7 @@
 #include <memory>
 #include <vector>
 #include <cstring>
+#include <ranges>
 
 namespace armv4vm {
 
@@ -96,7 +97,6 @@ template <typename Derived> class MemoryInterface {
   public:
     using byte = std::byte;
 
-#if 1
     template<typename T>
     inline MemoryRef<T> writePointer(const uint32_t addr) {
         return static_cast<Derived *>(this)->template writePointerImpl<T>(addr);
@@ -111,43 +111,6 @@ template <typename Derived> class MemoryInterface {
     inline T readPointer(const uint32_t addr) const {
         return static_cast<const Derived *>(this)->template readPointerImpl<T>(addr);
     }
-#else
-    inline uint32_t readPointer32<uint32_t>(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointerImpl<uint32_t>(addr);
-    }
-
-    inline uint16_t readPointer16(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointerImpl<uint16_t>(addr);
-    }
-
-    inline uint8_t readPointer8(uint32_t addr) const {
-        return static_cast<const Derived *>(this)->template readPointerImpl<uint8_t>(addr);
-    }
-
-    inline uint32_t &writePointer<uint32_t>(uint32_t addr) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint32_t>(addr);
-    }
-
-    inline uint16_t &writePointer16(uint32_t addr) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint16_t>(addr);
-    }
-
-    inline uint8_t &writePointer8(uint32_t addr) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint8_t>(addr);
-    }
-
-    inline void writePointer<uint32_t>(uint32_t addr, const uint32_t value) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint32_t>(addr, value);
-    }
-
-    inline void writePointer16(uint32_t addr, const uint16_t value) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint16_t>(addr, value);
-    }
-
-    inline void writePointer8(uint32_t addr, const uint8_t value) {
-        return static_cast<Derived *>(this)->template writePointerImpl<uint8_t>(addr, value);
-    }
-#endif
 
     inline byte *getAdressZero() { return static_cast<Derived *>(this)->getAddressZeroImpl(); }
     inline byte *allocate(const size_t size) { return static_cast<Derived *>(this)->allocate(size); }
@@ -257,11 +220,10 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     MemoryProtected() = default;
     ~MemoryProtected() = default;
 
-           // -------- Allocation --------
 
-    byte* allocate(std::size_t size/*, const std::byte &fillingValue*/) {
+    byte* allocate(std::size_t size, const std::byte fillingValue = std::byte{0}) {
         m_ram = std::make_unique<std::vector<byte>>(size);
-        //std::fill(m_ram.get(), fillingValue);
+        std::ranges::fill(*m_ram, fillingValue);
         return m_ram->data();
     }
 
@@ -277,8 +239,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         return m_ram ? m_ram->size() : 0;
     }
 
-           // -------- Lecture --------
-
     template <typename T>
     T readPointerImpl(uint32_t address) const {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -291,28 +251,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         return value;
     }
 
-           // -------- Écriture --------
-
-    // template <typename T>
-    // void writePointerImpl(uint32_t address, const T& value) {
-    //     static_assert(std::is_trivially_copyable_v<T>,
-    //                   "MemoryProtected::writePointerImpl requires trivially copyable T");
-
-    //     isAccessible(address, sizeof(T), AccessPermission::WRITE);
-
-    //     std::memcpy(m_ram->data() + address, &value, sizeof(T));
-    // }
-
-    // template <typename T>
-    // T& writePointerImpl(uint32_t address/*, const T& value*/) {
-    //     static_assert(std::is_trivially_copyable_v<T>,
-    //                   "MemoryProtected::writePointerImpl requires trivially copyable T");
-
-    //     isAccessible(address, sizeof(T), AccessPermission::WRITE);
-
-    //     //std::memcpy(m_ram->data() + address, &value, sizeof(T));
-    //     return m_ram->data();
-    // }
 
     template <typename T>
     MemoryRef<T> writePointerImpl(const uint32_t address) {
@@ -320,8 +258,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         isAccessible(address, sizeof(T), AccessPermission::WRITE);
         return MemoryRef<T>(m_ram.get()->data(), address);
     }
-
-           // -------- Accès octet --------
 
     MemoryRef<byte> operator[](const uint32_t index) const {
         //return (*m_ram)[offset];
@@ -333,8 +269,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     void setByte(uint32_t offset, byte value) {
         (*m_ram)[offset] = value;
     }
-
-           // -------- Permissions --------
 
     void addAccessRangeImpl(const AccessRange& accessRange) {
         m_accessRanges.push_back(accessRange);
@@ -360,18 +294,10 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         }
     }
 
-    //friend MemoryRef<std::byte> operator + (MemoryProtected &left, const int right);
-
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<AccessRange>           m_accessRanges;
 };
-
-// MemoryRef<std::byte> operator + (MemoryProtected &left, const int right) {
-
-//     left.isAccessible(right, /*sizeof(T)*/1, AccessPermission::WRITE);
-//     return MemoryRef<std::byte>(left.m_ram.get()->data(), right);
-// }
 
 template <typename T>
 inline T readPointer(const std::byte* mem) {
@@ -386,21 +312,6 @@ inline MemoryRef<T> writePointer(std::byte* mem) {
     static_assert(std::is_trivially_copyable_v<T>);
     return MemoryRef<T>(mem, 0);
 }
-
-// template <typename T>
-// inline T readPointer(const std::byte& mem) {
-//     static_assert(std::is_trivially_copyable_v<T>);
-//     T value;
-//     std::memcpy(&value, mem, sizeof(T));
-//     return value;
-// }
-
-// template <typename T>
-// inline MemoryRef<T> writePointer(std::byte& mem) {
-//     static_assert(std::is_trivially_copyable_v<T>);
-//     return MemRef<T>(mem);
-// }
-
 
 inline bool operator == (const std::byte &left, const int &right) {
 
@@ -417,10 +328,5 @@ bool operator == (const U right, const MemoryRef<std::byte> &left) {
 
     return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
 }
-
-// std::byte& operator = (std::byte &left, const MemoryRef<std::byte> &right) {
-
-//     return left = *(right.m_base + right.m_address);
-// }
 
 } // namespace armv4vm

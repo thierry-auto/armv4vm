@@ -74,7 +74,7 @@ class TestMem : public QObject {
         QVERIFY(exceptionRaised == false);
     }
 
-#if 0
+
     void testReadWrite16() {
 
         std::byte           *mem = nullptr;
@@ -138,7 +138,7 @@ class TestMem : public QObject {
 
         bool exceptionRaised = false;
         pro.addAccessRangeImpl({0, 32, AccessPermission::READ_WRITE});
-        mem = pro.allocate(64);
+        mem = pro.allocate(64, std::byte{45});
 
         try {
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
@@ -148,15 +148,18 @@ class TestMem : public QObject {
 
             writePointer<uint8_t>(mem + 10) = static_cast<uint8_t>(v1);
             pro.writePointer<uint8_t>(42) = readPointer<uint8_t>(mem + 10);
-
-        } catch (std::exception &) {
+        }
+        catch (std::exception &) {
+            exceptionRaised = true;
+        }
+        catch(...) {
             exceptionRaised = true;
         }
 
-        QVERIFY(pro[42] == 0);
+        QVERIFY(mem[42] == 0);
         QVERIFY(exceptionRaised == true);
     }
-
+#if 0
     void testOutOfRange16() {
 
         std::byte           *mem;

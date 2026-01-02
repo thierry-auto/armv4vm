@@ -46,11 +46,16 @@ inline constexpr bool operator&(AccessPermission a, AccessPermission b) {
     return (static_cast<int>(a) & static_cast<int>(b)) != 0;
 }
 
+class MemoryProtected;
+
 template <typename T>
 class MemoryRef {
   public:
     MemoryRef(std::byte* base, uint32_t address)
         : m_base(base), m_address(address) {}
+
+    // MemoryRef(MemoryProtected *memoryPorected, std::byte* base, uint32_t address)
+    //     : m_memoryProtected(memoryPorected), m_base(base), m_address(address) {}
 
            // Lecture implicite
     operator T() const {
@@ -71,13 +76,39 @@ class MemoryRef {
     friend bool operator == (const MemoryRef<std::byte> &left, const U right);
     template <typename U>
     friend bool operator == (const U right, const MemoryRef<std::byte> &left);
-    //friend std::byte& operator = (std::byte &left, const MemoryRef<std::byte> &right);
 
-
-  private:
+  protected:
     std::byte* m_base;
     uint32_t   m_address;
 };
+
+template <typename T, typename PRO>
+class MemoryProtectedBase : public MemoryRef<T> {
+  public:
+    MemoryProtectedBase(PRO *memoryPorected, std::byte* base, uint32_t address)
+        : MemoryRef<T>(base, address), m_memoryProtected(memoryPorected) {}
+
+    // Lecture
+    operator T() const;
+
+    // Écriture
+    MemoryProtectedBase& operator=(T value);
+
+    template <typename U>
+    friend bool operator == (const MemoryRef<std::byte> &left, const U right);
+    template <typename U>
+    friend bool operator == (const U right, const MemoryRef<std::byte> &left);
+
+  private:
+    PRO* m_memoryProtected;
+};
+
+template<typename T>
+using MemoryProtectedRef = MemoryProtectedBase<T, MemoryProtected>;
+
+// template<typename T>
+// using ConstMemoryProtectedRef = MemoryProtectedBase<const T, const MemoryProtected>;
+
 
 class AccessRange {
   public:
@@ -88,7 +119,7 @@ class AccessRange {
 
 // Depuis que tout est headers et template, je pense que le CRTP suivant
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
-// du polymorphsime classique qui serait effacé par le compilateur. A voir.
+// du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
 template <typename Derived> class MemoryInterface {
   protected:
     MemoryInterface()          = default;
@@ -127,8 +158,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
     MemoryRaw()  = default;
     ~MemoryRaw() = default;
 
-           // -------- Allocation --------
-
     byte* allocate(std::size_t size) {
         m_ram  = std::make_unique<byte[]>(size);
         m_size = static_cast<uint32_t>(size);
@@ -147,8 +176,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         return m_size;
     }
 
-           // -------- Lecture --------
-
     template <typename T>
     T readPointerImpl(uint32_t addr) const {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -159,24 +186,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         return value;
     }
 
-           // -------- Écriture --------
-
-    // template <typename T>
-    // void writePointerImpl(uint32_t addr, const T& value) {
-    //     static_assert(std::is_trivially_copyable_v<T>,
-    //                   "MemoryRaw::writePointerImpl requires trivially copyable T");
-
-    //     std::memcpy(m_ram.get() + addr, &value, sizeof(T));
-    // }
-
-    // template <typename T>
-    // T& writePointerImpl(const uint32_t addr) {
-    //     static_assert(std::is_trivially_copyable_v<T>,
-    //                   "MemoryRaw::writePointerImpl requires trivially copyable T");
-
-    //     //std::memcpy(m_ram.get() + addr, &value, sizeof(T));
-    //     return m_ram.get();
-    // }
     template <typename T>
     MemoryRef<T> writePointerImpl(const uint32_t address) {
 
@@ -190,8 +199,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         return MemoryRef<T>(m_ram.get(), address);
     }
 
-           // -------- Accès octet --------
-
     byte operator[](std::size_t index) const {
         return m_ram[index];
     }
@@ -199,8 +206,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
     void setByte(std::size_t index, byte value) {
         m_ram[index] = value;
     }
-
-           // -------- Permissions / hooks --------
 
     void addAccessRangeImpl(const AccessRange& accessRange) {
         (void)accessRange;
@@ -210,7 +215,6 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
     std::unique_ptr<byte[]> m_ram;
     uint32_t                m_size = 0;
 };
-
 
 
 class MemoryProtected : public MemoryInterface<MemoryProtected> {
@@ -251,7 +255,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         return value;
     }
 
-
     template <typename T>
     MemoryRef<T> writePointerImpl(const uint32_t address) {
         static_assert(std::is_trivially_copyable_v<T>);
@@ -259,12 +262,28 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         return MemoryRef<T>(m_ram.get()->data(), address);
     }
 
-    MemoryRef<byte> operator[](const uint32_t index) const {
-        //return (*m_ram)[offset];
-        //static_assert(std::is_trivially_copyable_v<T>);
-        isAccessible(index, /*sizeof(T)*/1, AccessPermission::WRITE);
-        return MemoryRef<byte>(m_ram.get()->data(), index);
+    // MemoryRef<byte> operator[](const uint32_t index) const {
+    //     isAccessible(index, 1, AccessPermission::WRITE);
+    //     return MemoryRef<byte>(m_ram.get()->data(), index);
+    // }
+
+    MemoryProtectedRef<std::byte> operator[](std::size_t index) {
+        return MemoryProtectedRef<std::byte>(this, m_ram.get()->data(), index);
     }
+
+    // ConstMemoryProtectedRef<std::byte> operator[](std::size_t index) const {
+    //     return ConstMemoryProtectedRef<std::byte>(this, m_ram->data(), index);
+    // }
+
+    // MemoryRef<std::byte> operator[](std::size_t index) {
+    //     isAccessible(index, 1, AccessPermission::READ);
+    //     return MemoryRef<std::byte>(m_ram->data(), index);
+    // }
+
+    // MemoryRef<const std::byte> operator[](std::size_t index) const {
+    //     isAccessible(index, 1, AccessPermission::WRITE);
+    //     return MemoryRef<const std::byte>(m_ram->data(), index);
+    // }
 
     void setByte(uint32_t offset, byte value) {
         (*m_ram)[offset] = value;
@@ -275,8 +294,6 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     }
 
   private:
-    // -------- Vérification d'accès --------
-
     void isAccessible(uint32_t address,
                       std::size_t dataSize,
                       const AccessPermission& permission) const
@@ -294,10 +311,29 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         }
     }
 
+  public:
+    // Limiter le friend à la spécialisation std::byte ?
+    template<typename T, typename PRO> friend class MemoryProtectedBase;
+
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<AccessRange>           m_accessRanges;
+
 };
+
+template<typename T, typename PRO>
+inline MemoryProtectedBase<T, PRO>::operator T() const {
+    m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::READ);
+    return MemoryProtectedBase<T, PRO>::m_base[MemoryRef<T>::m_address];
+}
+
+template<typename T, typename PRO>
+inline MemoryProtectedBase<T, PRO>& MemoryProtectedBase<T, PRO>::operator=(T value) {
+
+    m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::WRITE);
+    MemoryRef<T>::m_base[MemoryRef<T>::m_address] = value;
+    return *this;
+}
 
 template <typename T>
 inline T readPointer(const std::byte* mem) {

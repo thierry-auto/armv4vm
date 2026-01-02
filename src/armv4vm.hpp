@@ -31,12 +31,9 @@ constexpr std::uint64_t operator""_gb(const unsigned long long value) {
     return value * 1024ULL * 1024ULL * 1024ULL;
 }
 
-//namespace armv4vm {
-
 extern template class armv4vm::Alu<armv4vm::MemoryRaw, armv4vm::Vfpv2>;
 extern template class armv4vm::Alu<armv4vm::MemoryProtected, armv4vm::Vfpv2>;
 
 using VirtualMachineUnprotected = armv4vm::Alu<armv4vm::MemoryRaw, armv4vm::Vfpv2>;
 using VirtualMachineProtected   = armv4vm::Alu<armv4vm::MemoryProtected, armv4vm::Vfpv2>;
 
-//} // namespace armv4vm

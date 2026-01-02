@@ -159,6 +159,42 @@ class TestMem : public QObject {
         QVERIFY(mem[42] == 0);
         QVERIFY(exceptionRaised == true);
     }
+
+    void testReading() {
+        std::byte           *mem;
+        MemoryProtected    pro;
+        std::byte b;
+
+        bool exceptionRaised = false;
+        pro.addAccessRangeImpl({0, 32, AccessPermission::READ_WRITE});
+        pro.addAccessRangeImpl({32, 32, AccessPermission::WRITE});
+        mem = pro.allocate(64, std::byte{45});
+
+        try {
+            b = pro[0];
+            b = pro[12];
+            b = pro[31];
+        }
+        catch (std::exception &) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(exceptionRaised == false);
+
+        pro[32] = std::byte{3};
+
+        try {
+            b = pro[32];
+        }
+        catch (std::exception &) {
+            exceptionRaised = true;
+        }
+
+        QVERIFY(b);
+        QVERIFY(exceptionRaised == true);
+
+    }
+
 #if 0
     void testOutOfRange16() {
 

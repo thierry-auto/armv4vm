@@ -29,7 +29,6 @@
 namespace armv4vm {
 
 enum class AccessPermission {
-
     NONE    = 0b0000,
     READ    = 0b0001,
     WRITE   = 0b0010,
@@ -37,12 +36,10 @@ enum class AccessPermission {
 };
 
 inline constexpr AccessPermission operator | (const AccessPermission a, const AccessPermission b) {
-
     return static_cast<AccessPermission>(static_cast<int>(a) | static_cast<int>(b));
 }
 
 inline constexpr bool operator&(AccessPermission a, AccessPermission b) {
-
     return (static_cast<int>(a) & static_cast<int>(b)) != 0;
 }
 
@@ -54,18 +51,13 @@ class MemoryRef {
     MemoryRef(std::byte* base, uint32_t address)
         : m_base(base), m_address(address) {}
 
-    // MemoryRef(MemoryProtected *memoryPorected, std::byte* base, uint32_t address)
-    //     : m_memoryProtected(memoryPorected), m_base(base), m_address(address) {}
-
-           // Lecture implicite
-    operator T() const {
+    operator T() const {        
         static_assert(std::is_trivially_copyable_v<T>);
         T value;
         std::memcpy(&value, m_base + m_address, sizeof(T));
         return value;
     }
 
-           // Affectation
     MemoryRef& operator=(const T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
         std::memcpy(m_base + m_address, &value, sizeof(T));
@@ -82,10 +74,10 @@ class MemoryRef {
     uint32_t   m_address;
 };
 
-template <typename T, typename PRO>
+template <typename T>
 class MemoryProtectedBase : public MemoryRef<T> {
   public:
-    MemoryProtectedBase(PRO *memoryPorected, std::byte* base, uint32_t address)
+    MemoryProtectedBase(MemoryProtected *memoryPorected, std::byte* base, uint32_t address)
         : MemoryRef<T>(base, address), m_memoryProtected(memoryPorected) {}
 
     // Lecture
@@ -100,15 +92,11 @@ class MemoryProtectedBase : public MemoryRef<T> {
     friend bool operator == (const U right, const MemoryRef<std::byte> &left);
 
   private:
-    PRO* m_memoryProtected;
+    MemoryProtected* m_memoryProtected;
 };
 
 template<typename T>
-using MemoryProtectedRef = MemoryProtectedBase<T, MemoryProtected>;
-
-// template<typename T>
-// using ConstMemoryProtectedRef = MemoryProtectedBase<const T, const MemoryProtected>;
-
+using MemoryProtectedRef = MemoryProtectedBase<T>;
 
 class AccessRange {
   public:
@@ -216,14 +204,12 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
     uint32_t                m_size = 0;
 };
 
-
 class MemoryProtected : public MemoryInterface<MemoryProtected> {
   public:
     using byte = std::byte;
 
     MemoryProtected() = default;
     ~MemoryProtected() = default;
-
 
     byte* allocate(std::size_t size, const std::byte fillingValue = std::byte{0}) {
         m_ram = std::make_unique<std::vector<byte>>(size);
@@ -262,28 +248,9 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         return MemoryRef<T>(m_ram.get()->data(), address);
     }
 
-    // MemoryRef<byte> operator[](const uint32_t index) const {
-    //     isAccessible(index, 1, AccessPermission::WRITE);
-    //     return MemoryRef<byte>(m_ram.get()->data(), index);
-    // }
-
     MemoryProtectedRef<std::byte> operator[](std::size_t index) {
         return MemoryProtectedRef<std::byte>(this, m_ram.get()->data(), index);
     }
-
-    // ConstMemoryProtectedRef<std::byte> operator[](std::size_t index) const {
-    //     return ConstMemoryProtectedRef<std::byte>(this, m_ram->data(), index);
-    // }
-
-    // MemoryRef<std::byte> operator[](std::size_t index) {
-    //     isAccessible(index, 1, AccessPermission::READ);
-    //     return MemoryRef<std::byte>(m_ram->data(), index);
-    // }
-
-    // MemoryRef<const std::byte> operator[](std::size_t index) const {
-    //     isAccessible(index, 1, AccessPermission::WRITE);
-    //     return MemoryRef<const std::byte>(m_ram->data(), index);
-    // }
 
     void setByte(uint32_t offset, byte value) {
         (*m_ram)[offset] = value;
@@ -313,23 +280,21 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   public:
     // Limiter le friend à la spécialisation std::byte ?
-    template<typename T, typename PRO> friend class MemoryProtectedBase;
+    template<typename T> friend class MemoryProtectedBase;
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<AccessRange>           m_accessRanges;
-
 };
 
-template<typename T, typename PRO>
-inline MemoryProtectedBase<T, PRO>::operator T() const {
+template<typename T>
+inline MemoryProtectedBase<T>::operator T() const {
     m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::READ);
-    return MemoryProtectedBase<T, PRO>::m_base[MemoryRef<T>::m_address];
+    return MemoryProtectedBase<T>::m_base[MemoryRef<T>::m_address];
 }
 
-template<typename T, typename PRO>
-inline MemoryProtectedBase<T, PRO>& MemoryProtectedBase<T, PRO>::operator=(T value) {
-
+template<typename T>
+inline MemoryProtectedBase<T>& MemoryProtectedBase<T>::operator=(T value) {
     m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::WRITE);
     MemoryRef<T>::m_base[MemoryRef<T>::m_address] = value;
     return *this;
@@ -350,18 +315,16 @@ inline MemoryRef<T> writePointer(std::byte* mem) {
 }
 
 inline bool operator == (const std::byte &left, const int &right) {
-
     return std::to_integer<int>(left) == right;
 }
 
 template <typename U>
 bool operator == (const MemoryRef<std::byte> &left, const U right) {
-
     return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
 }
+
 template <typename U>
 bool operator == (const U right, const MemoryRef<std::byte> &left) {
-
     return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
 }
 

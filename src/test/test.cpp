@@ -2258,8 +2258,7 @@ private slots:
         vm.init();
 
         vm.m_ram.writePointer<uint32_t>(0, 0xee002a90); // FMSR S1, R2
-        vm.m_ram.writePointer<uint32_t>(0x10, 3.14159f);
-        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_registers[2] = 0x40490fd0; // 3.14159f
         vm.m_cpsr         = 0x60000000;
 
         vm.run(1);

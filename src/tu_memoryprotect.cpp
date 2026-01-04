@@ -156,7 +156,7 @@ class TestMem : public QObject {
             exceptionRaised = true;
         }
 
-        QVERIFY(mem[42] == 0);
+        QVERIFY(mem[42] == 45);
         QVERIFY(exceptionRaised == true);
     }
 

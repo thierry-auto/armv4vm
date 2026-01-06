@@ -48,6 +48,20 @@ namespace armv4vm {
 //     size_t m_index;
 // };
 
+template<typename T>
+concept Single =
+    std::is_floating_point_v<T> &&
+    std::numeric_limits<T>::is_iec559 &&
+    std::numeric_limits<T>::digits == 24 &&
+    sizeof(T) * CHAR_BIT == 32;
+
+template<typename T>
+concept Double =
+    std::is_floating_point_v<T> &&
+    std::numeric_limits<T>::is_iec559 &&
+    std::numeric_limits<T>::digits == 53 &&
+    sizeof(T) * CHAR_BIT == 64;
+
 // On verra plus tard que finalement, CRTP ne sera peut-être pas nécessaire because tout est header.
 // et par conséquent, on peut faire peut-être du polymorphisme classique..le compilo saura le dégager en -O2
 template<typename Derived>
@@ -172,12 +186,6 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
 
   private:
     std::array<float, 32> m_sRegisters;
-
-    // Demander un jour a un expert (pas une ia..) si ce ne serait pas
-    // plus simple et sans risque de faire une union.. On s'apargnerait
-    // ainsi tous ces cast bien relouds..
-    // union { float registerFloat[32], double registersDouble[16] };
-
     uint32_t m_fpscr;
     uint32_t m_fpexc;
     const uint32_t m_fpsid = 0x54001000; // 54 comme T :p
@@ -185,22 +193,28 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
     void decodeAndExecute(const uint32_t &wokingInstruction);
     void vadd(const uint32_t &wokingInstruction);
 
-    inline const float& toSingle(const uint32_t index) const noexcept {
-        return m_sRegisters[index];
-    }
-
-    inline const double toDouble(const uint32_t index) const noexcept {
-        double result;
-        memcpy(&result, &m_sRegisters[index * 2], sizeof(double));
+    template<typename T>
+    inline T toSingle(const std::size_t index) const noexcept {
+        T result;
+        memcpy(&result, &m_sRegisters[index], sizeof(T));
         return result;
     }
 
-    inline void setSingleRegister(const int index, const float value) noexcept {
-        m_sRegisters[index] = value;
+    template<typename T>
+    inline T toDouble(const std::size_t index) const noexcept {
+        T result;
+        memcpy(&result, &m_sRegisters[index * 2], sizeof(T));
+        return result;
     }
 
-    void setDoubleRegister(const int index, const double value) noexcept {
-        memcpy(&m_sRegisters[index], &value, sizeof(double));
+    template<typename T>
+    inline void setSingleRegister(const std::size_t index, const T value) noexcept {
+        memcpy(&m_sRegisters[index], &value, sizeof(T));
+    }
+
+    template<typename T>
+    void setDoubleRegister(const std::size_t index, const T value) noexcept {
+        memcpy(&m_sRegisters[index * 2], &value, sizeof(T));
     }
 
     static uint32_t getExtensionOpcode(const uint32_t instruction) noexcept;
@@ -313,9 +327,9 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
     constexpr auto OP_EXTE_FTOSIZ = 0b11011;
 
     bool isDouble = false;
-    uint32_t Fd;
-    uint32_t Fn;
-    uint32_t Fm;
+    std::size_t Fd;
+    std::size_t Fn;
+    std::size_t Fm;
 
     if((workingInstruction & MASK_SD) == SD_DOUBLE) {
 
@@ -333,86 +347,86 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
     switch (BITS(workingInstruction, 24, 27)) {
 
     case OP_FADD:
-        if (isDouble) setDoubleRegister(Fd, toDouble(Fn) + toDouble(Fm));
-        else     setSingleRegister(Fd, toSingle(Fn) + toSingle(Fm));
+        if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fn) + toDouble<double>(Fm));
+        else     setSingleRegister(Fd, toSingle<float>(Fn) + toSingle<float>(Fm));
         break;
 
     case OP_FSUB:
-        if (isDouble) setDoubleRegister(Fd, toDouble(Fn) - toDouble(Fm));
-        else     setSingleRegister(Fd, toSingle(Fn) - toSingle(Fm));
+        if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fn) - toDouble<double>(Fm));
+        else     setSingleRegister(Fd, toSingle<float>(Fn) - toSingle<float>(Fm));
         break;
 
     case OP_FMUL:
-        if (isDouble) setDoubleRegister(Fd, toDouble(Fn) * toDouble(Fm));
-        else     setSingleRegister(Fd, toSingle(Fn) * toSingle(Fm));
+        if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fn) * toDouble<double>(Fm));
+        else     setSingleRegister(Fd, toSingle<float>(Fn) * toSingle<float>(Fm));
         break;
 
     case OP_FNMUL:
-        if (isDouble) setDoubleRegister(Fd, -(toDouble(Fn) * toDouble(Fm)));
-        else     setSingleRegister(Fd, -(toSingle(Fn) * toSingle(Fm)));
+        if (isDouble) setDoubleRegister(Fd, -(toDouble<double>(Fn) * toDouble<double>(Fm)));
+        else     setSingleRegister(Fd, -(toSingle<float>(Fn) * toSingle<float>(Fm)));
         break;
 
     case OP_FDIV:
-        if (isDouble) setDoubleRegister(Fd, toDouble(Fn) / toDouble(Fm));
-        else     setSingleRegister(Fd, toSingle(Fn) / toSingle(Fm));
+        if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fn) / toDouble<double>(Fm));
+        else     setSingleRegister(Fd, toSingle<float>(Fn) / toSingle<float>(Fm));
         break;
 
     case OP_FMAC:
-        if (isDouble) setDoubleRegister(Fd, (toDouble(Fn) * toDouble(Fm)) + toDouble(Fd));
-        else     setSingleRegister(Fd, (toSingle(Fn) * toSingle(Fm)) + toSingle(Fd));
+        if (isDouble) setDoubleRegister(Fd, (toDouble<double>(Fn) * toDouble<double>(Fm)) + toDouble<double>(Fd));
+        else     setSingleRegister(Fd, (toSingle<float>(Fn) * toSingle<float>(Fm)) + toSingle<float>(Fd));
         break;
 
     case OP_FNMAC:
-        if (isDouble) setDoubleRegister(Fd, -(toDouble(Fn) * toDouble(Fm)) + toDouble(Fd));
-        else     setSingleRegister(Fd, -(toSingle(Fn) * toSingle(Fm)) + toSingle(Fd));
+        if (isDouble) setDoubleRegister(Fd, -(toDouble<double>(Fn) * toDouble<double>(Fm)) + toDouble<double>(Fd));
+        else     setSingleRegister(Fd, -(toSingle<float>(Fn) * toSingle<float>(Fm)) + toSingle<float>(Fd));
         break;
 
     case OP_FMSC:
-        if (isDouble) setDoubleRegister(Fd, toDouble(Fd) - (toDouble(Fn) * toDouble(Fm)));
-        else     setSingleRegister(Fd, toSingle(Fd) - (toSingle(Fn) * toSingle(Fm)));
+        if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fd) - (toDouble<double>(Fn) * toDouble<double>(Fm)));
+        else     setSingleRegister(Fd, toSingle<float>(Fd) - (toSingle<float>(Fn) * toSingle<float>(Fm)));
         break;
 
     case OP_FNMSC:
-        if (isDouble) setDoubleRegister(Fd, -(toDouble(Fn) * toDouble(Fm)) - toDouble(Fd));
-        else     setSingleRegister(Fd, -(toSingle(Fn) * toSingle(Fm)) - toSingle(Fd));
+        if (isDouble) setDoubleRegister(Fd, -(toDouble<double>(Fn) * toDouble<double>(Fm)) - toDouble<double>(Fd));
+        else     setSingleRegister(Fd, -(toSingle<float>(Fn) * toSingle<float>(Fm)) - toSingle<float>(Fd));
         break;
 
     case OP_EXTE:
         switch(getExtensionOpcode(workingInstruction)) {
 
         case OP_EXTE_FCPY:
-            if (isDouble) setDoubleRegister(Fd, toDouble(Fm));
-            else setSingleRegister(Fd, toSingle(Fm));
+            if (isDouble) setDoubleRegister(Fd, toDouble<double>(Fm));
+            else setSingleRegister(Fd, toSingle<float>(Fm));
             break;
 
         case OP_EXTE_FNEG:
-            if (isDouble) setDoubleRegister(Fd, -toDouble(Fm));
-            else setSingleRegister(Fd, -toSingle(Fm));
+            if (isDouble) setDoubleRegister(Fd, -toDouble<double>(Fm));
+            else setSingleRegister(Fd, -toSingle<float>(Fm));
             break;
 
         case OP_EXTE_FABS:
-            if (isDouble) setDoubleRegister(Fd, std::fabs(toDouble(Fm)));
-            else setSingleRegister(Fd, std::fabs(toSingle(Fm)));
+            if (isDouble) setDoubleRegister(Fd, std::fabs(toDouble<double>(Fm)));
+            else setSingleRegister(Fd, std::fabs(toSingle<float>(Fm)));
             break;
 
         case OP_EXTE_FSQRT:
-            if (isDouble) setDoubleRegister(Fd, std::sqrt(toDouble(Fm)));
-            else setSingleRegister(Fd, std::sqrt(toSingle(Fm)));
+            if (isDouble) setDoubleRegister(Fd, std::sqrt(toDouble<double>(Fm)));
+            else setSingleRegister(Fd, std::sqrt(toSingle<float>(Fm)));
             break;
 
         case OP_EXTE_FTOSIZ:
-            if (isDouble) setSingleRegister(Fd, static_cast<int32_t>(toDouble(Fm)));
-            else setSingleRegister(Fd, static_cast<int32_t>(toSingle(Fm)));
+            if (isDouble) setDoubleRegister(Fd, toDouble<uint64_t>(Fm));
+            else setSingleRegister(Fd, toSingle<float>(Fm));
             break;
 
         case OP_EXTE_FTOUIZ:
-            if (isDouble) setSingleRegister(Fd, static_cast<uint32_t>(toDouble(Fm)));
-            else setSingleRegister(Fd, static_cast<uint32_t>(toSingle(Fm)));
+            if (isDouble) setDoubleRegister(Fd, static_cast<uint32_t>(toDouble<double>(Fm)));
+            else setSingleRegister(Fd, static_cast<uint32_t>(toSingle<float>(Fm)));
             break;
 
         case OP_EXTE_FSITO:
             if (isDouble) setDoubleRegister(Fd, static_cast<int32_t>(BITS(workingInstruction, 0, 3)));
-            else setSingleRegister(Fd, static_cast<int32_t>(BITS(workingInstruction, 0, 3)));
+            else setSingleRegister(Fd, static_cast<uint32_t>(BITS(workingInstruction, 0, 3)));
             break;
 
         case OP_EXTE_FUITO:
@@ -421,31 +435,31 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
             break;
 
         case OP_EXTE_FCMP:
-            isDouble ? setFPSCRCompare<double>(toDouble(Fm), toDouble(Fd), false) : setFPSCRCompare<float>(toSingle(Fm), toSingle(Fd), false);
+            isDouble ? setFPSCRCompare<double>(toDouble<double>(Fm), toDouble<double>(Fd), false) : setFPSCRCompare<float>(toSingle<float>(Fm), toSingle<float>(Fd), false);
             break;
 
         case OP_EXTE_FCMPE:
-            isDouble ? setFPSCRCompare(toDouble(Fm), toDouble(Fd), true) : setFPSCRCompare(toSingle(Fm), toSingle(Fd), true);
+            isDouble ? setFPSCRCompare(toDouble<double>(Fm), toDouble<double>(Fd), true) : setFPSCRCompare(toSingle<float>(Fm), toSingle<float>(Fd), true);
             break;
 
         case OP_EXTE_FCMPZ:
-            isDouble ? setFPSCRCompare(toDouble(Fm), 0.0, false) : setFPSCRCompare(toSingle(Fm), 0.0f, false);
+            isDouble ? setFPSCRCompare(toDouble<double>(Fm), 0.0, false) : setFPSCRCompare(toSingle<float>(Fm), 0.0f, false);
             break;
 
         case OP_EXTE_FCMPEZ:
-            isDouble ? setFPSCRCompare(toDouble(Fm), 0.0, true) : setFPSCRCompare(toSingle(Fm), 0.0f, true);
+            isDouble ? setFPSCRCompare(toDouble<double>(Fm), 0.0, true) : setFPSCRCompare(toSingle<float>(Fm), 0.0f, true);
             break;
 
         case OP_EXTE_FCVTD:
-            setDoubleRegister(Fd, static_cast<double>(toSingle(Fm)));
+            setDoubleRegister(Fd, static_cast<double>(toSingle<float>(Fm)));
             break;
 
         case OP_EXTE_FTOUI:
-            isDouble ? setSingleRegister(Fd, static_cast<uint32_t>(toDouble(Fm))) : setSingleRegister(Fd, static_cast<uint32_t>(toSingle(Fm)));
+            isDouble ? setSingleRegister(Fd, static_cast<uint32_t>(toDouble<double>(Fm))) : setSingleRegister(Fd, static_cast<uint32_t>(toSingle<float>(Fm)));
             break;
 
         case OP_EXTE_FTOSI:
-            isDouble ? setSingleRegister(Fd, static_cast<int32_t>(toDouble(Fm))) : setSingleRegister(Fd, static_cast<int32_t>(toSingle(Fm)));
+            isDouble ? setSingleRegister(Fd, static_cast<int32_t>(toDouble<double>(Fm))) : setSingleRegister(Fd, static_cast<int32_t>(toSingle<float>(Fm)));
             break;
 
         default:
@@ -462,20 +476,20 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
 
 inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
 
-    constexpr uint32_t OP_MASK  = 0x0FF00F00;
-    constexpr uint32_t OP_FMSR  = 0x0E000a00;
-    constexpr uint32_t OP_FMRS  = 0x0E100a00;
-    constexpr uint32_t OP_FMDLR = 0x0E000700;
-    constexpr uint32_t OP_FMRDL = 0x0E100700;
-    constexpr uint32_t OP_FMDHR = 0x0E200700;
-    constexpr uint32_t OP_FMRDH = 0x0E300700;
-    constexpr uint32_t OP_FMXR  = 0x0EE00600;
-    constexpr uint32_t OP_FMRX  = 0x0EF00600;
+    constexpr uint32_t OP_MASK  = 0x0FF00F10;
+    constexpr uint32_t OP_FMSR  = 0x0E000a10;
+    constexpr uint32_t OP_FMRS  = 0x0E100a10;
+    constexpr uint32_t OP_FMDLR = 0x0E000B10; ///////////
+    constexpr uint32_t OP_FMRDL = 0x0E100B10;
+    constexpr uint32_t OP_FMDHR = 0x0E200B10;
+    constexpr uint32_t OP_FMRDH = 0x0E300B10;
+    constexpr uint32_t OP_FMXR  = 0x0EE00610;
+    constexpr uint32_t OP_FMRX  = 0x0EF00610;
 
-    constexpr uint32_t OP_FMSRR = 0x0C400A00;
-    constexpr uint32_t OP_FMRRS = 0x0C500A00;
-    constexpr uint32_t OP_FMDRR = 0x0C400B00;
-    constexpr uint32_t OP_FMRRD = 0x0C500B00;
+    constexpr uint32_t OP_FMSRR = 0x0C400A10;
+    constexpr uint32_t OP_FMRRS = 0x0C500A10;
+    constexpr uint32_t OP_FMDRR = 0x0C400B10;
+    constexpr uint32_t OP_FMRRD = 0x0C500B10;
 
     constexpr auto FPSID  = 0b0000;
     constexpr auto FPSCR  = 0b0001;
@@ -504,32 +518,32 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
 
     case OP_FMSR:
         Fn = decodeFnSingle(workingInstruction);
-        m_alu->getRegisters()[Rd] = toSingle(Fn);
+        setSingleRegister(Fn, m_alu->getRegisters()[Rd]);
         break;
 
     case OP_FMRS:
         Fn = decodeFnSingle(workingInstruction);
-        m_alu->getRegisters()[Rd] = toSingle(Fn);
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fn);
         break;
 
     case OP_FMDLR:
         Fn = decodeFnDouble(workingInstruction);
-        m_sRegisters[Fn] = m_alu->getRegisters()[Rd];
+        setDoubleRegister(Fn, m_alu->getRegisters()[Rd]);
         break;
 
     case OP_FMRDL:
         Fn = decodeFnDouble(workingInstruction);
-        m_alu->getRegisters()[Rd] = m_sRegisters[Fn];
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fn * 2);
         break;
 
     case OP_FMDHR:
-         Fn = decodeFnDouble(workingInstruction);
-         m_sRegisters[Fn * 2 + 1] = m_alu->getRegisters()[Rd];
+        Fn = decodeFnDouble(workingInstruction);
+        setSingleRegister<uint32_t>(Fn * 2 + 1, m_alu->getRegisters()[Rd]);
         break;
 
     case OP_FMRDH:
         Fn = decodeFnDouble(workingInstruction);
-        m_alu->getRegisters()[Rd] = m_sRegisters[Fn * 2 + 1];
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fn * 2 + 1);
         break;
 
     case OP_FMXR:
@@ -583,8 +597,8 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     case OP_FMRRS:
         Fm = decodeFmSingle(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
-        m_alu->getRegisters()[Rn] = toSingle(Fm);
-        m_alu->getRegisters()[Rd] = toSingle(Fm + 1);
+        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm);
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm + 1);
         break;
 
     case OP_FMDRR:
@@ -597,8 +611,8 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     case OP_FMRRD:
         Fm = decodeFmSingle(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
-        m_alu->getRegisters()[Rd] = toSingle(Fm);
-        m_alu->getRegisters()[Rn] = toSingle(Fm + 1);
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
+        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm + 1);
         break;
 
     default:

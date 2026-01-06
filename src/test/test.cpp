@@ -2271,14 +2271,14 @@ private slots:
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
 
-        vm.m_ram.writePointer<uint32_t>(0, 0xee002a90); // FMSR S1, R2
+        vm.m_ram.writePointer<uint32_t>(0, 0xee102a90); // FMRS R2, S1
         vm.m_ram.writePointer<uint32_t>(0x10, 0xABCDEF01);
-        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_coprocessor.m_sRegisters[1] = std::bit_cast<float>(0xaabbccdd);
         vm.m_cpsr         = 0x60000000;
 
         vm.run(1);
 
-        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == std::bit_cast<float>(0xaabbccddU));
+        QVERIFY(vm.m_registers[2] == 0xaabbccdd);
         QVERIFY(vm.m_cpsr == 0x60000000);
     }
 
@@ -2295,9 +2295,76 @@ private slots:
 
         vm.run(1);
 
-        QVERIFY(vm.m_coprocessor.m_sRegisters[1] == 3213.4393f);
-        QVERIFY(vm.m_registers[3] == 3213.4393f);
+        QVERIFY(vm.m_coprocessor.m_sRegisters[4] == 3213.4393f);
+        QVERIFY(vm.m_registers[3] == std::bit_cast<uint32_t>(3213.4393f));
         QVERIFY(vm.m_cpsr == 0x60000000);
+    }
+
+    void testFMDLR() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xee041b10); // FMDLR D4, R1
+        vm.m_registers[1] = 0xaabbccdd;
+        vm.m_coprocessor.m_sRegisters[8] = 0.0f;
+        vm.m_coprocessor.m_sRegisters[9] = 0.0f;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_coprocessor.m_sRegisters[8] == std::bit_cast<float>(0xaabbccdd));
+        QVERIFY(vm.m_coprocessor.m_sRegisters[9] == 0.0f);
+        QVERIFY(vm.m_coprocessor.toSingle<uint32_t>(8) == 0xaabbccdd);
+        QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(4) == 0x00000000aabbccdd);
+    }
+
+    void testFMRDL() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xee161b10); // FMRDL R1, D6
+        vm.m_coprocessor.setDoubleRegister<uint64_t>(6, 0x11223344aabbccdd);
+        vm.m_registers[1] = 0x99887766;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[0] == 0x00000000);
+        QVERIFY(vm.m_registers[1] == 0xaabbccdd);
+        QVERIFY(vm.m_registers[2] == 0x00000000);
+    }
+
+    void testFMDHR() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xee292b10); // FMDHR D9, R2
+        vm.m_coprocessor.setDoubleRegister<uint64_t>(9, 0x55667788FFEEDDCC);
+        vm.m_registers[2] = 0x66993322;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0x66993322);
+        QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(8) == 0x0000000000000000);
+        QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(9) == 0x66993322FFEEDDCC);
+        QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(10) == 0x0000000000000000);
+    }
+
+    void testFMRDH() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xee351b10); // FMRDH R1, D5
+        vm.m_coprocessor.setDoubleRegister<uint64_t>(5, 0xdeabcd24841cf651);
+        vm.m_registers[1] = 0x99887766;
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[0] == 0x00000000);
+        QVERIFY(vm.m_registers[1] == 0xdeabcd24);
+        QVERIFY(vm.m_registers[2] == 0x00000000);
     }
 };
 } // namespace armv4vm

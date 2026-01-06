@@ -48,7 +48,7 @@ class MemoryProtected;
 template <typename T>
 class MemoryRef {
   public:
-    MemoryRef(std::byte* base, uint32_t address)
+    MemoryRef(std::byte* base, std::size_t address)
         : m_base(base), m_address(address) {}
 
     operator T() const {        
@@ -70,14 +70,14 @@ class MemoryRef {
     friend bool operator == (const U right, const MemoryRef<std::byte> &left);
 
   protected:
-    std::byte* m_base;
-    uint32_t   m_address;
+    std::byte*  m_base;
+    std::size_t m_address;
 };
 
 template <typename T>
 class MemoryProtectedBase : public MemoryRef<T> {
   public:
-    MemoryProtectedBase(MemoryProtected *memoryPorected, std::byte* base, uint32_t address)
+    MemoryProtectedBase(MemoryProtected *memoryPorected, std::byte* base, std::size_t address)
         : MemoryRef<T>(base, address), m_memoryProtected(memoryPorected) {}
 
     // Lecture

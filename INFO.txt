@@ -96,6 +96,8 @@ make install-target-libstdc++-v3
 
 
 
+https://problemkaputt.de/gbatek-arm-vfp-floating-point-load-store-opcodes.htm
+
 
 
 

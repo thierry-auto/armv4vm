@@ -229,28 +229,58 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
 
 inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
 
-    // clang-format off
-    struct CoprocessorDataTransfers {
+    constexpr uint32_t OP_MASK  = 0x0FF00FD0;
+    constexpr uint32_t OP_FMSRR = 0x0C400A10;
+    constexpr uint32_t OP_FMRRS = 0x0C500A10;
+    constexpr uint32_t OP_FMDRR = 0x0C400B10;
+    constexpr uint32_t OP_FMRRD = 0x0C500B10;
 
-        uint32_t immediateOffset                : 8;
-        uint32_t coproNumber                    : 4;
-        uint32_t coproSourceDestinationRegister : 4;
-        uint32_t baseRegister                   : 4;
-        uint32_t loadStoreBit                   : 1;
-        uint32_t writeBackBit                   : 1;
-        uint32_t transferLength                 : 1;
-        uint32_t upDownBit                      : 1;
-        uint32_t prePostIndexingBit             : 1;
-        uint32_t                                : 3;
-        uint32_t condition                      : 4;
+    //instruction = cast<CoprocessorDataTransfers>(workingInstruction);
 
-    } instruction;
-    // clang-format on
+    const uint32_t Rd = BITS(workingInstruction, 12, 15);
+    uint32_t Rn, Fm;
 
-    instruction = cast<CoprocessorDataTransfers>(workingInstruction);
+    auto decodeFmSingle = [](const uint32_t instruction) {
+        return (BITS(instruction, 0, 3) << 1) | BITS(instruction, 5, 5);
+    };
 
-           // On leve une exception
-    armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    auto decodeFmDouble = [](const uint32_t instruction) {
+        return BITS(instruction, 0, 3);
+    };
+
+    switch (workingInstruction & OP_MASK) {
+    case OP_FMSRR:
+        Fm = decodeFmSingle(workingInstruction);
+        Rn = BITS(workingInstruction, 16, 19);
+        setSingleRegister(Fm, m_alu->getRegisters()[Rd]);
+        setSingleRegister(Fm + 1, m_alu->getRegisters()[Rn]);
+        break;
+
+    case OP_FMRRS:
+        Fm = decodeFmSingle(workingInstruction);
+        Rn = BITS(workingInstruction, 16, 19);
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
+        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm + 1);
+        break;
+
+    case OP_FMDRR:
+        Fm = decodeFmDouble(workingInstruction);
+        Rn = BITS(workingInstruction, 16, 19);
+        setSingleRegister(Fm * 2, m_alu->getRegisters()[Rd]);
+        setSingleRegister(Fm * 2 + 1, m_alu->getRegisters()[Rn]);
+        break;
+
+    case OP_FMRRD:
+        Fm = decodeFmSingle(workingInstruction);
+        Rn = BITS(workingInstruction, 16, 19);
+        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
+        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm + 1);
+        break;
+
+    default:
+               // On leve une exception
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+    }
 }
 
 inline uint32_t Vfpv2::getExtensionOpcode(const uint32_t instruction) noexcept {
@@ -486,11 +516,6 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     constexpr uint32_t OP_FMXR  = 0x0EE00610;
     constexpr uint32_t OP_FMRX  = 0x0EF00610;
 
-    constexpr uint32_t OP_FMSRR = 0x0C400A10;
-    constexpr uint32_t OP_FMRRS = 0x0C500A10;
-    constexpr uint32_t OP_FMDRR = 0x0C400B10;
-    constexpr uint32_t OP_FMRRD = 0x0C500B10;
-
     constexpr auto FPSID  = 0b0000;
     constexpr auto FPSCR  = 0b0001;
     constexpr auto FPEXC  = 0b1000;
@@ -547,6 +572,7 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
         break;
 
     case OP_FMXR:
+#if 0
         Fn = decodeFnDouble(workingInstruction);
         switch (Fn)
         {
@@ -564,9 +590,13 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
             armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
             break;
         }
+#else
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
 
     case OP_FMRX:
+#if 0
         Fn = decodeFnDouble(workingInstruction);
         switch (Fn)
         {
@@ -585,35 +615,11 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
         default:
             armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
         }
+#else
+        armv4vm_assert(__FUNCTION__, __FILE__, __LINE__);
+#endif
         break;
 
-    case OP_FMSRR:
-        Fm = decodeFmSingle(workingInstruction);
-        Rn = BITS(workingInstruction, 16, 19);
-        setSingleRegister(Fm, m_alu->getRegisters()[Rn]);
-        setSingleRegister(Fm + 1, m_alu->getRegisters()[Rd]);
-        break;
-
-    case OP_FMRRS:
-        Fm = decodeFmSingle(workingInstruction);
-        Rn = BITS(workingInstruction, 16, 19);
-        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm);
-        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm + 1);
-        break;
-
-    case OP_FMDRR:
-        Fm = decodeFmDouble(workingInstruction);
-        Rn = BITS(workingInstruction, 16, 19);
-        setSingleRegister(Fm * 2, m_alu->getRegisters()[Rd]);
-        setSingleRegister(Fm * 2 + 1, m_alu->getRegisters()[Rn]);
-        break;
-
-    case OP_FMRRD:
-        Fm = decodeFmSingle(workingInstruction);
-        Rn = BITS(workingInstruction, 16, 19);
-        m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
-        m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm + 1);
-        break;
 
     default:
         // On leve une exception

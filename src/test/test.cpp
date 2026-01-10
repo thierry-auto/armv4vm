@@ -2366,6 +2366,69 @@ private slots:
         QVERIFY(vm.m_registers[1] == 0xdeabcd24);
         QVERIFY(vm.m_registers[2] == 0x00000000);
     }
+
+    void testFMSRR() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xec425a3d); // FMSRR {s27,s28}, r5, r2
+        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_registers[5] = 0x12345678;
+
+        vm.run(1);
+
+         QVERIFY(vm.m_coprocessor.toSingle<uint32_t>(27) == 0x12345678);
+         QVERIFY(vm.m_coprocessor.toSingle<uint32_t>(28) == 0xaabbccdd);
+    }
+
+    void testFMRRS() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xec525a3d); // FMRRS r5, r2, {s27,s28}
+        vm.m_registers[2] = 0xaabbccdd;
+        vm.m_registers[5] = 0x12345678;
+        vm.m_coprocessor.setSingleRegister<uint32_t>(27, 0xDF34AC82);
+        vm.m_coprocessor.setSingleRegister<uint32_t>(28, 0x11BBBB37);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[2] == 0x11BBBB37);
+        QVERIFY(vm.m_registers[5] == 0xDF34AC82);
+    }
+
+    void testFMDRR() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xec494b13); // FMDRR d3, r4, r9
+        vm.m_registers[4] = 0x7EB1A776;
+        vm.m_registers[9] = 0xACB4B4AC;
+        vm.m_coprocessor.setDoubleRegister<uint64_t>(9, 0x55667788FFEEDDCC);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(3) == 0xacb4b4ac7eb1a776);
+    }
+
+    void testFMRRD() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xec512b16); // FMRRD  r2, r1, d6
+        vm.m_registers[1] = 0x7EB1A776;
+        vm.m_registers[2] = 0xACB4B4AC;
+        vm.m_coprocessor.setDoubleRegister<uint64_t>(6, 0x55667788FFEEDDCC);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_registers[1] == 0x55667788);
+        QVERIFY(vm.m_registers[2] == 0xFFEEDDCC);
+    }
 };
 } // namespace armv4vm
 QTEST_MAIN(armv4vm::TestVm)

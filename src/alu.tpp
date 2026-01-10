@@ -124,7 +124,7 @@ template <typename MemoryHandler, typename CoproHandler> uint32_t Alu<MemoryHand
     return result;
 }
 
-template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::decode(const uint32_t instruction) {
+template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::decodev1(const uint32_t instruction) {
 
     static const uint32_t DATA_PROCESSING                      = 0x00000000;
     static const uint32_t MULTIPLY                             = 0x00000090;

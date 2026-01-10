@@ -182,7 +182,10 @@ public:
     enum Error           m_error;
 
     inline uint32_t fetch();
-    inline void     decode(const uint32_t);
+    inline void     decodev1(const uint32_t);
+    inline void     decode(const uint32_t i) {
+        decodev1(i);
+    }
     inline void     evaluate();
 
     void dataProcessingEval();

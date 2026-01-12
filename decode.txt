@@ -1,0 +1,14 @@
+
+    
+
+Cond  0 0 0 1 0 0 1 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1  	BRANCH AND EXC
+Cond  1 0 1 0                                             Branch
+Cond  1 0 1 1                                             Branch with Link
+Cond  0 0   0 0 0 0                                       DATA PROC. AND
+            . . . .
+Cond  0 0   1 1 1 1                                       DATA PROC. MVN
+Cond  0 0 0 0 0 0                             1 1 1 1     MULTI ACC
+Cond  0 0 0 0 1                               1 0 0 1     Multiply Long and Multiply-Accumulate Long
+Cond  0 1     				      	    	  Single Data Transfer
+Cond  0 0 0     0                   0 0 0 0 1 S H 1
+ RmHalfword and Signed Data Transfer

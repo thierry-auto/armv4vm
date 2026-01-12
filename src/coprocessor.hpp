@@ -87,7 +87,8 @@ class CoprocessorBase {
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
   protected:
-    AluBase * m_alu;
+    //AluBase * m_alu;
+    Alu<, Derived> *m_alu;
 };
 
 template<typename Derived>
@@ -229,16 +230,44 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
 
 inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
 
-    constexpr uint32_t OP_MASK  = 0x0FF00FD0;
-    constexpr uint32_t OP_FMSRR = 0x0C400A10;
-    constexpr uint32_t OP_FMRRS = 0x0C500A10;
-    constexpr uint32_t OP_FMDRR = 0x0C400B10;
-    constexpr uint32_t OP_FMRRD = 0x0C500B10;
+    // two registers transfer
+    constexpr uint32_t OP_MASK   = 0x0FB00F00;
+    constexpr uint32_t OP_FMSRR  = 0x0C000A00;
+    constexpr uint32_t OP_FMRRS  = 0x0C100A00;
+    constexpr uint32_t OP_FMDRR  = 0x0C000B00;
+    constexpr uint32_t OP_FMRRD  = 0x0C100B00;
 
-    //instruction = cast<CoprocessorDataTransfers>(workingInstruction);
+    // load and store
+    // offset[0] willl be test in instruction. (FSTMD, FSTMX, etc.)
+    constexpr uint32_t OP_FSTMSU = 0x0C800A00;
+    constexpr uint32_t OP_FDLMSU = 0x0C900A00;
+    constexpr uint32_t OP_FSTMDU = 0x0C800B00;
+    constexpr uint32_t OP_FLDMDU = 0x0C900B00;
 
-    const uint32_t Rd = BITS(workingInstruction, 12, 15);
-    uint32_t Rn, Fm;
+    constexpr uint32_t OP_FSTMSI = 0x0CA00A00;
+    constexpr uint32_t OP_FDLMSI = 0x0CB00A00;
+    constexpr uint32_t OP_FSTMDI = 0x0CA00B00;
+    constexpr uint32_t OP_FLDMDI = 0x0CB00B00;
+
+    constexpr uint32_t OP_FSTSN  = 0x0D000A00;
+    constexpr uint32_t OP_FLDSN  = 0x0D100A00;
+    constexpr uint32_t OP_FSTDN  = 0x0D000B00;
+    constexpr uint32_t OP_FLDDN  = 0x0D100B00;
+    constexpr uint32_t OP_FSTMSD = 0x0D200A00;
+    constexpr uint32_t OP_FDLMSD = 0x0D300A00;
+    constexpr uint32_t OP_FSTMDD = 0x0D200B00;
+    constexpr uint32_t OP_FLDMDD = 0x0D300B00;
+
+    constexpr uint32_t OP_FSTSP  = 0x0D800A00;
+    constexpr uint32_t OP_FLDSP  = 0x0D900A00;
+    constexpr uint32_t OP_FSTDP  = 0x0D800B00;
+    constexpr uint32_t OP_FLDDP  = 0x0D900B00;
+
+    uint32_t Rd;
+    uint32_t Fd;
+    uint32_t offset;
+    uint32_t Rn;
+    uint32_t Fm;
 
     auto decodeFmSingle = [](const uint32_t instruction) {
         return (BITS(instruction, 0, 3) << 1) | BITS(instruction, 5, 5);
@@ -248,8 +277,17 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
         return BITS(instruction, 0, 3);
     };
 
+    auto decodeFdSingle = [](const uint32_t instruction) {
+        return (BITS(instruction, 12, 15) << 1) | BITS(instruction, 22, 22);
+    };
+
+    auto decodeFdDouble = [](const uint32_t instruction) {
+        return BITS(instruction, 12, 15);
+    };
+
     switch (workingInstruction & OP_MASK) {
     case OP_FMSRR:
+        Rd = BITS(workingInstruction, 12, 15);
         Fm = decodeFmSingle(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
         setSingleRegister(Fm, m_alu->getRegisters()[Rd]);
@@ -257,6 +295,7 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
         break;
 
     case OP_FMRRS:
+        Rd = BITS(workingInstruction, 12, 15);
         Fm = decodeFmSingle(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
         m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
@@ -264,6 +303,7 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
         break;
 
     case OP_FMDRR:
+        Rd = BITS(workingInstruction, 12, 15);
         Fm = decodeFmDouble(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
         setSingleRegister(Fm * 2, m_alu->getRegisters()[Rd]);
@@ -271,10 +311,75 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
         break;
 
     case OP_FMRRD:
+        Rd = BITS(workingInstruction, 12, 15);
         Fm = decodeFmSingle(workingInstruction);
         Rn = BITS(workingInstruction, 16, 19);
         m_alu->getRegisters()[Rd] = toSingle<uint32_t>(Fm);
         m_alu->getRegisters()[Rn] = toSingle<uint32_t>(Fm + 1);
+        break;
+
+    case OP_FSTMSU:
+        Fd = decodeFdSingle(workingInstruction);
+        offset = BITS(workingInstruction, 0, 7);
+        Rn = BITS(workingInstruction, 16, 19);
+        void * d = m_alu->m_ram;
+        break;
+
+    case OP_FDLMSU:
+        break;
+
+    case OP_FSTMDU:
+        break;
+
+    case OP_FLDMDU:
+        break;
+
+    case OP_FSTMSI:
+        break;
+
+    case OP_FDLMSI:
+        break;
+
+    case OP_FSTMDI:
+        break;
+
+    case OP_FLDMDI:
+        break;
+
+    case OP_FSTSN:
+        break;
+
+    case OP_FLDSN:
+        break;
+
+    case OP_FSTDN:
+        break;
+
+    case OP_FLDDN:
+        break;
+
+    case OP_FSTMSD:
+        break;
+
+    case OP_FDLMSD:
+        break;
+
+    case OP_FSTMDD:
+        break;
+
+    case OP_FLDMDD:
+        break;
+
+    case OP_FSTSP:
+        break;
+
+    case OP_FLDSP:
+        break;
+
+    case OP_FSTDP:
+        break;
+
+    case OP_FLDDP:
         break;
 
     default:
@@ -515,13 +620,16 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     constexpr uint32_t OP_FMRDH = 0x0E300B10;
     constexpr uint32_t OP_FMXR  = 0x0EE00610;
     constexpr uint32_t OP_FMRX  = 0x0EF00610;
-
+#if 0
     constexpr auto FPSID  = 0b0000;
     constexpr auto FPSCR  = 0b0001;
     constexpr auto FPEXC  = 0b1000;
-
+#endif
     const uint32_t Rd = BITS(workingInstruction, 12, 15);
-    uint32_t Fn, Rn, Fm;
+    uint32_t Fn;
+#if 0
+    uint32_t Rn, Fm;
+#endif
 
     auto decodeFnSingle = [](const uint32_t instruction) {
         return (BITS(instruction, 16, 19) << 1) | BITS(instruction, 7, 7);
@@ -530,7 +638,7 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     auto decodeFnDouble = [](const uint32_t instruction) {
         return BITS(instruction, 16, 19);
     };
-
+#if 0
     auto decodeFmSingle = [](const uint32_t instruction) {
         return (BITS(instruction, 0, 3) << 1) | BITS(instruction, 5, 5);
     };
@@ -538,7 +646,7 @@ inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstru
     auto decodeFmDouble = [](const uint32_t instruction) {
         return BITS(instruction, 0, 3);
     };
-
+#endif
     switch (workingInstruction & OP_MASK) {
 
     case OP_FMSR:

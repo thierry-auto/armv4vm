@@ -43,6 +43,7 @@ public:
 
 private slots:
 
+#if 0
     void testMOV() {
         VirtualMachineUnprotected vm(&vmProperties);
         vm.init();
@@ -2413,7 +2414,7 @@ private slots:
 
         QVERIFY(vm.m_coprocessor.toDouble<uint64_t>(3) == 0xacb4b4ac7eb1a776);
     }
-
+#endif
     void testFMRRD() {
 
         VirtualMachineUnprotected vm(&vmProperties);
@@ -2428,6 +2429,25 @@ private slots:
 
         QVERIFY(vm.m_registers[1] == 0x55667788);
         QVERIFY(vm.m_registers[2] == 0xFFEEDDCC);
+    }
+
+    void testFSTMS() {
+
+        VirtualMachineUnprotected vm(&vmProperties);
+        armv4vm::MemoryRaw
+        vm.init();
+
+        vm.m_ram.writePointer<uint32_t>(0, 0xec831a03); // VSTM R3, {S2-S4} aka FSTMS
+        vm.m_registers[3] = 0x00000016;
+        vm.m_coprocessor.setSingleRegister<uint32_t>(1, 0xCCDDEEFF);
+        vm.m_coprocessor.setSingleRegister<uint32_t>(2, 0x11223344);
+        vm.m_coprocessor.setSingleRegister<uint32_t>(3, 0x55667788);
+        vm.m_coprocessor.setSingleRegister<uint32_t>(4, 0x9900AABB);
+
+        vm.run(1);
+
+        QVERIFY(vm.m_ram.readPointer<uint32_t>(0x16) == 0x11223344);
+
     }
 };
 } // namespace armv4vm

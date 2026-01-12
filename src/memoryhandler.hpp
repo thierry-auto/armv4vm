@@ -75,16 +75,16 @@ class MemoryRef {
 };
 
 template <typename T>
-class MemoryProtectedBase : public MemoryRef<T> {
+class MemoryRefProtectedBase : public MemoryRef<T> {
   public:
-    MemoryProtectedBase(MemoryProtected *memoryPorected, std::byte* base, std::size_t address)
+    MemoryRefProtectedBase(MemoryProtected *memoryPorected, std::byte* base, std::size_t address)
         : MemoryRef<T>(base, address), m_memoryProtected(memoryPorected) {}
 
     // Lecture
     operator T() const;
 
     // Écriture
-    MemoryProtectedBase& operator=(T value);
+    MemoryRefProtectedBase& operator=(T value);
 
     template <typename U>
     friend bool operator == (const MemoryRef<std::byte> &left, const U right);
@@ -96,7 +96,7 @@ class MemoryProtectedBase : public MemoryRef<T> {
 };
 
 template<typename T>
-using MemoryProtectedRef = MemoryProtectedBase<T>;
+using MemoryProtectedRef = MemoryRefProtectedBase<T>;
 
 class AccessRange {
   public:
@@ -105,10 +105,15 @@ class AccessRange {
     AccessPermission permission;
 };
 
+// class MemoryInterfaceBase {
+//   public:
+
+// };
+
 // Depuis que tout est headers et template, je pense que le CRTP suivant
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
 // du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
-template <typename Derived> class MemoryInterface {
+template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase*/ {
   protected:
     MemoryInterface()          = default;
     virtual ~MemoryInterface() = default;
@@ -280,7 +285,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   public:
     // Limiter le friend à la spécialisation std::byte ?
-    template<typename T> friend class MemoryProtectedBase;
+    template<typename T> friend class MemoryRefProtectedBase;
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
@@ -288,13 +293,13 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 };
 
 template<typename T>
-inline MemoryProtectedBase<T>::operator T() const {
+inline MemoryRefProtectedBase<T>::operator T() const {
     m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::READ);
-    return MemoryProtectedBase<T>::m_base[MemoryRef<T>::m_address];
+    return MemoryRefProtectedBase<T>::m_base[MemoryRef<T>::m_address];
 }
 
 template<typename T>
-inline MemoryProtectedBase<T>& MemoryProtectedBase<T>::operator=(T value) {
+inline MemoryRefProtectedBase<T>& MemoryRefProtectedBase<T>::operator=(T value) {
     m_memoryProtected->isAccessible(MemoryRef<T>::m_address, sizeof(T), AccessPermission::WRITE);
     MemoryRef<T>::m_base[MemoryRef<T>::m_address] = value;
     return *this;

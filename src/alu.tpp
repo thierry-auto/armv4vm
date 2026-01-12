@@ -966,8 +966,6 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
                     if (instruction.registerList & (1 << i)) {
 
                         offset += 4;
-                        //* reinterpret_cast<uint32_t*>(m_ram + offset) =
-                        // m_registers[i];
                         m_ram.template writePointer<uint32_t>(offset) = m_registers[i];
                     }
                 }

@@ -99,6 +99,7 @@ struct VmProperties {
     }
 };
 
+
 class alignas(32) AluBase {
   public:
     enum class Interrupt : int32_t {
@@ -120,6 +121,8 @@ class alignas(32) AluBase {
     std::array<uint32_t, 16> & getRegisters() noexcept { return m_registers; }
     uint32_t getCPSR() const;
     void     setCPSR(const uint32_t);
+
+    MemoryInterface* getMemoryInterface() = 0;
 
   protected:
     std::array<uint32_t, 16> m_registers;
@@ -173,8 +176,11 @@ public:
     };
 
   protected:
-    MemoryHandler m_ram;
-    CoproHandler m_coprocessor;
+    MemoryHandler *m_ram;
+    CoproHandler  *m_coprocessor;
+
+  public:
+    friend CoproHandler;
 
   private:
     struct VmProperties  m_vmProperties;

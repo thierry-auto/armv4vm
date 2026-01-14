@@ -1,5 +1,3 @@
-# 29/08/2025
-
 cmake_minimum_required(VERSION 4.0.2)
 project(armv4vm VERSION 1.0.4)
 
@@ -16,7 +14,7 @@ endif()
 # FIND_PACKAGE(Qt6 COMPONENTS Core Test)
 
 if(Qt6Core_FOUND)
-	SET(CMAKE_AUTOMOC ON)
+    SET(CMAKE_AUTOMOC ON)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -25,14 +23,39 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 SET(CMAKE_CXX_STANDARD 26)
-
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# Options pour choisir le type de bibliothèque
+#option(MY_LIBRARY_HEADER_ONLY "Build as header-only library" ON)
+#option(MY_LIBRARY_STATIC "Build static library" OFF)
 
-SET(ARMV4VM_HEADER_FILES src/armv4vm.hpp src/armv4vm_p.hpp src/alu.hpp #[[src/alu.tpp]] src/memoryhandler.hpp #[[src/vfpv2.hpp]] src/coprocessor.hpp #[[src/assertcopro.hpp]])
-SET(ARMV4VM_SOURCE_FILES #[[src/vfpv2.cpp]] src/armv4vm.cpp #[[src/assertcopro.cpp]])
-SET(ARMV4VM_TEST_SOURCE_FILES src/test/test.cpp src/test/testvfpv2.cpp src/test2.cpp)
-SET(ARMV4VM_TEST2_SOURCE_FILES src/tu_memoryprotect.cpp)
+# ===========================================================
+# Files
+# ===========================================================
+
+SET(ARMV4VM_HEADER_FILES
+    src/vm.hpp
+    src/vmproperties.hpp
+    src/armv4vm.hpp
+    src/armv4vm_p.hpp
+    src/alu.hpp
+    #[[src/alu.tpp]]
+    src/memoryhandler.hpp
+    #[[src/vfpv2.hpp]]
+    src/coprocessor.hpp
+    #[[src/assertcopro.hpp]])
+
+SET(ARMV4VM_SOURCE_FILES
+    src/vm.cpp
+    src/armv4vm.cpp)
+
+SET(ARMV4VM_TEST_SOURCE_FILES
+    src/test/test.cpp
+    src/test/testvfpv2.cpp
+    src/test2.cpp)
+
+# SET(ARMV4VM_TEST2_SOURCE_FILES
+#     src/tu_memoryprotect.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -44,41 +67,106 @@ endif()
 set(BINPATH_STRING ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file( config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 
-
 if(Qt6Core_FOUND)
     SET(CMAKE_AUTOMOC ON)
     INCLUDE_DIRECTORIES(SYSTEM ${QT_USE_FILE})
     ADD_DEFINITIONS(-D${Qt6Core_COMPILE_DEFINITIONS})
-    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-    TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
-else()
-    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
 endif()
 
+# ===========================================================
+# Main Target
+# ===========================================================
+if(MY_LIBRARY_HEADER_ONLY)
+    # # Version header-only : pas de bibliothèque physique
+    # add_library(armv4vm INTERFACE)
+    # target_include_directories(armv4vm INTERFACE
+    #     $<TARGET_PROPERTY:my_library,INTERFACE_INCLUDE_DIRECTORIES>
+    #     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    # )
+    # target_compile_features(armv4vm INTERFACE cxx_std_17)
+
+    # Version header-only : pas de bibliothèque physique
+    add_library(armv4vm INTERFACE ${ARMV4VM_HEADER_FILES})
+    target_include_directories(armv4vm INTERFACE
+        $<TARGET_PROPERTY:my_library,INTERFACE_INCLUDE_DIRECTORIES>
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_compile_features(armv4vm INTERFACE cxx_std_23)
+
+    # Pour les utilisateurs, on peut aussi créer une version "fake"
+    # qui ne fait rien mais permet de garder la même interface
+    add_library(armv4vm_header_only INTERFACE)
+    target_include_directories(armv4vm_header_only INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_compile_features(armv4vm_header_only INTERFACE cxx_std_23)
+    MESSAGE("11111111111111111")
+elseif(MY_LIBRARY_STATIC)
+    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
+    TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
+    MESSAGE("2222222222222222222")
+endif()
+
+# ===========================================================
+# Alias
+# ===========================================================
+if(MY_LIBRARY_HEADER_ONLY)
+    add_library(armv4vm::armv4vm ALIAS armv4vm_header_only)
+else()
+    add_library(armv4vm::armv4vm ALIAS armv4vm)
+endif()
+
+# ===========================================================
+# Test
+# ===========================================================
 if(Qt6Core_FOUND)
+   add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+   add_test(NAME tu COMMAND tu)
+   target_include_directories(tu INTERFACE
+          $<TARGET_PROPERTY:armv4vm,INTERFACE_INCLUDE_DIRECTORIES>
+          ${CMAKE_CURRENT_SOURCE_DIR}/src)
+endif()
 
-
-    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES})
-    add_test(tu ${ARMV4VM_TEST_SOURCE_FILES})
-    add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
-    add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
-    target_link_libraries(tu Qt6::Core Qt6::Test armv4vm)
-    target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
-
-    #target_link_libraries(test_qt PRIVATE Qt::Core )
+if(MY_LIBRARY_HEADER_ONLY)
+    if(Qt6Core_FOUND)
+        #add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+        #add_test(NAME tu COMMAND tu)
+        #add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
+        #add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
+        target_link_libraries(tu Qt6::Core Qt6::Test #[[armv4vm]])
+        #target_link_libraries(tu2 Qt6::Core Qt6::Test #[[armv4vm]])
+    endif()
+elseif(MY_LIBRARY_STATIC)
+    if(Qt6Core_FOUND)
+        #add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+        #add_test(NAME tu COMMAND tu)
+        #add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
+        #add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
+        target_link_libraries(tu Qt6::Core Qt6::Test armv4vm::armv4vm)
+        #target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
+    endif()
 endif()
 
 set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
 set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
 
+# ===========================================================
+# Installation
+# ===========================================================
 #install(TARGETS armv4vm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
 
-install(TARGETS armv4vm
-    ARCHIVE DESTINATION lib       # pour .a
-    LIBRARY DESTINATION lib       # pour .so (si librairie partagée)
-    RUNTIME DESTINATION bin       # pour Windows .dll si partagé
-)
+if(MY_LIBRARY_HEADER_ONLY)
+    install(FILES include/myheader.h
+        DESTINATION include
+    )
+elseif(MY_LIBRARY_STATIC)
+    install(FILES include/myheader.h
+        DESTINATION include
+    )
 
-install(FILES include/myheader.h
-    DESTINATION include
-)
+    install(TARGETS armv4vm
+        ARCHIVE DESTINATION lib       # pour .a
+        LIBRARY DESTINATION lib       # pour .so (si librairie partagée)
+        RUNTIME DESTINATION bin       # pour Windows .dll si partagé
+    )
+endif()

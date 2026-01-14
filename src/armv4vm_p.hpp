@@ -39,4 +39,17 @@ static inline T cast(uint32_t instruction) {
     return *reinterpret_cast<T *>(&instruction);
 }
 
-}
+enum class Interrupt : int32_t {
+
+    Resume     = 1,
+    Stop       = 2,
+    Suspend    = 3,
+    LockPop    = 4,
+    UnlockPop  = 5,
+    LockPush   = 6,
+    UnlockPush = 7,
+    Fatal      = 8,
+    Undefined  = 9,
+};
+
+} // namespace armv4vm

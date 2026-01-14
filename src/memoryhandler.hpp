@@ -18,6 +18,7 @@
 #pragma once
 
 #include "armv4vm_p.hpp"
+#include "vmproperties.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -28,12 +29,7 @@
 
 namespace armv4vm {
 
-enum class AccessPermission {
-    NONE    = 0b0000,
-    READ    = 0b0001,
-    WRITE   = 0b0010,
-    READ_WRITE = READ | WRITE,
-};
+
 
 inline constexpr AccessPermission operator | (const AccessPermission a, const AccessPermission b) {
     return static_cast<AccessPermission>(static_cast<int>(a) | static_cast<int>(b));
@@ -115,7 +111,7 @@ class AccessRange {
 // du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
 template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase*/ {
   protected:
-    MemoryInterface()          = default;
+    MemoryInterface(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
     virtual ~MemoryInterface() = default;
 
   public:
@@ -142,13 +138,15 @@ template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase
     inline void addAccessRange(const AccessRange &accessRange) {
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
     }
+
+    struct VmProperties  m_vmProperties;
 };
 
 class MemoryRaw : public MemoryInterface<MemoryRaw> {
   public:
     using byte = std::byte;
 
-    MemoryRaw()  = default;
+    MemoryRaw(struct VmProperties * vmProperties = nullptr) : MemoryInterface(vmProperties) {}
     ~MemoryRaw() = default;
 
     byte* allocate(std::size_t size) {

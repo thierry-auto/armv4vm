@@ -18,6 +18,7 @@
 #pragma once
 
 #include "armv4vm_p.hpp"
+#include "memoryhandler.hpp"
 #include "alu.hpp"
 
 #include <cstdint>
@@ -67,8 +68,8 @@ concept Double =
 template<typename Derived>
 class CoprocessorBase {
   public:
-    CoprocessorBase() {}
-    void init(AluBase * alu) { m_alu = alu; }
+    CoprocessorBase(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
+    //void init(AluBase * alu) { m_alu = alu; }
 
     void coprocessorDataTransfers(const uint32_t workingInstruction) {
         static_cast<Derived *>(this)->coprocessorDataTransfersImpl(workingInstruction);
@@ -86,9 +87,11 @@ class CoprocessorBase {
     void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
+
+
   protected:
-    //AluBase * m_alu;
-    Alu<, Derived> *m_alu;
+    struct VmProperties  m_vmProperties;
+
 };
 
 template<typename Derived>
@@ -174,9 +177,10 @@ inline void CoprocessorBase<Derived>::coprocessorRegisterTransfersImpl(const uin
 template <typename T>
 concept FloatingPoint = std::same_as<T, float> || std::same_as<T, double> /*|| std::same_as<T, DoubleInFloatArray>*/;
 
-class Vfpv2 : public CoprocessorBase<Vfpv2> {
+template <typename MemoryHandler>
+class Vfpv2 : public CoprocessorBase<Vfpv2<MemoryHandler>> {
   public:
-    Vfpv2() : m_fpscr(0), m_fpexc(0) {
+    Vfpv2(struct VmProperties * vmProperties = nullptr) : CoprocessorBase<Vfpv2<MemoryHandler>>(vmProperties), m_fpscr(0), m_fpexc(0) {
 
         m_sRegisters.fill(0.0f);
     }
@@ -185,11 +189,19 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
     void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
+    void attach(MemoryHandler *mem, Alu<MemoryHandler, Vfpv2> *alu) {
+
+        m_mem = mem;
+        m_alu = alu;
+    }
+
   private:
     std::array<float, 32> m_sRegisters;
     uint32_t m_fpscr;
     uint32_t m_fpexc;
     const uint32_t m_fpsid = 0x54001000; // 54 comme T :p
+    MemoryHandler *m_mem;
+    Alu<MemoryHandler, Vfpv2>  *m_alu;
 
     void decodeAndExecute(const uint32_t &wokingInstruction);
     void vadd(const uint32_t &wokingInstruction);
@@ -223,12 +235,35 @@ class Vfpv2 : public CoprocessorBase<Vfpv2> {
     void updateCPSR() const;
 
     template <FloatingPoint T>
-    void setFPSCRCompare(const T a, const T b, const bool raiseException);
+    void setFPSCRCompare(const T a, const T b, const bool raiseVFPV2Exception) {
+
+        if (std::isnan(a) || std::isnan(b)) {
+
+            setNZCV(0, 0, 0, 1);
+            if(raiseVFPV2Exception) {
+
+            }
+        } else if (a < b) {
+
+            setNZCV(1, 0, 0, 0);
+        } else if (a == b) {
+
+            setNZCV(0, 1, 1, 0);
+        } else {
+
+            setNZCV(0, 0, 1, 0);
+        }
+
+               // Update Alu CPSR from FPSCR
+        updateCPSR();
+    }
+
 
     friend class TestVm;
 };
 
-inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
+template <typename MemoryHandler>
+inline void Vfpv2<MemoryHandler>::coprocessorDataTransfersImpl(const uint32_t workingInstruction) {
 
     // two registers transfer
     constexpr uint32_t OP_MASK   = 0x0FB00F00;
@@ -322,7 +357,7 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
         Fd = decodeFdSingle(workingInstruction);
         offset = BITS(workingInstruction, 0, 7);
         Rn = BITS(workingInstruction, 16, 19);
-        void * d = m_alu->m_ram;
+        //void * d = m_alu->m_ram;
         break;
 
     case OP_FDLMSU:
@@ -388,46 +423,26 @@ inline void Vfpv2::coprocessorDataTransfersImpl(const uint32_t workingInstructio
     }
 }
 
-inline uint32_t Vfpv2::getExtensionOpcode(const uint32_t instruction) noexcept {
+template <typename MemoryHandler>
+inline uint32_t Vfpv2<MemoryHandler>::getExtensionOpcode(const uint32_t instruction) noexcept {
 
     return (((instruction >> 16) & 0xF) << 1) | ((instruction >> 7) & 0x1);
 }
 
-inline void Vfpv2::setNZCV(bool N, bool Z, bool C, bool V) noexcept {
+template <typename MemoryHandler>
+inline void Vfpv2<MemoryHandler>::setNZCV(bool N, bool Z, bool C, bool V) noexcept {
 
     m_fpscr &= ~(0xF << 28);
     m_fpscr |= (uint32_t(N) << 31) | (uint32_t(Z) << 30) | (uint32_t(C) << 29) | (uint32_t(V) << 28);
 }
 
-inline void Vfpv2::updateCPSR() const {
+template <typename MemoryHandler>
+inline void Vfpv2<MemoryHandler>::updateCPSR() const {
     m_alu->setCPSR((m_alu->getCPSR() & ~(0xF << 28)) | (m_fpscr & (0xF << 28)));
 }
 
-template <FloatingPoint T>
-inline void Vfpv2::setFPSCRCompare(const T a, const T b, const bool raiseVFPV2Exception) {
-
-    if (std::isnan(a) || std::isnan(b)) {
-
-        setNZCV(0, 0, 0, 1);
-        if(raiseVFPV2Exception) {
-
-        }
-    } else if (a < b) {
-
-        setNZCV(1, 0, 0, 0);
-    } else if (a == b) {
-
-        setNZCV(0, 1, 1, 0);
-    } else {
-
-        setNZCV(0, 0, 1, 0);
-    }
-
-           // Update Alu CPSR from FPSCR
-    updateCPSR();
-}
-
-inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstruction) {
+template <typename MemoryHandler>
+inline void Vfpv2<MemoryHandler>::coprocessorDataOperationsImpl(const uint32_t workingInstruction) {
 
     constexpr uint32_t MASK_SD     = 0x00000300; // bits 9:8
     constexpr uint32_t SD_DOUBLE   = 0x00000200;
@@ -608,8 +623,8 @@ inline void Vfpv2::coprocessorDataOperationsImpl(const uint32_t workingInstructi
     }
 }
 
-
-inline void Vfpv2::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
+template <typename MemoryHandler>
+inline void Vfpv2<MemoryHandler>::coprocessorRegisterTransfersImpl(const uint32_t workingInstruction) {
 
     constexpr uint32_t OP_MASK  = 0x0FF00F10;
     constexpr uint32_t OP_FMSR  = 0x0E000a10;

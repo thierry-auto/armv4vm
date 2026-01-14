@@ -4,16 +4,13 @@
 #include <string>
 #include <cstdint>
 
+#include "armv4vm_p.hpp"
+
 namespace armv4vm {
 
 class MemoryProtected;
 
-enum class AccessPermission {
-    NONE    = 0b0000,
-    READ    = 0b0001,
-    WRITE   = 0b0010,
-    READ_WRITE = READ | WRITE,
-};
+
 
 struct VmProperties {
 
@@ -24,10 +21,10 @@ struct VmProperties {
             PROTECTED,
         };
 
-        MemModel(Type type = DIRECT) : m_type(type) { m_accessPermission.clear(); }
+        MemModel(Type type = DIRECT) : m_type(type) { m_accessRanges.clear(); }
 
         Type                        m_type;
-        std::vector<armv4vm::AccessPermission> m_accessPermission;
+        std::vector<armv4vm::AccessRange> m_accessRanges;
     };
 
     VmProperties() {

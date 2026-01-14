@@ -39,6 +39,9 @@
 
 namespace armv4vm {
 
+class TestMem;
+class TestAlu;
+class TestVfp;
 
 template<typename Derived>
 class CoprocessorBase;
@@ -72,6 +75,10 @@ template <typename MemoryHandler, typename CoproHandler> // Remettre les concept
 class Alu : public AluBase {
 
   public:
+    friend TestMem;
+    friend TestAlu;
+    friend TestVfp;
+
     Alu(struct VmProperties * vmProperties = nullptr) :
         m_sp(m_registers[13]),
         m_lr(m_registers[14]),
@@ -95,15 +102,9 @@ class Alu : public AluBase {
     //uint64_t        load() override;
     Interrupt       run(const uint32_t nbMaxIteration = 0) override;
 
-    void attach(MemoryHandler *mem, CoproHandler *coprocessor) {
+    void attach(MemoryHandler *mem) { m_mem = mem; }
+    void attach(CoproHandler *coprocessor) { m_coprocessor = coprocessor; }
 
-        m_mem = mem;
-        m_coprocessor = coprocessor;
-    }
-
-
-    friend class TestVm;
-    friend class TestVfpv2;
 public:
     enum Error {
 

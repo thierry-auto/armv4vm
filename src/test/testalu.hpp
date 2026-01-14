@@ -20,47 +20,46 @@
 #include <iostream>
 
 #include "config.h"
-#include "../vm.hpp"
+#include "memoryhandler.hpp"
+#include "alu.hpp"
+#include "coprocessor.hpp"
 
 namespace armv4vm {
 
-struct VmProperties vmProperties;
+//struct VmProperties vmProperties;
 
        //#define MEMSIZE 128
 #define MEMSIZE 300
 #define UARTPOS 0x01000000;
-                                  //#define UARTPOS 0x101f1000
+                            //#define UARTPOS 0x101f1000
 
-#ifdef MY_LIBRARY_HEADER_ONLY
-template class Vfpv2<MemoryRaw>;
-template class Vfpv2<MemoryProtected>;
-template class Vm<MemoryRaw, Vfpv2Unprotected>;
-template class Vm<MemoryProtected, Vfpv2Protected>;
-#endif
-
-class TestVm : public QObject {
+class TestAlu : public QObject {
     Q_OBJECT
-
-public:
-    TestVm() {
-        vmProperties.m_memsize = 512;
-        vmProperties.m_coproModel = "vfpv2";
-
-        m_vm.init(vmProperties);
-    }
   private:
-    VmProtected m_vm;
+    std::unique_ptr<MemoryProtected> m_mem;
+    std::unique_ptr<Alu<MemoryProtected, Vfpv2<MemoryProtected>>> m_alu;
+    VmProperties m_vmProperties;
 
-private slots:
+  public:
+    TestAlu() {
+
+        m_mem->allocate(512);
+        m_mem->addAccessRangeImpl({0, 512, AccessPermission::READ_WRITE});
+
+        m_alu->attach(m_mem.get());
+    }
+    ~TestAlu() = default;
+
+  private slots:
 
     void testMOV() {
-        m_vm.reset();
-        m_vm.m_mem->writePointer<uint32_t>(0) = 0xe3a0002d; // mov r0, #45
+        m_alu->reset();
+        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3a0002d; // mov r0, #45
 
-        m_vm.run(1);
+        m_alu->run(1);
 
-        QVERIFY(m_vm.m_alu->m_registers[0] == 45);
-        QVERIFY(m_vm.m_alu->m_cpsr == 0);
+        QVERIFY(m_alu->m_registers[0] == 45);
+        QVERIFY(m_alu->m_cpsr == 0);
     }
 
 #if 0
@@ -2457,5 +2456,5 @@ private slots:
 #endif
 };
 } // namespace armv4vm
-QTEST_MAIN(armv4vm::TestVm)
-#include "test.moc"
+//QTEST_MAIN(armv4vm::TestAlu)
+//#include "testalu.moc"

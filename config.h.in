@@ -19,7 +19,7 @@
 
 #cmakedefine BINPATH_STRING "@BINPATH_STRING@"
 
-const char* getBinPath() {
+inline const char* getBinPath() {
 
     return BINPATH_STRING;
 }

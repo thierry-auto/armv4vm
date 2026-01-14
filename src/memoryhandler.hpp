@@ -29,7 +29,9 @@
 
 namespace armv4vm {
 
-
+class TestMem;
+class TestAlu;
+class TestVfp;
 
 inline constexpr AccessPermission operator | (const AccessPermission a, const AccessPermission b) {
     return static_cast<AccessPermission>(static_cast<int>(a) | static_cast<int>(b));
@@ -94,12 +96,7 @@ class MemoryRefProtectedBase : public MemoryRef<T> {
 template<typename T>
 using MemoryProtectedRef = MemoryRefProtectedBase<T>;
 
-class AccessRange {
-  public:
-    uint32_t         start;
-    size_t           size;
-    AccessPermission permission;
-};
+
 
 // class MemoryInterfaceBase {
 //   public:
@@ -111,7 +108,8 @@ class AccessRange {
 // du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
 template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase*/ {
   protected:
-    MemoryInterface(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
+    //MemoryInterface(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
+    MemoryInterface() = default;
     virtual ~MemoryInterface() = default;
 
   public:
@@ -139,14 +137,21 @@ template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
     }
 
-    struct VmProperties  m_vmProperties;
+    // struct VmProperties  m_vmProperties;
 };
 
 class MemoryRaw : public MemoryInterface<MemoryRaw> {
+
+  public:
+    friend TestMem;
+    friend TestAlu;
+    friend TestVfp;
+
   public:
     using byte = std::byte;
 
-    MemoryRaw(struct VmProperties * vmProperties = nullptr) : MemoryInterface(vmProperties) {}
+    //MemoryRaw(struct VmProperties * vmProperties = nullptr) : MemoryInterface(vmProperties) {}
+    MemoryRaw() = default;
     ~MemoryRaw() = default;
 
     byte* allocate(std::size_t size) {
@@ -208,6 +213,12 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
 };
 
 class MemoryProtected : public MemoryInterface<MemoryProtected> {
+
+  public:
+    friend TestMem;
+    friend TestAlu;
+    friend TestVfp;
+
   public:
     using byte = std::byte;
 

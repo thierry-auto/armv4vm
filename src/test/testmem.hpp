@@ -7,22 +7,17 @@
 
 namespace armv4vm {
 
-//using Test1Vm = Alu<MemoryProtected>;
-
-// template <typename T> inline T  readPointer(std::byte *mem) { return *reinterpret_cast<T *>(mem); }
-// template <typename T> inline T &writePointer(std::byte *mem) { return *reinterpret_cast<T *>(mem); }
-
-auto to_int = [](std::byte b) { return std::to_integer<int>(b); };
-
-struct VmProperties vmProperties;
-
-
+inline auto to_int = [](std::byte b) { return std::to_integer<int>(b); };
 
 class TestMem : public QObject {
     Q_OBJECT
+  private:
+    VmProperties m_vmProperties;
 
   public:
-    TestMem() { vmProperties.m_memsize = 512; }
+    TestMem() {
+        m_vmProperties.m_memsize = 512;
+    }
 
   private slots:
 
@@ -610,5 +605,5 @@ class TestMem : public QObject {
 };
 
 } // namespace armv4vm
-QTEST_MAIN(armv4vm::TestMem)
-#include "tu_memoryprotect.moc"
+//QTEST_MAIN(armv4vm::TestMem)
+//#include "testmem.moc"

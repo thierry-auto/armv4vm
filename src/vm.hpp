@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <fstream>
@@ -11,16 +12,37 @@
 
 namespace armv4vm {
 
-class TestVm;
+class TestMem;
+class TestAlu;
+class TestVfp;
+
+class VmBase {
+  public:
+    VmBase() = default;
+    virtual ~VmBase() = default;
+
+    virtual void init(struct VmProperties &vmProperties) = 0;
+    virtual void reset() = 0;
+    virtual uint64_t load() = 0;
+    virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
+};
 
 template <typename MemoryHandler, typename CoproHandler>
-class Vm {
+class Vm : public VmBase {
   private:
     using PrivateAlu = Alu<MemoryHandler, CoproHandler>;
     using PrivateVfpv2 = Vfpv2<MemoryHandler>;
 
   public:
-    friend TestVm;
+    friend TestMem;
+    friend TestAlu;
+    friend TestVfp;
+
+    Vm(const struct VmProperties &vmProperties) {
+
+        m_vmProperties = vmProperties;
+    }
+    ~Vm() = default;
 
     enum Error {
 
@@ -28,18 +50,6 @@ class Vm {
         E_LOAD_FAILED,
         E_UNDEFINED,
     };
-
-    void init(struct VmProperties &vmProperties) {
-
-        m_vmProperties = vmProperties;
-        m_mem = std::make_unique<MemoryHandler>();
-        m_alu = std::make_unique<PrivateAlu>(&vmProperties);
-        m_vfp = std::make_unique<PrivateVfpv2>(&vmProperties);
-
-        m_alu->attach(m_mem.get(), m_vfp.get());
-        m_vfp->attach(m_mem.get(), m_alu.get());
-        m_alu->reset();
-    }
 
     void reset() {
 
@@ -75,7 +85,7 @@ class Vm {
         return programSize > 0;
     }
 
-    Interrupt run(const uint32_t nbMaxIteration = 0) {
+    inline Interrupt run(const uint32_t nbMaxIteration = 0) {
 
         return m_alu->run(nbMaxIteration);
     }
@@ -103,5 +113,27 @@ extern template class Vfpv2<MemoryProtected>;
 extern template class Vm<MemoryRaw, Vfpv2Unprotected>;
 extern template class Vm<MemoryProtected, Vfpv2Protected>;
 #endif
+
+inline std::unique_ptr<VmBase> buildVm(const struct VmProperties &vmProperties) {
+
+    std::unique_ptr<VmBase> vm = nullptr;
+
+    switch(vmProperties.m_memModel.m_type) {
+
+    // case VmProperties::MemModel::DIRECT:
+    //     //vm = std::make_unique<VmUnprotected>(vmProperties);
+    //     break;
+
+    // case VmProperties::MemModel::PROTECTED:
+    //     //vm = std::make_unique<VmProtected>(vmProperties);
+    //     break;
+
+    default:
+        break;
+    }
+
+    return vm;
+}
+
 
 } // namespace armv4vm

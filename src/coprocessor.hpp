@@ -27,27 +27,9 @@
 
 namespace armv4vm {
 
-// class DoubleInFloatArray {
-//   public:
-//     DoubleInFloatArray(std::array<float, 32>* floatArray, size_t index) : m_floatArray(floatArray), m_index(index) {}
-
-//            // Opérateur d'affectation pour écrire un double
-//     DoubleInFloatArray& operator=(double value) {
-//         std::memcpy(&m_floatArray[m_index], &value, sizeof(double));
-//         return *this;
-//     }
-
-//            // Opérateur de conversion pour lire un double
-//     operator double() const {
-//         double value;
-//         std::memcpy(&value, &m_floatArray[m_index], sizeof(double));
-//         return value;
-//     }
-
-//   private:
-//     std::array<float, 32> *m_floatArray;
-//     size_t m_index;
-// };
+class TestMem;
+class TestAlu;
+class TestVfp;
 
 template<typename T>
 concept Single =
@@ -179,6 +161,12 @@ concept FloatingPoint = std::same_as<T, float> || std::same_as<T, double> /*|| s
 
 template <typename MemoryHandler>
 class Vfpv2 : public CoprocessorBase<Vfpv2<MemoryHandler>> {
+
+  public:
+    friend TestMem;
+    friend TestAlu;
+    friend TestVfp;
+
   public:
     Vfpv2(struct VmProperties * vmProperties = nullptr) : CoprocessorBase<Vfpv2<MemoryHandler>>(vmProperties), m_fpscr(0), m_fpexc(0) {
 
@@ -316,9 +304,9 @@ inline void Vfpv2<MemoryHandler>::coprocessorDataTransfersImpl(const uint32_t wo
         return (BITS(instruction, 12, 15) << 1) | BITS(instruction, 22, 22);
     };
 
-    auto decodeFdDouble = [](const uint32_t instruction) {
-        return BITS(instruction, 12, 15);
-    };
+    // auto decodeFdDouble = [](const uint32_t instruction) {
+    //     return BITS(instruction, 12, 15);
+    // };
 
     switch (workingInstruction & OP_MASK) {
     case OP_FMSRR:

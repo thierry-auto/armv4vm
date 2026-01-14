@@ -52,4 +52,18 @@ enum class Interrupt : int32_t {
     Undefined  = 9,
 };
 
+enum class AccessPermission {
+    NONE    = 0b0000,
+    READ    = 0b0001,
+    WRITE   = 0b0010,
+    READ_WRITE = READ | WRITE,
+};
+
+class AccessRange {
+  public:
+    uint32_t         start;
+    size_t           size;
+    AccessPermission permission;
+};
+
 } // namespace armv4vm

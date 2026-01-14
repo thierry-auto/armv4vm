@@ -19,7 +19,11 @@ endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_compile_options(-Wall -fPIC -Wextra -Wstrict-aliasing -Wfloat-conversion#[[-Wextra -Wstrict-aliasing -fsanitize=undefined -Wfloat-conversion -Wconversion]])
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_compile_options(-Wunused-but-set-variable)
+    endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+
 endif()
 
 SET(CMAKE_CXX_STANDARD 26)
@@ -49,11 +53,6 @@ SET(ARMV4VM_SOURCE_FILES
     src/vm.cpp
     src/armv4vm.cpp)
 
-SET(ARMV4VM_TEST_SOURCE_FILES
-    src/test/test.cpp
-    src/test/testvfpv2.cpp
-    src/test2.cpp)
-
 # SET(ARMV4VM_TEST2_SOURCE_FILES
 #     src/tu_memoryprotect.cpp)
 
@@ -77,14 +76,6 @@ endif()
 # Main Target
 # ===========================================================
 if(MY_LIBRARY_HEADER_ONLY)
-    # # Version header-only : pas de bibliothèque physique
-    # add_library(armv4vm INTERFACE)
-    # target_include_directories(armv4vm INTERFACE
-    #     $<TARGET_PROPERTY:my_library,INTERFACE_INCLUDE_DIRECTORIES>
-    #     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    # )
-    # target_compile_features(armv4vm INTERFACE cxx_std_17)
-
     # Version header-only : pas de bibliothèque physique
     add_library(armv4vm INTERFACE ${ARMV4VM_HEADER_FILES})
     target_include_directories(armv4vm INTERFACE
@@ -100,11 +91,10 @@ if(MY_LIBRARY_HEADER_ONLY)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_compile_features(armv4vm_header_only INTERFACE cxx_std_23)
-    MESSAGE("11111111111111111")
 elseif(MY_LIBRARY_STATIC)
     ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
     TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
-    MESSAGE("2222222222222222222")
+    set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
 endif()
 
 # ===========================================================
@@ -119,36 +109,32 @@ endif()
 # ===========================================================
 # Test
 # ===========================================================
+SET(ARMV4VM_TEST_SOURCE_FILES
+    src/test/main.cpp
+    src/test/testmem.hpp
+    src/test/testalu.hpp
+    src/test/testvfp.hpp)
+
 if(Qt6Core_FOUND)
    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
    add_test(NAME tu COMMAND tu)
-   target_include_directories(tu INTERFACE
-          $<TARGET_PROPERTY:armv4vm,INTERFACE_INCLUDE_DIRECTORIES>
+   target_include_directories(tu PRIVATE
+          #$<TARGET_PROPERTY:armv4vm,INTERFACE_INCLUDE_DIRECTORIES>
           ${CMAKE_CURRENT_SOURCE_DIR}/src)
 endif()
 
 if(MY_LIBRARY_HEADER_ONLY)
     if(Qt6Core_FOUND)
-        #add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-        #add_test(NAME tu COMMAND tu)
-        #add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
-        #add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
-        target_link_libraries(tu Qt6::Core Qt6::Test #[[armv4vm]])
-        #target_link_libraries(tu2 Qt6::Core Qt6::Test #[[armv4vm]])
+        target_link_libraries(tu Qt6::Core Qt6::Test armv4vm::armv4vm)
     endif()
 elseif(MY_LIBRARY_STATIC)
     if(Qt6Core_FOUND)
-        #add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-        #add_test(NAME tu COMMAND tu)
-        #add_executable(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
-        #add_test(tu2 ${ARMV4VM_TEST2_SOURCE_FILES})
         target_link_libraries(tu Qt6::Core Qt6::Test armv4vm::armv4vm)
-        #target_link_libraries(tu2 Qt6::Core Qt6::Test armv4vm)
     endif()
 endif()
 
-set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
-set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
+#set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
+
 
 # ===========================================================
 # Installation

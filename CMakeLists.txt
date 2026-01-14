@@ -20,7 +20,8 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_compile_options(-Wall -fPIC -Wextra -Wstrict-aliasing -Wfloat-conversion#[[-Wextra -Wstrict-aliasing -fsanitize=undefined -Wfloat-conversion -Wconversion]])
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        add_compile_options(-Wunused-but-set-variable)
+        add_compile_options(-Wno-unused-but-set-variable)
+        #add_compile_options("-Wunused-but-set-variable=0")
     endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
@@ -43,9 +44,8 @@ SET(ARMV4VM_HEADER_FILES
     src/armv4vm.hpp
     src/armv4vm_p.hpp
     src/alu.hpp
-    #[[src/alu.tpp]]
     src/memoryhandler.hpp
-    #[[src/vfpv2.hpp]]
+    src/vfpv2.hpp
     src/coprocessor.hpp
     #[[src/assertcopro.hpp]])
 

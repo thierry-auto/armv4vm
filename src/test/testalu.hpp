@@ -22,7 +22,7 @@
 #include "config.h"
 #include "memoryhandler.hpp"
 #include "alu.hpp"
-#include "coprocessor.hpp"
+#include "vfpv2.hpp"
 
 namespace armv4vm {
 
@@ -48,7 +48,7 @@ class TestAlu : public QObject {
 
         m_alu->attach(m_mem.get());
     }
-    ~TestAlu() = default;
+    virtual ~TestAlu() = default;
 
   private slots:
 

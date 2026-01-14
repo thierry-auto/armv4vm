@@ -20,7 +20,7 @@
 #include "armv4vm_p.hpp"
 #include "vmproperties.hpp"
 #include "memoryhandler.hpp"
-#include "coprocessor.hpp"
+#include "vfpv2.hpp"
 #include "alu.hpp"
 
 // todo : traiter les overflow

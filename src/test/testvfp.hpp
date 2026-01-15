@@ -5,6 +5,7 @@
 
 #include "armv4vm.hpp"
 
+
 namespace armv4vm {
 
 class TestVfp : public QObject {
@@ -13,7 +14,7 @@ class TestVfp : public QObject {
     VmProperties m_vmProperties;
 
   public:
-    TestVfp() { m_vmProperties.m_memsize = 512; }
+    TestVfp() {  }
 
   private slots:
 

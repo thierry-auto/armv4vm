@@ -68,7 +68,7 @@ enum class AccessPermission {
     READ_WRITE = READ | WRITE,
 };
 
-class AccessRange {
+class MemoryLayout {
   public:
     uint32_t         start;
     size_t           size;

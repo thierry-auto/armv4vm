@@ -56,7 +56,7 @@ class Vfpv2 final : public CoprocessorBase<Vfpv2<MemoryHandler>> {
     friend TestVfp;
 
   public:
-    Vfpv2(struct VmProperties * vmProperties = nullptr) : CoprocessorBase<Vfpv2<MemoryHandler>>(vmProperties), m_fpscr(0), m_fpexc(0) {
+    Vfpv2(struct CoproProperties & properties) : CoprocessorBase<Vfpv2<MemoryHandler>>(properties), m_fpscr(0), m_fpexc(0) {
 
         m_sRegisters.fill(0.0f);
     }

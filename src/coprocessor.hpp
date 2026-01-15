@@ -34,7 +34,7 @@ namespace armv4vm {
 template<typename Derived>
 class CoprocessorBase {
   public:
-    CoprocessorBase(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
+    CoprocessorBase(struct CoproProperties & properties) : m_properties(properties) {};
     //void init(AluBase * alu) { m_alu = alu; }
 
     void coprocessorDataTransfers(const uint32_t workingInstruction) {
@@ -54,7 +54,7 @@ class CoprocessorBase {
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
   protected:
-    struct VmProperties  m_vmProperties;
+    struct CoproProperties m_properties;
 };
 
 template<typename Derived>

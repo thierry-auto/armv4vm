@@ -18,7 +18,7 @@
 #pragma once
 
 #include "armv4vm_p.hpp"
-#include "vmproperties.hpp"
+#include "properties.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -106,9 +106,10 @@ using MemoryProtectedRef = MemoryRefProtectedBase<T>;
 // Depuis que tout est headers et template, je pense que le CRTP suivant
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
 // du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
-template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase*/ {
+template <typename Derived>
+class MemoryInterface /*: public MemoryInterfaceBase*/ {
   protected:
-    //MemoryInterface(struct VmProperties * vmProperties = nullptr) : m_vmProperties(*vmProperties) {};
+    MemoryInterface(struct MemoryHandlerProperties & properties) : m_properties(properties) {};
     MemoryInterface() = default;
     virtual ~MemoryInterface() = default;
 
@@ -131,13 +132,16 @@ template <typename Derived> class MemoryInterface /*: public MemoryInterfaceBase
     }
 
     inline byte *getAdressZero() { return static_cast<Derived *>(this)->getAddressZeroImpl(); }
-    inline byte *allocate(const size_t size) { return static_cast<Derived *>(this)->allocate(size); }
+    //inline byte *allocate(const size_t size) { return static_cast<Derived *>(this)->allocateImpl(size); }
     inline uint8_t operator[](const size_t index) { return static_cast<Derived *>(this)->operator[](index); }
-    inline void addAccessRange(const AccessRange &accessRange) {
+    inline void addAccessRange(const MemoryLayout &accessRange) {
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
     }
+    inline byte *reset(const std::byte fillingValue = std::byte{0}) {
+        return static_cast<Derived *>(this)->resetImpl(fillingValue);
+    }
 
-    // struct VmProperties  m_vmProperties;
+    struct MemoryHandlerProperties m_properties;
 };
 
 class MemoryRaw : public MemoryInterface<MemoryRaw> {
@@ -150,13 +154,13 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
   public:
     using byte = std::byte;
 
-    //MemoryRaw(struct VmProperties * vmProperties = nullptr) : MemoryInterface(vmProperties) {}
-    MemoryRaw() = default;
+    MemoryRaw(struct MemoryHandlerProperties & properties) : MemoryInterface(properties) {}
     ~MemoryRaw() = default;
 
-    byte* allocate(std::size_t size) {
-        m_ram  = std::make_unique<byte[]>(size);
-        m_size = static_cast<uint32_t>(size);
+    byte *resetImpl(const std::byte fillingValue = std::byte{0}) {
+
+        m_ram  = std::make_unique<byte[]>(m_properties.m_memsize);
+        m_size = static_cast<uint32_t>(m_properties.m_memsize);
         return m_ram.get();
     }
 
@@ -203,7 +207,7 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         m_ram[index] = value;
     }
 
-    void addAccessRangeImpl(const AccessRange& accessRange) {
+    void addAccessRangeImpl(const MemoryLayout& accessRange) {
         (void)accessRange;
     }
 
@@ -222,11 +226,15 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
   public:
     using byte = std::byte;
 
-    MemoryProtected() = default;
+    MemoryProtected(struct MemoryHandlerProperties & properties) : MemoryInterface(properties) {
+
+        m_accessRanges = properties.m_layout;
+    }
     ~MemoryProtected() = default;
 
-    byte* allocate(std::size_t size, const std::byte fillingValue = std::byte{0}) {
-        m_ram = std::make_unique<std::vector<byte>>(size);
+    byte *resetImpl(const std::byte fillingValue = std::byte{0}) {
+
+        m_ram = std::make_unique<std::vector<byte>>(m_properties.m_memsize);
         std::ranges::fill(*m_ram, fillingValue);
         return m_ram->data();
     }
@@ -270,7 +278,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
         (*m_ram)[offset] = value;
     }
 
-    void addAccessRangeImpl(const AccessRange& accessRange) {
+    void addAccessRangeImpl(const MemoryLayout& accessRange) {
         m_accessRanges.push_back(accessRange);
     }
 
@@ -279,7 +287,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
                       std::size_t dataSize,
                       const AccessPermission& permission) const
     {
-        auto test = [&](const AccessRange& range) {
+        auto test = [&](const MemoryLayout& range) {
             return  (range.permission & permission) &&
                    (address >= range.start) &&
                    ((address + dataSize) <= (range.start + range.size));
@@ -298,7 +306,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
-    std::vector<AccessRange>           m_accessRanges;
+    std::vector<MemoryLayout>           m_accessRanges;
 };
 
 template<typename T>

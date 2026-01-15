@@ -34,14 +34,23 @@ namespace armv4vm {
 class TestAlu : public QObject {
     Q_OBJECT
   private:
+
+    using ProtectedVfp = Vfpv2<MemoryProtected>;
+    using ProtectedAlu = Alu<MemoryProtected, ProtectedVfp>;
+
     std::unique_ptr<MemoryProtected> m_mem;
-    std::unique_ptr<Alu<MemoryProtected, Vfpv2<MemoryProtected>>> m_alu;
+    std::unique_ptr<ProtectedAlu> m_alu;
     VmProperties m_vmProperties;
 
   public:
     TestAlu() {
 
-        m_mem->allocate(512);
+        m_vmProperties.m_memoryHandlerProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
+
+        m_mem = std::make_unique<MemoryProtected>(m_vmProperties.m_memoryHandlerProperties);
+        m_alu = std::make_unique<ProtectedAlu>(m_vmProperties.m_aluProperties);
+
+        m_mem->reset();
         m_mem->addAccessRangeImpl({0, 512, AccessPermission::READ_WRITE});
 
         m_alu->attach(m_mem.get());

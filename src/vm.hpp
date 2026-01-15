@@ -21,7 +21,7 @@
 #include <fstream>
 
 #include "armv4vm_p.hpp"
-#include "vmproperties.hpp"
+#include "properties.hpp"
 #include "vfpv2.hpp"
 #include "alu.hpp"
 
@@ -36,7 +36,7 @@ class VmBase {
     VmBase() = default;
     virtual ~VmBase() = default;
 
-    virtual void init(struct VmProperties &vmProperties) = 0;
+    //virtual void init(struct VmProperties &vmProperties) = 0;
     virtual void reset() = 0;
     virtual uint64_t load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
@@ -68,9 +68,9 @@ class Vm final : public VmBase {
 
     void reset() {
 
-        m_mem = std::make_unique<MemoryHandler>();
-        m_alu = std::make_unique<PrivateAlu>(&m_vmProperties);
-        m_vfp = std::make_unique<PrivateVfpv2>(&m_vmProperties);
+        m_mem = std::make_unique<MemoryHandler>(m_vmProperties.m_memoryHandlerProperties);
+        m_alu = std::make_unique<PrivateAlu>(m_vmProperties.m_aluProperties);
+        m_vfp = std::make_unique<PrivateVfpv2>(m_vmProperties.m_coproProperties);
 
         m_alu->attach(m_mem.get());
         m_alu->attach(m_vfp.get());
@@ -133,23 +133,15 @@ extern template class Vm<MemoryProtected, Vfpv2Protected>;
 
 inline std::unique_ptr<VmBase> buildVm(const struct VmProperties &vmProperties) {
 
-    std::unique_ptr<VmBase> vm = nullptr;
+    // Quand des permissions sont renseignées,
+    // une mémoire de type protegée est créée.
+    if(vmProperties.m_memoryHandlerProperties.m_layout.empty()) {
 
-    switch(vmProperties.m_memModel.m_type) {
-
-    // case VmProperties::MemModel::DIRECT:
-    //     //vm = std::make_unique<VmUnprotected>(vmProperties);
-    //     break;
-
-    // case VmProperties::MemModel::PROTECTED:
-    //     //vm = std::make_unique<VmProtected>(vmProperties);
-    //     break;
-
-    default:
-        break;
+        return std::make_unique<VmUnprotected>(vmProperties);
     }
-
-    return vm;
+    else {
+        return std::make_unique<VmProtected>(vmProperties);
+    }
 }
 
 

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "armv4vm_p.hpp"        // IWYU pragma: export
-#include "vmproperties.hpp"     // IWYU pragma: export
+#include "properties.hpp"       // IWYU pragma: export
 #include "memoryhandler.hpp"    // IWYU pragma: export
 #include "vfpv2.hpp"            // IWYU pragma: export
 #include "alu.hpp"              // IWYU pragma: export

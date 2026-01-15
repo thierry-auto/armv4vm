@@ -40,7 +40,8 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(ARMV4VM_HEADER_FILES
     src/vm.hpp
-    src/vmproperties.hpp
+    src/properties.hpp
+    src/properties.cpp
     src/armv4vm.hpp
     src/armv4vm_p.hpp
     src/alu.hpp

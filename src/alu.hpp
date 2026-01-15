@@ -23,6 +23,7 @@
 #endif
 
 #include "armv4vm_p.hpp"
+#include "properties.hpp"
 #include "memoryhandler.hpp"
 //#include "coprocessor.hpp"
 
@@ -79,12 +80,12 @@ class Alu final : public AluBase {
     friend TestAlu;
     friend TestVfp;
 
-    Alu(struct VmProperties * vmProperties = nullptr) :
+    Alu(struct AluProperties & properties) :
         m_sp(m_registers[13]),
         m_lr(m_registers[14]),
         m_pc(m_registers[15])
     {
-        m_vmProperties = *vmProperties;
+        m_properties = properties;
 
         m_error = E_NONE;
         m_instructionSetFormat = unknown;
@@ -121,7 +122,7 @@ public:
     friend CoprocessorBase<MemoryHandler>;
 
   private:
-    struct VmProperties  m_vmProperties;
+    struct AluProperties  m_properties;
 
     enum Error           m_error;
 
@@ -244,7 +245,7 @@ static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ?
 template <typename MemoryHandler, typename CoproHandler>
 std::byte* Alu<MemoryHandler, CoproHandler>::reset() {
 
-    m_mem->allocate(m_vmProperties.m_memsize);
+    m_mem->reset();
     m_registers.fill(0);
     m_cpsr = 0;
     m_spsr = 0;

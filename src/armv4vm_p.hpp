@@ -17,9 +17,18 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <cassert>
+
+// todo : traiter les overflow
+constexpr std::uint64_t operator""_mb(const unsigned long long value) {
+    return value * 1024ULL * 1024ULL;
+}
+
+constexpr std::uint64_t operator""_gb(const unsigned long long value) {
+    return value * 1024ULL * 1024ULL * 1024ULL;
+}
 
 #define armv4vm_assert(__FUNCTION__, __FILE__, __LINE__)                                \
 {                                                                                       \
@@ -65,5 +74,5 @@ class AccessRange {
     size_t           size;
     AccessPermission permission;
 };
-
 } // namespace armv4vm
+

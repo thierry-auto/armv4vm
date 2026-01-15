@@ -1,11 +1,10 @@
 #include "armv4vm.hpp"
 
 #ifdef MY_LIBRARY_HEADER_ONLY
-template class Vfpv2<MemoryRaw>;
-template class Vfpv2<MemoryProtected>;
-template class Vm<MemoryRaw, Vfpv2Unprotected>;
-template class Vm<MemoryProtected, Vfpv2Protected>;
-s
+template class armv4vm::Vfpv2<armv4vm::MemoryRaw>;
+template class armv4vm::Vfpv2<armv4vm::MemoryProtected>;
+template class armv4vm::Vm<armv4vm::MemoryRaw, armv4vm::Vfpv2<armv4vm::MemoryRaw>>;
+template class armv4vm::Vm<armv4vm::MemoryProtected, armv4vm::Vfpv2<armv4vm::MemoryProtected>>;
 #endif
 
 #include "testmem.hpp"
@@ -16,20 +15,20 @@ int main(int argc, char** argv)
 {
     int status = 0;
 
-    // {
-    //     armv4vm::TestMem tc;
-    //     status |= QTest::qExec(&tc, argc, argv);
-    // }
+    {
+        armv4vm::TestMem tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     {
         armv4vm::TestAlu tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 
-    // {
-    //     armv4vm::TestVfp tc;
-    //     status |= QTest::qExec(&tc, argc, argv);
-    // }
+    {
+        armv4vm::TestVfp tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     return status;
 }

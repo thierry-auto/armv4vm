@@ -48,7 +48,7 @@ template <typename T>
 concept FloatingPoint = std::same_as<T, float> || std::same_as<T, double> /*|| std::same_as<T, DoubleInFloatArray>*/;
 
 template <typename MemoryHandler>
-class Vfpv2 : public CoprocessorBase<Vfpv2<MemoryHandler>> {
+class Vfpv2 final : public CoprocessorBase<Vfpv2<MemoryHandler>> {
 
   public:
     friend TestMem;
@@ -65,11 +65,8 @@ class Vfpv2 : public CoprocessorBase<Vfpv2<MemoryHandler>> {
     void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
-    void attach(MemoryHandler *mem, Alu<MemoryHandler, Vfpv2> *alu) {
-
-        m_mem = mem;
-        m_alu = alu;
-    }
+    void attach(MemoryHandler *mem) { m_mem = mem; }
+    void attach(Alu<MemoryHandler, Vfpv2> *alu) { m_alu = alu; }
 
   private:
     std::array<float, 32> m_sRegisters;

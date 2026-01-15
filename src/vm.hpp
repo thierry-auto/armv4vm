@@ -1,8 +1,23 @@
+//    Copyright (c) 2020-26, thierry vic
+//
+//    This file is part of armv4vm.
+//
+//    armv4vm is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    armv4vm is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
-#include <cstddef>
 #include <memory>
-#include <optional>
 #include <fstream>
 
 #include "armv4vm_p.hpp"
@@ -28,7 +43,7 @@ class VmBase {
 };
 
 template <typename MemoryHandler, typename CoproHandler>
-class Vm : public VmBase {
+class Vm final : public VmBase {
   private:
     using PrivateAlu = Alu<MemoryHandler, CoproHandler>;
     using PrivateVfpv2 = Vfpv2<MemoryHandler>;
@@ -57,8 +72,10 @@ class Vm : public VmBase {
         m_alu = std::make_unique<PrivateAlu>(&m_vmProperties);
         m_vfp = std::make_unique<PrivateVfpv2>(&m_vmProperties);
 
-        m_alu->attach(m_mem.get(), m_vfp.get());
-        m_vfp->attach(m_mem.get(), m_alu.get());
+        m_alu->attach(m_mem.get());
+        m_alu->attach(m_vfp.get());
+        m_vfp->attach(m_mem.get());
+        m_vfp->attach(m_alu.get());
         m_alu->reset();
     }
 

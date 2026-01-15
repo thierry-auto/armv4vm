@@ -20,9 +20,7 @@
 #include <iostream>
 
 #include "config.h"
-#include "memoryhandler.hpp"
-#include "alu.hpp"
-#include "vfpv2.hpp"
+#include "armv4vm.hpp"
 
 namespace armv4vm {
 

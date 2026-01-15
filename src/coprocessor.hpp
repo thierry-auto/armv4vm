@@ -53,11 +53,8 @@ class CoprocessorBase {
     void coprocessorDataOperationsImpl(const uint32_t workingInstruction);
     void coprocessorRegisterTransfersImpl(const uint32_t workingInstruction);
 
-
-
   protected:
     struct VmProperties  m_vmProperties;
-
 };
 
 template<typename Derived>

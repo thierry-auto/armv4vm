@@ -76,6 +76,8 @@ endif()
 # Main Target
 # ===========================================================
 if(MY_LIBRARY_HEADER_ONLY)
+    ADD_DEFINITIONS(-DMY_LIBRARY_HEADER_ONLY)
+
     # Version header-only : pas de bibliothèque physique
     add_library(armv4vm INTERFACE ${ARMV4VM_HEADER_FILES})
     target_include_directories(armv4vm INTERFACE
@@ -91,10 +93,12 @@ if(MY_LIBRARY_HEADER_ONLY)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_compile_features(armv4vm_header_only INTERFACE cxx_std_23)
+    message("11111111111111111111111")
 elseif(MY_LIBRARY_STATIC)
     ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
     TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
     set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
+    message("222222222222222222222222")
 endif()
 
 # ===========================================================

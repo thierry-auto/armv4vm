@@ -72,7 +72,7 @@ class alignas(32) AluBase {
 
 
 template <typename MemoryHandler, typename CoproHandler> // Remettre les concepts MemDerived CoproDerived
-class Alu : public AluBase {
+class Alu final : public AluBase {
 
   public:
     friend TestMem;

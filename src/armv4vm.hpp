@@ -17,34 +17,12 @@
 
 #pragma once
 
-#include "armv4vm_p.hpp"
-#include "vmproperties.hpp"
-#include "memoryhandler.hpp"
-#include "vfpv2.hpp"
-#include "alu.hpp"
-
-// todo : traiter les overflow
-constexpr std::uint64_t operator""_mb(const unsigned long long value) {
-    return value * 1024ULL * 1024ULL;
-}
-
-constexpr std::uint64_t operator""_gb(const unsigned long long value) {
-    return value * 1024ULL * 1024ULL * 1024ULL;
-}
-
-enum class AccessPermission {
-    NONE    = 0b0000,
-    READ    = 0b0001,
-    WRITE   = 0b0010,
-    READ_WRITE = READ | WRITE,
-};
-
-class AccessRange {
-  public:
-    uint32_t         start;
-    size_t           size;
-    AccessPermission permission;
-};
+#include "armv4vm_p.hpp"        // IWYU pragma: export
+#include "vmproperties.hpp"     // IWYU pragma: export
+#include "memoryhandler.hpp"    // IWYU pragma: export
+#include "vfpv2.hpp"            // IWYU pragma: export
+#include "alu.hpp"              // IWYU pragma: export
+#include "vm.hpp"               // IWYU pragma: export
 
 //extern template class armv4vm::Alu<armv4vm::MemoryRaw, armv4vm::Vfpv2>;
 //extern template class armv4vm::Alu<armv4vm::MemoryProtected, armv4vm::Vfpv2>;

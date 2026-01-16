@@ -26,7 +26,7 @@
 namespace armv4vm {
 
 class TestMem;
-class TestAlu;
+class TestAluInstruction;
 class TestVfp;
 
 template<typename T>
@@ -52,7 +52,7 @@ class Vfpv2 final : public CoprocessorBase<Vfpv2<MemoryHandler>> {
 
   public:
     friend TestMem;
-    friend TestAlu;
+    friend TestAluInstruction;
     friend TestVfp;
 
   public:

@@ -28,36 +28,48 @@
 namespace armv4vm {
 
 class TestMem;
-class TestAlu;
+class TestAluInstruction;
 class TestVfp;
 
-class VmBase {
+
+class VmException : public std::exception {
   public:
-    VmBase() = default;
-    virtual ~VmBase() = default;
+    VmException() = default;
+    ~VmException() = default;
+};
+
+
+class Vm {
+  protected:
+    Vm() = default;
+
+  public:
+
+    virtual ~Vm() = default;
 
     //virtual void init(struct VmProperties &vmProperties) = 0;
-    virtual void reset() = 0;
+    virtual std::byte* reset() = 0;
     virtual uint64_t load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
 };
 
 template <typename MemoryHandler, typename CoproHandler>
-class Vm final : public VmBase {
+class VmImplementation final : public Vm {
   private:
     using PrivateAlu = Alu<MemoryHandler, CoproHandler>;
     using PrivateVfpv2 = Vfpv2<MemoryHandler>;
 
-  public:
-    friend TestMem;
-    friend TestAlu;
-    friend TestVfp;
-
-    Vm(const struct VmProperties &vmProperties) {
+    VmImplementation(const struct VmProperties &vmProperties) {
 
         m_vmProperties = vmProperties;
     }
-    ~Vm() = default;
+
+  public:
+    friend TestMem;
+    friend TestAluInstruction;
+    friend TestVfp;
+
+    ~VmImplementation() = default;
 
     enum Error {
 
@@ -66,7 +78,7 @@ class Vm final : public VmBase {
         E_UNDEFINED,
     };
 
-    void reset() {
+    std::byte* reset() {
 
         m_mem = std::make_unique<MemoryHandler>(m_vmProperties.m_memoryHandlerProperties);
         m_alu = std::make_unique<PrivateAlu>(m_vmProperties.m_aluProperties);
@@ -76,7 +88,7 @@ class Vm final : public VmBase {
         m_alu->attach(m_vfp.get());
         m_vfp->attach(m_mem.get());
         m_vfp->attach(m_alu.get());
-        m_alu->reset();
+        return m_alu->reset();
     }
 
     uint64_t load() {
@@ -119,8 +131,8 @@ class Vm final : public VmBase {
 using Vfpv2Unprotected = Vfpv2<MemoryRaw>;
 using Vfpv2Protected = Vfpv2<MemoryProtected>;
 
-using VmUnprotected = Vm<MemoryRaw, Vfpv2Unprotected>;
-using VmProtected = Vm<MemoryProtected, Vfpv2Protected>;
+using VmUnprotected = VmImplementation<MemoryRaw, Vfpv2Unprotected>;
+using VmProtected = VmImplementation<MemoryProtected, Vfpv2Protected>;
 
 #ifdef MY_LIBRARY_STATIC
 // Ne genere pas les constructions suivantes quand ce header est appelé.
@@ -131,17 +143,28 @@ extern template class Vm<MemoryRaw, Vfpv2Unprotected>;
 extern template class Vm<MemoryProtected, Vfpv2Protected>;
 #endif
 
-inline std::unique_ptr<VmBase> buildVm(const struct VmProperties &vmProperties) {
+inline std::unique_ptr<Vm> buildVm(const struct VmProperties &vmProperties) {
+
+    std::unique_ptr<Vm> vm = nullptr;
+
+    // Une mémoire ne peut pas avoir de taille et des layout en même temps.
+    // C'est une incohérence de configuration. On ne sait donc pas quel type de mémoire il faut créer.
+    if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memsize) {
+
+        throw VmException();
+    }
 
     // Quand des permissions sont renseignées,
     // une mémoire de type protegée est créée.
     if(vmProperties.m_memoryHandlerProperties.m_layout.empty()) {
 
-        return std::make_unique<VmUnprotected>(vmProperties);
+        vm = std::make_unique<VmUnprotected>(vmProperties);
     }
     else {
-        return std::make_unique<VmProtected>(vmProperties);
+        vm = std::make_unique<VmProtected>(vmProperties);
     }
+
+    return vm;
 }
 
 

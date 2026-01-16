@@ -3,8 +3,8 @@
 #ifdef MY_LIBRARY_HEADER_ONLY
 template class armv4vm::Vfpv2<armv4vm::MemoryRaw>;
 template class armv4vm::Vfpv2<armv4vm::MemoryProtected>;
-template class armv4vm::Vm<armv4vm::MemoryRaw, armv4vm::Vfpv2<armv4vm::MemoryRaw>>;
-template class armv4vm::Vm<armv4vm::MemoryProtected, armv4vm::Vfpv2<armv4vm::MemoryProtected>>;
+template class armv4vm::VmImplementation<armv4vm::MemoryRaw, armv4vm::Vfpv2<armv4vm::MemoryRaw>>;
+template class armv4vm::VmImplementation<armv4vm::MemoryProtected, armv4vm::Vfpv2<armv4vm::MemoryProtected>>;
 #endif
 
 #include "testmem.hpp"
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     }
 
     {
-        armv4vm::TestAlu tc;
+        armv4vm::TestAluInstruction tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

@@ -26,11 +26,12 @@
 #include <vector>
 #include <cstring>
 #include <ranges>
+#include <numeric>
 
 namespace armv4vm {
 
 class TestMem;
-class TestAlu;
+class TestAluInstruction;
 class TestVfp;
 
 inline constexpr AccessPermission operator | (const AccessPermission a, const AccessPermission b) {
@@ -107,7 +108,7 @@ using MemoryProtectedRef = MemoryRefProtectedBase<T>;
 // n'est plus vraiment justifié. On pourrait peut-être revenir sur
 // du polymorphsime classique qui serait probablement effacé par le compilateur. A voir.
 template <typename Derived>
-class MemoryInterface /*: public MemoryInterfaceBase*/ {
+class MemoryInterface {
   protected:
     MemoryInterface(struct MemoryHandlerProperties & properties) : m_properties(properties) {};
     MemoryInterface() = default;
@@ -133,7 +134,7 @@ class MemoryInterface /*: public MemoryInterfaceBase*/ {
 
     inline byte *getAdressZero() { return static_cast<Derived *>(this)->getAddressZeroImpl(); }
     //inline byte *allocate(const size_t size) { return static_cast<Derived *>(this)->allocateImpl(size); }
-    inline uint8_t operator[](const size_t index) { return static_cast<Derived *>(this)->operator[](index); }
+    inline std::byte& operator[](const size_t index) { return static_cast<Derived *>(this)->getByteImpl(index); }
     inline void addAccessRange(const MemoryLayout &accessRange) {
         static_cast<Derived *>(this)->addAccessRangeImpl(accessRange);
     }
@@ -148,18 +149,18 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
 
   public:
     friend TestMem;
-    friend TestAlu;
+    friend TestAluInstruction;
     friend TestVfp;
 
   public:
     using byte = std::byte;
 
-    MemoryRaw(struct MemoryHandlerProperties & properties) : MemoryInterface(properties) {}
+    MemoryRaw(struct MemoryHandlerProperties & properties) : MemoryInterface(properties) {
+        m_ram  = std::make_unique<byte[]>(m_properties.m_memsize);
+    }
     ~MemoryRaw() = default;
 
     byte *resetImpl(const std::byte fillingValue = std::byte{0}) {
-
-        m_ram  = std::make_unique<byte[]>(m_properties.m_memsize);
         m_size = static_cast<uint32_t>(m_properties.m_memsize);
         return m_ram.get();
     }
@@ -199,7 +200,12 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
         return MemoryRef<T>(m_ram.get(), address);
     }
 
-    byte operator[](std::size_t index) const {
+    // byte operator[](std::size_t index) const {
+    //     return m_ram[index];
+    // }
+
+    std::byte& getByteImpl(const std::size_t index) {
+
         return m_ram[index];
     }
 
@@ -220,7 +226,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   public:
     friend TestMem;
-    friend TestAlu;
+    friend TestAluInstruction;
     friend TestVfp;
 
   public:
@@ -228,13 +234,21 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
     MemoryProtected(struct MemoryHandlerProperties & properties) : MemoryInterface(properties) {
 
-        m_accessRanges = properties.m_layout;
+        m_memoryLayout = properties.m_layout;
+
+        const size_t totalAllocation = std::accumulate(
+            m_memoryLayout.begin(),
+            m_memoryLayout.end(),
+            0,
+            [](const int &cumul, const MemoryLayout &layout){ return cumul + layout.size; });
+
+        m_ram = std::make_unique<std::vector<byte>>(totalAllocation);
+        std::ranges::fill(*m_ram, std::byte{0});
     }
     ~MemoryProtected() = default;
 
     byte *resetImpl(const std::byte fillingValue = std::byte{0}) {
 
-        m_ram = std::make_unique<std::vector<byte>>(m_properties.m_memsize);
         std::ranges::fill(*m_ram, fillingValue);
         return m_ram->data();
     }
@@ -264,14 +278,29 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     }
 
     template <typename T>
+    MemoryRef<T> writePointerImpl(const uint32_t address, const T& value) {
+        static_assert(std::is_trivially_copyable_v<T>, "MemoryProtected::writePointerImpl requires trivially copyable T");
+        isAccessible(address, sizeof(T), AccessPermission::WRITE);
+        std::memcpy(m_ram.get()->data()[address], &value, sizeof(T));
+        return MemoryRef<T>(m_ram.get()->data(), address);
+    }
+
+    template <typename T>
     MemoryRef<T> writePointerImpl(const uint32_t address) {
         static_assert(std::is_trivially_copyable_v<T>);
         isAccessible(address, sizeof(T), AccessPermission::WRITE);
         return MemoryRef<T>(m_ram.get()->data(), address);
     }
 
-    MemoryProtectedRef<std::byte> operator[](std::size_t index) {
-        return MemoryProtectedRef<std::byte>(this, m_ram.get()->data(), index);
+    // MemoryProtectedRef<std::byte> operator[](std::size_t index) {
+    //     isAccessible(index, sizeof(std::byte), AccessPermission::WRITE);
+    //     return MemoryProtectedRef<std::byte>(this, m_ram.get()->data(), index);
+    // }
+
+    std::byte& getByteImpl(const std::size_t index) {
+
+        isAccessible(index, sizeof(std::byte), AccessPermission::WRITE);
+        return m_ram.get()->at(index);
     }
 
     void setByte(uint32_t offset, byte value) {
@@ -279,7 +308,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     }
 
     void addAccessRangeImpl(const MemoryLayout& accessRange) {
-        m_accessRanges.push_back(accessRange);
+        m_memoryLayout.push_back(accessRange);
     }
 
   private:
@@ -293,7 +322,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
                    ((address + dataSize) <= (range.start + range.size));
         };
 
-        const bool allowed = std::any_of(m_accessRanges.begin(), m_accessRanges.end(), test);
+        const bool allowed = std::any_of(m_memoryLayout.begin(), m_memoryLayout.end(), test);
 
         if (!allowed) {
             throw std::runtime_error("segmentation fault");
@@ -306,7 +335,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
-    std::vector<MemoryLayout>           m_accessRanges;
+    std::vector<MemoryLayout>           m_memoryLayout;
 };
 
 template<typename T>

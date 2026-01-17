@@ -28,6 +28,7 @@
 namespace armv4vm {
 
 class TestMem;
+template <typename T>
 class TestAluInstruction;
 class TestVfp;
 
@@ -51,6 +52,7 @@ class Vm {
     virtual std::byte* reset() = 0;
     virtual uint64_t load() = 0;
     virtual Interrupt run(const uint32_t nbMaxIteration = 0) = 0;
+    static std::unique_ptr<Vm> build(const struct VmProperties &vmProperties);
 };
 
 template <typename MemoryHandler, typename CoproHandler>
@@ -66,8 +68,9 @@ class VmImplementation final : public Vm {
 
   public:
     friend TestMem;
-    friend TestAluInstruction;
+    friend TestAluInstruction<MemoryHandler>;
     friend TestVfp;
+    friend class Vm;
 
     ~VmImplementation() = default;
 
@@ -143,7 +146,7 @@ extern template class Vm<MemoryRaw, Vfpv2Unprotected>;
 extern template class Vm<MemoryProtected, Vfpv2Protected>;
 #endif
 
-inline std::unique_ptr<Vm> buildVm(const struct VmProperties &vmProperties) {
+inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
 
     std::unique_ptr<Vm> vm = nullptr;
 
@@ -158,10 +161,10 @@ inline std::unique_ptr<Vm> buildVm(const struct VmProperties &vmProperties) {
     // une mémoire de type protegée est créée.
     if(vmProperties.m_memoryHandlerProperties.m_layout.empty()) {
 
-        vm = std::make_unique<VmUnprotected>(vmProperties);
+        vm = std::unique_ptr<Vm>(new VmUnprotected(vmProperties));
     }
     else {
-        vm = std::make_unique<VmProtected>(vmProperties);
+        vm = std::unique_ptr<Vm>(new VmProtected(vmProperties));
     }
 
     return vm;

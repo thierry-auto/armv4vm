@@ -15,6 +15,8 @@
 //    You should have received a copy of the GNU General Public License
 //    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
 
+#pragma once
+
 #include <QObject>
 #include <QtTest>
 #include <iostream>
@@ -32,23 +34,24 @@ namespace armv4vm {
 #define UARTPOS 0x01000000;
                             //#define UARTPOS 0x101f1000
 
-class TestAluInstruction : public QObject {
-    Q_OBJECT
+template<typename T>
+class TestAluInstruction
+{
   private:
+    using ProtectedVfp = Vfpv2<T>;
+    using ProtectedAlu = Alu<T, ProtectedVfp>;
 
-    using ProtectedVfp = Vfpv2<MemoryProtected>;
-    using ProtectedAlu = Alu<MemoryProtected, ProtectedVfp>;
-
-    std::unique_ptr<MemoryProtected> m_mem;
+    std::unique_ptr<T> m_mem;
     std::unique_ptr<ProtectedAlu> m_alu;
     VmProperties m_vmProperties;
 
-  public:
-    TestAluInstruction() {
 
+  public:
+    TestAluInstruction()
+    {
         m_vmProperties.m_memoryHandlerProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
 
-        m_mem = std::make_unique<MemoryProtected>(m_vmProperties.m_memoryHandlerProperties);
+        m_mem = std::make_unique<T>(m_vmProperties.m_memoryHandlerProperties);
         m_alu = std::make_unique<ProtectedAlu>(m_vmProperties.m_aluProperties);
 
         m_mem->reset();
@@ -56,13 +59,11 @@ class TestAluInstruction : public QObject {
 
         m_alu->attach(m_mem.get());
     }
-    virtual ~TestAluInstruction() = default;
-
-  private slots:
 
     void testMOV() {
+
         m_alu->reset();
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3a0002d; // mov r0, #45
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3a0002d; // mov r0, #45
 
         m_alu->run(1);
 
@@ -70,12 +71,11 @@ class TestAluInstruction : public QObject {
         QVERIFY(m_alu->m_cpsr == 0);
     }
 
-
     void testADD() {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
 
         m_alu->m_registers[0] = 0xFFFFFFFF;
         m_alu->m_registers[1] = 0x1;
@@ -91,7 +91,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
 
         m_alu->m_registers[0] = 0xFFFFFFFF;
         m_alu->m_registers[1] = 0x4;
@@ -107,7 +107,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0510002; // subs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs r0, r1, r2
 
         m_alu->m_registers[0] = 0xFFFFFFFF;
         m_alu->m_registers[1] = 0x4;
@@ -123,7 +123,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
 
         m_alu->m_registers[0] = 0xFFFFFFFF;
         m_alu->m_registers[1] = 0xFFFFFFFF; // -1
@@ -139,7 +139,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0xFFFFFFFF; // -1
         m_alu->m_registers[2] = 0xFFFFFFFF; // -1
@@ -154,7 +154,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00211;
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00211;
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0xFFFFFFFF; // -1
         m_alu->m_registers[2] = 0xFFFFFFFF; // -1
@@ -169,7 +169,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00001;
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001;
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x801200EF; // -1
 
@@ -183,7 +183,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00231; // lsrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00231; // lsrs r0, r1, r2
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x801200EF; // -1
         m_alu->m_registers[2] = 0x100;
@@ -198,7 +198,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x801200EF; // -1
@@ -215,7 +215,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x8012FFFF; // -1
@@ -231,7 +231,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x0012FFFF; // -1
         m_alu->m_registers[2] = 0x10;
@@ -246,7 +246,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x8012FFFF; // -1
@@ -262,7 +262,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x1012FFFF; // -1
@@ -278,7 +278,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, #0
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, #0
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x801200EF; // -1
         m_alu->m_registers[2] = 0;
@@ -293,7 +293,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00001; // asrs r0, r1, #0
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001; // asrs r0, r1, #0
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x801200EF; // -1
 
@@ -307,7 +307,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -323,7 +323,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -339,7 +339,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00001; // rors r0, r1, #0
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001; // rors r0, r1, #0
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -355,7 +355,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -371,7 +371,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
 
         m_alu->m_registers[0] = 0xABABABAB;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -387,7 +387,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00170; // rors r0, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00170; // rors r0, r0, r1
 
         m_alu->m_registers[0] = 0x00000008;
         m_alu->m_registers[1] = 0x00000010; // -1
@@ -402,7 +402,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00260; // rors r0, #4
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00260; // rors r0, #4
         m_alu->m_registers[0] = 0x00080000;
 
         m_alu->run(1);
@@ -415,7 +415,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe1b00221; // movs r0, r1, lsr #4
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00221; // movs r0, r1, lsr #4
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00010000;
@@ -430,7 +430,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3800d7d; // ORR r0, r0, #8000
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800d7d; // ORR r0, r0, #8000
         m_alu->m_registers[0] = 0x00000001;
 
         m_alu->run(1);
@@ -443,7 +443,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
         m_alu->m_registers[0] = 0xF000000F;
 
         m_alu->run(1);
@@ -456,7 +456,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[0] = 0x800F0001;
 
@@ -470,7 +470,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe3810602; // ORR r0, r1, #2097152
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3810602; // ORR r0, r1, #2097152
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x800f0001;
 
@@ -484,10 +484,10 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5910004; // ldr  r0, [r1, #4]
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5910004; // ldr  r0, [r1, #4]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x0000000c;
-        m_alu->m_mem->writePointer<uint32_t>(0xc + 0x4, 0x12345678);
+        m_alu->m_mem->template writePointer<uint32_t>(0xc + 0x4, 0x12345678);
 
         m_alu->run(1);
 
@@ -500,16 +500,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5810004; // str     r0, [r1, #4]
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5810004; // str     r0, [r1, #4]
 
         m_alu->m_registers[0] = 0xabcdef02;
         m_alu->m_registers[1] = 0x0000000c;
         m_alu->run(1);
 
-        QVERIFY(m_alu->m_mem->readPointer<std::byte>(0xc + 4) == 0x02);
-        QVERIFY(m_alu->m_mem->readPointer<std::byte>(0xc + 5) == 0xef);
-        QVERIFY(m_alu->m_mem->readPointer<std::byte>(0xc + 6) == 0xcd);
-        QVERIFY(m_alu->m_mem->readPointer<std::byte>(0xc + 7) == 0xab);
+        QVERIFY(m_alu->m_mem->template readPointer<std::byte>(0xc + 4) == 0x02);
+        QVERIFY(m_alu->m_mem->template readPointer<std::byte>(0xc + 5) == 0xef);
+        QVERIFY(m_alu->m_mem->template readPointer<std::byte>(0xc + 6) == 0xcd);
+        QVERIFY(m_alu->m_mem->template readPointer<std::byte>(0xc + 7) == 0xab);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -519,16 +519,16 @@ class TestAluInstruction : public QObject {
                //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe92d0007; // push     {r0, r1, r2}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d0007; // push     {r0, r1, r2}
         m_alu->m_registers[0]  = 0x00000001;
         m_alu->m_registers[1]  = 0x00000022;
         m_alu->m_registers[2]  = 0x00000333;
         m_alu->m_registers[13] = 0x50;
         m_alu->run(1);
 
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 12) == 0x00000001);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 8) == 0x00000022);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 4) == 0x00000333);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 12) == 0x00000001);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 8) == 0x00000022);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 4) == 0x00000333);
         QVERIFY(m_alu->m_registers[13] == 0x44);
 
         QVERIFY(m_alu->m_cpsr == 0x00000000);
@@ -538,8 +538,8 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe92d001f; // push {r0, r1, r2, r3, r4}
-        m_alu->m_mem->writePointer<uint32_t>(4) = 0xe8bd03e0; // pop {r5, r6, r7, r8, r9}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d001f; // push {r0, r1, r2, r3, r4}
+        m_alu->m_mem->template writePointer<uint32_t>(4) = 0xe8bd03e0; // pop {r5, r6, r7, r8, r9}
 
         m_alu->m_registers[0]  = 0x00000001;
         m_alu->m_registers[1]  = 0x00000022;
@@ -555,11 +555,11 @@ class TestAluInstruction : public QObject {
 
         m_alu->run(1);
 
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 20) == 0x00000001);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 16) == 0x00000022);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 12) == 0x00000333);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 8) == 0x00004444);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x50 - 4) == 0x00055555);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 20) == 0x00000001);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 16) == 0x00000022);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 12) == 0x00000333);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 8) == 0x00004444);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x50 - 4) == 0x00055555);
         QVERIFY(m_alu->m_registers[13] == 0x3c);
 
         QVERIFY(m_alu->m_cpsr == 0x00000000);
@@ -581,7 +581,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000444;
@@ -598,7 +598,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0910002; // adds r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // adds r0, r1, r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x7FFFFFFF;
@@ -615,7 +615,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x40000000;
@@ -632,7 +632,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x40000000;
@@ -649,7 +649,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x7FFFFFFF;
@@ -666,12 +666,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5f10002;     // ldrb r0, [r1, #2]!
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5e1000c); // strb r0, [r1, #12]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10002;     // ldrb r0, [r1, #2]!
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5e1000c); // strb r0, [r1, #12]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
 
@@ -682,7 +682,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x0000010e);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x00220000);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x00220000);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -691,12 +691,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5f10001;     // ldrb r0, [r1, #1]!
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5e1000b); // strb r0, [r1, #11]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10001;     // ldrb r0, [r1, #1]!
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5e1000b); // strb r0, [r1, #11]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
 
@@ -707,7 +707,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x0000010c);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x00000033);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x00000033);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -715,17 +715,17 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5d10000; // ldrb r0, [r1]
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5d20000);
-        m_alu->m_mem->writePointer<uint32_t>(8, 0xe5d30000);
-        m_alu->m_mem->writePointer<uint32_t>(12, 0xe5d40000);
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5d10000; // ldrb r0, [r1]
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5d20000);
+        m_alu->m_mem->template writePointer<uint32_t>(8, 0xe5d30000);
+        m_alu->m_mem->template writePointer<uint32_t>(12, 0xe5d40000);
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
         m_alu->m_registers[2] = 0x00000101;
         m_alu->m_registers[3] = 0x00000102;
         m_alu->m_registers[4] = 0x00000103;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
         QVERIFY(m_alu->m_registers[0] == 0x00000044);
@@ -742,12 +742,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5f10003;     // ldrb r0, [r1, #3]!
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5e1000d); // strb r0, [r1, #13]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10003;     // ldrb r0, [r1, #3]!
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5e1000d); // strb r0, [r1, #13]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
 
@@ -758,7 +758,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x00000110);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x110) == 0x00000011);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x110) == 0x00000011);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -767,13 +767,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe4110004;     // ldr r0, [r1], #-4
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4110004;     // ldr r0, [r1], #-4
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -784,7 +784,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x000000e4);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0xfc) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0xfc) == 0x11223344);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -792,10 +792,10 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5910000; // ldr r0, [r1]
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5910000; // ldr r0, [r1]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
@@ -805,7 +805,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0020190; // mul r2,r0,r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0020190; // mul r2,r0,r1
         m_alu->m_registers[0] = 0xffffff0f;
         m_alu->m_registers[1] = 0x00000002;
 
@@ -818,7 +818,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000012;
         m_alu->m_registers[2] = 0x0000007f;
@@ -836,7 +836,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0xFFFFFFF6;
         m_alu->m_registers[2] = 0x00000014;
@@ -854,7 +854,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x7FFFEFF6;
         m_alu->m_registers[2] = 0x70070014;
@@ -873,7 +873,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x7FFFEFF6;
         m_alu->m_registers[2] = 0x00000000;
@@ -892,7 +892,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0xfffffff6;
         m_alu->m_registers[2] = 0x00000002;
@@ -912,13 +912,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5b10000;     // ldr r0, [r1, #0]!
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5a1000c); // str r0, [r1, #12]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5b10000;     // ldr r0, [r1, #0]!
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5a1000c); // str r0, [r1, #12]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -929,7 +929,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x0000010c);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x11223344);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -938,13 +938,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5310004;     // ldr r0, [r1, #-4]!
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe5210018); // str r0, [r1, #-24]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5310004;     // ldr r0, [r1, #-4]!
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe5210018); // str r0, [r1, #-24]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000104;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -955,7 +955,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x000000e8);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0xe8) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0xe8) == 0x11223344);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -964,13 +964,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe4910004;     // ldr r0, [r1], #4
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4910004;     // ldr r0, [r1], #4
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe4010018); // str r0, [r1], #-24
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -981,7 +981,7 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x000000ec);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x11223344);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -990,13 +990,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe4910000;     // ldr r0, [r1], #0
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe4010001); // str r0, [r1], #-24! -> str r0, [r1], #-1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4910000;     // ldr r0, [r1], #0
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe4010001); // str r0, [r1], #-24! -> str r0, [r1], #-1
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -1007,8 +1007,8 @@ class TestAluInstruction : public QObject {
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[1] == 0x000000ff);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x55667788);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1017,12 +1017,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe491f000; // ldr r15, [r1], #0
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe491f000; // ldr r15, [r1], #0
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -1037,13 +1037,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe6910002; // ldr r0, [r1], r2
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe6910002; // ldr r0, [r1], r2
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
         m_alu->m_registers[2] = 0x00000004;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -1058,13 +1058,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe7b10002; // ldr r0, [r1, r2]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7b10002; // ldr r0, [r1, r2]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
         m_alu->m_registers[2] = 0x00000004;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -1079,13 +1079,13 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1, r2]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1, r2]!
 
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000100;
         m_alu->m_registers[2] = 0x00000004;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
@@ -1100,20 +1100,20 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe7e10002; // strb r0, [r1, r2]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7e10002; // strb r0, [r1, r2]!
 
         m_alu->m_registers[0] = 0x99aabbcc;
         m_alu->m_registers[1] = 0x00000100;
         m_alu->m_registers[2] = 0x00000004;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0x99aabbcc);
         QVERIFY(m_alu->m_registers[1] == 0x00000104);
         QVERIFY(m_alu->m_registers[2] == 0x00000004);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x556677cc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x556677cc);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1122,14 +1122,14 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe58f0000; // str r0, [r15]
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe58f0000; // str r0, [r15]
 
         m_alu->m_registers[0] = 0x99aabbcc;
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x8) == 0x99aabbcc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x8) == 0x99aabbcc);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1138,15 +1138,15 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5cf0000; // strb r0, [r15]
-        m_alu->m_mem->writePointer<uint32_t>(4, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(8, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5cf0000; // strb r0, [r15]
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(8, 0x55667788);
         m_alu->m_registers[0] = 0x99aabbcc;
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x8) == 0x556677cc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x8) == 0x556677cc);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1155,19 +1155,19 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5c10000; // strb r0, [r1]
-        m_alu->m_mem->writePointer<uint32_t>(4, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(8, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5c10000; // strb r0, [r1]
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(8, 0x55667788);
         m_alu->m_registers[0] = 0x99aabbee;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0xaabbccdd);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0x99aabbee);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x4) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x8) == 0x55667788);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xaabbccee);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x4) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x8) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xaabbccee);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1176,17 +1176,17 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1]
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1]
 
         m_alu->m_registers[0] = 0xdeadbeaf;
         m_alu->m_registers[1] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0x00000044);
         QVERIFY(m_alu->m_registers[1] == 0x00000100);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x11223344);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1194,17 +1194,17 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8bd000f; // LDMFD r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8bd000f; // LDMFD r13!, {r0-r3}
         m_alu->m_registers[0]  = 0x00000000;
         m_alu->m_registers[1]  = 0x00000000;
         m_alu->m_registers[2]  = 0x00000000;
         m_alu->m_registers[3]  = 0x00000000;
         m_alu->m_registers[13] = 0x00000100;
 
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
-        m_alu->m_mem->writePointer<uint32_t>(0x108, 0x99aabbcc);
-        m_alu->m_mem->writePointer<uint32_t>(0x10c, 0xddee00ff);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x108, 0x99aabbcc);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10c, 0xddee00ff);
 
         m_alu->run(1);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
@@ -1218,7 +1218,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe83d000f; // LDMFA r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe83d000f; // LDMFA r13!, {r0-r3}
 
         m_alu->m_registers[0]  = 0x00000000;
         m_alu->m_registers[1]  = 0x00000000;
@@ -1226,10 +1226,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[3]  = 0x00000000;
         m_alu->m_registers[13] = 0x0000010c;
 
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0x11223344);
-        m_alu->m_mem->writePointer<uint32_t>(0x104, 0x55667788);
-        m_alu->m_mem->writePointer<uint32_t>(0x108, 0x99aabbcc);
-        m_alu->m_mem->writePointer<uint32_t>(0x10c, 0xddee00ff);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0x11223344);
+        m_alu->m_mem->template writePointer<uint32_t>(0x104, 0x55667788);
+        m_alu->m_mem->template writePointer<uint32_t>(0x108, 0x99aabbcc);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10c, 0xddee00ff);
 
         m_alu->run(1);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
@@ -1243,7 +1243,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe92d000f; // STMFA r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d000f; // STMFA r13!, {r0-r3}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1252,10 +1252,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[13] = 0x00000110;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x55667788);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0xddee00ff);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x99aabbcc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0xddee00ff);
         QVERIFY(m_alu->m_registers[13] == 0x00000100);
     }
 
@@ -1263,7 +1263,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe82d000f; // STMED r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe82d000f; // STMED r13!, {r0-r3}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1271,13 +1271,13 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[3]  = 0xddee00ff;
         m_alu->m_registers[13] = 0x00000100;
 
-        m_alu->m_mem->writePointer<uint32_t>(0xf4) = 0xABCDEF09;
+        m_alu->m_mem->template writePointer<uint32_t>(0xf4) = 0xABCDEF09;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0xf4) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0xf8) == 0x55667788);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0xfc) == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xddee00ff);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0xf4) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0xf8) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0xfc) == 0x99aabbcc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xddee00ff);
         QVERIFY(m_alu->m_registers[13] == 0x000000f0);
     }
 
@@ -1286,7 +1286,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8ad000f; // STMEA r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8ad000f; // STMEA r13!, {r0-r3}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1295,10 +1295,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[13] = 0x00000100;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x55667788);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0xddee00ff);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x99aabbcc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0xddee00ff);
         QVERIFY(m_alu->m_registers[13] == 0x00000110);
     }
 
@@ -1306,7 +1306,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe9ad000f; // STMFA r13!, {r0-r3}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe9ad000f; // STMFA r13!, {r0-r3}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1315,10 +1315,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[13] = 0x00000100;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x11223344);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x55667788);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x99aabbcc);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x110) == 0xddee00ff);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x55667788);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x99aabbcc);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x110) == 0xddee00ff);
         QVERIFY(m_alu->m_registers[13] == 0x00000110);
     }
 
@@ -1326,7 +1326,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8a30038; // STM r3!, {r3-r5}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30038; // STM r3!, {r3-r5}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1337,10 +1337,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[13] = 0x00000110;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x00000100);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x00004444);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x00055555);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x00000000);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x00000100);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
         QVERIFY(m_alu->m_registers[1] == 0x55667788);
         QVERIFY(m_alu->m_registers[2] == 0x99aabbcc);
@@ -1354,7 +1354,7 @@ class TestAluInstruction : public QObject {
         //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8a30030; // STM r3!, {r4-r5}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30030; // STM r3!, {r4-r5}
 
         m_alu->m_registers[0]  = 0x11223344;
         m_alu->m_registers[1]  = 0x55667788;
@@ -1365,9 +1365,9 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[13] = 0x00000110;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x00004444);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x00055555);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x00000000);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x00004444);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x00055555);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x00000000);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
         QVERIFY(m_alu->m_registers[1] == 0x55667788);
         QVERIFY(m_alu->m_registers[2] == 0x99aabbcc);
@@ -1382,12 +1382,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe5a10004; // str r0, [r1, #4]!
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5a10004; // str r0, [r1, #4]!
         m_alu->m_registers[0] = 0x11223344;
         m_alu->m_registers[1] = 0x00000080;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x84) == 0x11223344);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x84) == 0x11223344);
         QVERIFY(m_alu->m_registers[0] == 0x11223344);
         QVERIFY(m_alu->m_registers[1] == 0x00000084);
     }
@@ -1397,7 +1397,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8a30034; // stm	r3!,{r2,r4,r5}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30034; // stm	r3!,{r2,r4,r5}
 
         m_alu->m_registers[2] = 0x00000022;
         m_alu->m_registers[3] = 0x00000100;
@@ -1406,10 +1406,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[6] = 0x00666666;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x00000022);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x00004444);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x00055555);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x00000000);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x00000022);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(m_alu->m_registers[2] == 0x00000022);
         QVERIFY(m_alu->m_registers[3] == 0x0000010c);
         QVERIFY(m_alu->m_registers[4] == 0x00004444);
@@ -1422,7 +1422,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe8a30038; // stm	r3!,{r3,r4,r5}
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30038; // stm	r3!,{r3,r4,r5}
 
         m_alu->m_registers[2] = 0x00000022;
         m_alu->m_registers[3] = 0x00000100;
@@ -1431,10 +1431,10 @@ class TestAluInstruction : public QObject {
         m_alu->m_registers[6] = 0x00666666;
 
         m_alu->run(1);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0x00000100);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x104) == 0x00004444);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x108) == 0x00055555);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10c) == 0x00000000);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0x00000100);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x104) == 0x00004444);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x108) == 0x00055555);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10c) == 0x00000000);
         QVERIFY(m_alu->m_registers[2] == 0x00000022);
         QVERIFY(m_alu->m_registers[3] == 0x0000010c);
         QVERIFY(m_alu->m_registers[4] == 0x00004444);
@@ -1447,8 +1447,8 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
-        m_alu->m_mem->writePointer<uint32_t>(4, 0x50823001); // addpl r3, r2, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0x50823001); // addpl r3, r2, r1
         m_alu->m_registers[0] = 0xFFFFFF0F;
         m_alu->m_registers[1] = 0x00000002;
         m_alu->m_registers[2] = 0x00000000;
@@ -1469,8 +1469,8 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
-        m_alu->m_mem->writePointer<uint32_t>(4, 0x70823001); // addvc r3, r2, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0x70823001); // addvc r3, r2, r1
         m_alu->m_registers[0] = 0xFFFFFF0F;
         m_alu->m_registers[1] = 0x000F0000;
         m_alu->m_registers[2] = 0x00000000;
@@ -1491,10 +1491,10 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1540002);  // cmp   r4,r2
-        m_alu->m_mem->writePointer<uint32_t>(4, 0x33a0600f);  // movcc r6,#15
-        m_alu->m_mem->writePointer<uint32_t>(8, 0xe1540002);  // cmp   r4,r2
-        m_alu->m_mem->writePointer<uint32_t>(12, 0x33a0600f); // movcc r6,#15
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1540002);  // cmp   r4,r2
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0x33a0600f);  // movcc r6,#15
+        m_alu->m_mem->template writePointer<uint32_t>(8, 0xe1540002);  // cmp   r4,r2
+        m_alu->m_mem->template writePointer<uint32_t>(12, 0x33a0600f); // movcc r6,#15
         m_alu->m_registers[2] = 0x0000000A;
         m_alu->m_registers[4] = 0x0000000F;
         m_alu->m_registers[6] = 0x00004444;
@@ -1526,15 +1526,15 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe1d140fe);  // ldrsh   r4, [r1, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe1d140fe);  // ldrsh   r4, [r1, #14]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000000;
         m_alu->m_registers[2] = 0x00000000;
         m_alu->m_registers[3] = 0x00000000;
         m_alu->m_registers[4] = 0x00000000;
         m_alu->m_cpsr         = 0x00000000;
-        m_alu->m_mem->writePointer<uint32_t>(12, 0x9a8b7c6d);
+        m_alu->m_mem->template writePointer<uint32_t>(12, 0x9a8b7c6d);
 
         m_alu->run(2);
 
@@ -1551,14 +1551,14 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000000;
         m_alu->m_registers[2] = 0x00000000;
         m_alu->m_registers[3] = 0x00000048;
         m_alu->m_registers[4] = 0x00000000;
         m_alu->m_cpsr         = 0x00000000;
-        m_alu->m_mem->writePointer<uint32_t>(0x54, 0x1a2b3c4d);
+        m_alu->m_mem->template writePointer<uint32_t>(0x54, 0x1a2b3c4d);
 
         m_alu->run(1);
 
@@ -1575,12 +1575,12 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000000;
         m_alu->m_registers[2] = 0x00000000;
         m_alu->m_cpsr         = 0x00000000;
-        m_alu->m_mem->writePointer<uint32_t>(12, 0x9a8b7c6d);
+        m_alu->m_mem->template writePointer<uint32_t>(12, 0x9a8b7c6d);
 
         m_alu->run(1);
 
@@ -1595,7 +1595,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
         m_alu->m_registers[0] = 0x00000000;
         m_alu->m_registers[1] = 0x00000000;
         m_alu->m_registers[2] = 0x00000000;
@@ -1608,7 +1608,7 @@ class TestAluInstruction : public QObject {
         QVERIFY(m_alu->m_registers[1] == 0x00000000);
         QVERIFY(m_alu->m_registers[2] == 0x00000000);
         QVERIFY(m_alu->m_registers[3] == 0x00000012);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(32) == 0x00000012);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(32) == 0x00000012);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1617,15 +1617,15 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
         m_alu->m_registers[3] = 0x00000014;
         m_alu->m_cpsr         = 0x00000000;
-        m_alu->m_mem->writePointer<uint32_t>(0x20, 0xa1b2c3d4);
+        m_alu->m_mem->template writePointer<uint32_t>(0x20, 0xa1b2c3d4);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[3] == 0x00000014);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x20) == 0x0014c3d4);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x20) == 0x0014c3d4);
         QVERIFY(m_alu->m_cpsr == 0x00000000);
     }
 
@@ -1634,16 +1634,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
         m_alu->m_registers[2] = 0x00000001;
         m_alu->m_registers[3] = 0x00000048;
-        m_alu->m_mem->writePointer<uint32_t>(0x54, 0xf3d7e5b9);
+        m_alu->m_mem->template writePointer<uint32_t>(0x54, 0xf3d7e5b9);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0x00000001);
         QVERIFY(m_alu->m_registers[3] == 0x00000048);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x54) == 0x0001e5b9);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x54) == 0x0001e5b9);
     }
 
     void testSTRH4() {
@@ -1651,16 +1651,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
         m_alu->m_registers[2] = 0x00000001;
         m_alu->m_registers[3] = 0x00000048;
-        m_alu->m_mem->writePointer<uint32_t>(0x54, 0x00000009);
+        m_alu->m_mem->template writePointer<uint32_t>(0x54, 0x00000009);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0x00000001);
         QVERIFY(m_alu->m_registers[3] == 0x00000048);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x54) == 0x00010009);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x54) == 0x00010009);
     }
 
     void testSTRH5() {
@@ -1668,16 +1668,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0c320b2);  // strh r2, [r3], #2
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c320b2);  // strh r2, [r3], #2
         m_alu->m_registers[2] = 0xaabbccdd;
         m_alu->m_registers[3] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0xaaaaaaaa);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0xaaaaaaaa);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0xaabbccdd);
         QVERIFY(m_alu->m_registers[3] == 0x00000102);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xaaaaccdd);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xaaaaccdd);
     }
 
     void testSTRH6() {
@@ -1685,16 +1685,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0c320b3);  // strh r2, [r3], #3
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c320b3);  // strh r2, [r3], #3
         m_alu->m_registers[2] = 0xaabbccdd;
         m_alu->m_registers[3] = 0x00000102;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0xaaaaaaaa);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0xaaaaaaaa);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0xaabbccdd);
         QVERIFY(m_alu->m_registers[3] == 0x00000105);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xccddaaaa);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xccddaaaa);
     }
 
     void testLDRH1() {
@@ -1702,16 +1702,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0d320b2);  // ldrh r2, [r3], #2
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0d320b2);  // ldrh r2, [r3], #2
         m_alu->m_registers[2] = 0x11223344;
         m_alu->m_registers[3] = 0x00000100;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0xaabbccdd);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0x0000ccdd);
         QVERIFY(m_alu->m_registers[3] == 0x00000102);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xaabbccdd);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xaabbccdd);
     }
 
     void testLDRH2() {
@@ -1719,16 +1719,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0d320b3);  // ldrh r2, [r3], #3
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0d320b3);  // ldrh r2, [r3], #3
         m_alu->m_registers[2] = 0x11223344;
         m_alu->m_registers[3] = 0x00000102;
-        m_alu->m_mem->writePointer<uint32_t>(0x100, 0xaabbccdd);
+        m_alu->m_mem->template writePointer<uint32_t>(0x100, 0xaabbccdd);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[2] == 0x0000aabb);
         QVERIFY(m_alu->m_registers[3] == 0x00000105);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x100) == 0xaabbccdd);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x100) == 0xaabbccdd);
     }
 
     void testSTRB() {
@@ -1736,16 +1736,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe5c10000);  // strb r0, [r1]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10000);  // strb r0, [r1]
         m_alu->m_registers[0] = 0xa1b2c3d4;
         m_alu->m_registers[1] = 0x00000010;
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0xeeeeeeee);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0xeeeeeeee);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0xa1b2c3d4);
         QVERIFY(m_alu->m_registers[1] == 0x00000010);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0xeeeeeed4);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0xeeeeeed4);
     }
 
     void testSTRB2() {
@@ -1753,16 +1753,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe5c10002);  // strb r0, [r1, #2]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10002);  // strb r0, [r1, #2]
         m_alu->m_registers[0] = 0xa1b2c3d4;
         m_alu->m_registers[1] = 0x00000010;
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0x11111111);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0x11111111);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0xa1b2c3d4);
         QVERIFY(m_alu->m_registers[1] == 0x00000010);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0x11d41111);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0x11d41111);
     }
 
     void testSTRB3() {
@@ -1770,16 +1770,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe5c10003);  // strb r0, [r1, #3]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10003);  // strb r0, [r1, #3]
         m_alu->m_registers[0] = 0xa1b2c3d4;
         m_alu->m_registers[1] = 0x00000010;
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0x11111111);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0x11111111);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0xa1b2c3d4);
         QVERIFY(m_alu->m_registers[1] == 0x00000010);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0xd4111111);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0xd4111111);
     }
 
     void testSTRB4() {
@@ -1787,16 +1787,16 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe5c10001);  // strb r0, [r1, #1]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10001);  // strb r0, [r1, #1]
         m_alu->m_registers[0] = 0xa1b2c3d4;
         m_alu->m_registers[1] = 0x00000010;
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0x11111111);
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0x11111111);
 
         m_alu->run(1);
 
         QVERIFY(m_alu->m_registers[0] == 0xa1b2c3d4);
         QVERIFY(m_alu->m_registers[1] == 0x00000010);
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0x1111d411);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0x1111d411);
     }
 
     void testADCS() {
@@ -1804,7 +1804,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
         m_alu->m_registers[1] = 0x00148fbe;
         m_alu->m_registers[3] = 0xffe80000;
         m_alu->m_registers[5] = 0x00000000;
@@ -1822,7 +1822,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe2100003);  // ands r0, r0, #3
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2100003);  // ands r0, r0, #3
         m_alu->m_registers[0] = 0x00055820;
         m_alu->m_cpsr = 0x60000000;
 
@@ -1837,7 +1837,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1340005);  // teq r4, r5
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1340005);  // teq r4, r5
         m_alu->m_registers[4] = 0x7fe91f7c;
         m_alu->m_registers[5] = 0x7ff00000;
         m_alu->m_cpsr = 0x20000000;
@@ -1854,7 +1854,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
         m_alu->m_registers[1] = 0x3ff48fbe;
         m_alu->m_cpsr = 0x80000000;
 
@@ -1869,7 +1869,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe2e33000);  // rsc r3, r3, #0
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2e33000);  // rsc r3, r3, #0
         m_alu->m_registers[3] = 0x00180000;
         m_alu->m_cpsr = 0x60000000;
 
@@ -1884,7 +1884,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe08ec290);  // umull   ip, lr, r0, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe08ec290);  // umull   ip, lr, r0, r2
         m_alu->m_registers[0] = 0x49ba5e38;
         m_alu->m_registers[2] = 0x636f4361;
         m_alu->m_registers[12] = 0x000007ff;
@@ -1905,7 +1905,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0c23290); // smull   r3, r2, r0, r2
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c23290); // smull   r3, r2, r0, r2
         m_alu->m_registers[0] = 0x17;
         m_alu->m_registers[2] = 0xd;
         m_alu->m_registers[3] = 0x7;
@@ -1925,7 +1925,7 @@ class TestAluInstruction : public QObject {
 
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe0c23190); // smull   r3, r2, r0, r1
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c23190); // smull   r3, r2, r0, r1
         m_alu->m_registers[0] = -324;       // fffffebc
         m_alu->m_registers[1] = 45674233;   // 2b8eef9
         m_alu->m_registers[2] = 0x7213;
@@ -1946,7 +1946,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe2722000);  // rsbs r2,r2,#0
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2722000);  // rsbs r2,r2,#0
         m_alu->m_registers[2] = 0xe2f3f618;
         m_alu->m_cpsr = 0xa0000000;
 
@@ -1961,7 +1961,7 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
         m_alu->m_registers[1] = 0x00000000;
         m_alu->m_cpsr = 0x60000000;
 
@@ -1976,15 +1976,15 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe320f000); // nop
-        m_alu->m_mem->writePointer<uint32_t>(4, 0xe780f001); // STR    R15, [R0, R1]
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe320f000); // nop
+        m_alu->m_mem->template writePointer<uint32_t>(4, 0xe780f001); // STR    R15, [R0, R1]
         m_alu->m_registers[0] = 0x0000000a;
         m_alu->m_registers[1] = 0x00000002;
         m_alu->m_cpsr         = 0x60000000;
 
         m_alu->run(2);
 
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(12) == 0x00000010);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(12) == 0x00000010);
     }
 
     void testSWP_1() {
@@ -1992,8 +1992,8 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1020091); // SWP R0, R1, [R2]
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0xABCDEF01);
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1020091); // SWP R0, R1, [R2]
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0xABCDEF01);
         m_alu->m_registers[0] = 0x0000000a;
         m_alu->m_registers[1] = 0x11112222;
         m_alu->m_registers[2] = 0x00000010;
@@ -2001,7 +2001,7 @@ class TestAluInstruction : public QObject {
 
         m_alu->run(1);
 
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0x11112222);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0x11112222);
         QVERIFY(m_alu->m_registers[0] == 0xABCDEF01);
         QVERIFY(m_alu->m_registers[1] == 0x11112222);
         QVERIFY(m_alu->m_registers[2] == 0x00000010);
@@ -2013,8 +2013,8 @@ class TestAluInstruction : public QObject {
           //VirtualMachineUnprotected vm(&vmProperties);
         m_alu->reset();
 
-        m_alu->m_mem->writePointer<uint32_t>(0, 0xe1420091); // SWPB R0, R1, [R2]
-        m_alu->m_mem->writePointer<uint32_t>(0x10, 0xABCDEF33);
+        m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1420091); // SWPB R0, R1, [R2]
+        m_alu->m_mem->template writePointer<uint32_t>(0x10, 0xABCDEF33);
         m_alu->m_registers[0] = 0x11223344;
         m_alu->m_registers[1] = 0x11112222;
         m_alu->m_registers[2] = 0x00000010;
@@ -2022,7 +2022,7 @@ class TestAluInstruction : public QObject {
 
         m_alu->run(1);
 
-        QVERIFY(m_alu->m_mem->readPointer<uint32_t>(0x10) == 0xABCDEF22);
+        QVERIFY(m_alu->m_mem->template readPointer<uint32_t>(0x10) == 0xABCDEF22);
         QVERIFY(m_alu->m_registers[0] == 0x00000033);
         QVERIFY(m_alu->m_registers[1] == 0x11112222);
         QVERIFY(m_alu->m_registers[2] == 0x00000010);
@@ -2030,14 +2030,254 @@ class TestAluInstruction : public QObject {
     }
 };
 
-class TestAluProgram : public QObject {
+class TestAluInstructionFlat : public QObject {
     Q_OBJECT
   private:
 
-    using ProtectedVfp = Vfpv2<MemoryProtected>;
-    using ProtectedAlu = Alu<MemoryProtected, ProtectedVfp>;
+    TestAluInstruction<MemoryRaw> m_test;
 
-    std::unique_ptr<MemoryProtected> m_mem;
+  public:
+    TestAluInstructionFlat() {
+
+    }
+    virtual ~TestAluInstructionFlat() = default;
+
+  private slots:
+
+    void testMOV() { m_test.testMOV(); }
+    void testADD() { m_test.testADD(); }
+    void testADD2() { m_test.testADD2(); }
+    void testSUBS() { m_test.testSUBS(); }
+    void testSUBS2() { m_test.testSUBS2(); }
+    void testSUBS3() { m_test.testSUBS3(); }
+    void testLSLS() { m_test.testLSLS(); }
+    void testLSLS2() { m_test.testLSLS2(); }
+    void testLSRS() { m_test.testLSRS(); }
+    void testASRS() { m_test.testASRS(); }
+    void testASRS2() { m_test.testASRS2(); }
+    void testASRS3() { m_test.testASRS3(); }
+    void testASRS4() { m_test.testASRS4(); }
+    void testASRS5() { m_test.testASRS5(); }
+    void testASRS6() { m_test.testASRS6(); }
+    void testASRS7() { m_test.testASRS7(); }
+    void testRORS() { m_test.testRORS(); }
+    void testRORS2() { m_test.testRORS2(); }
+    void testRORS3() { m_test.testRORS3(); }
+    void testRRXS() { m_test.testRRXS(); }
+    void testRRXS2() { m_test.testRRXS2(); }
+    void testRORS4() { m_test.testRORS4(); }
+    void testRORS5() { m_test.testRORS5(); }
+    void testMOVS() { m_test.testMOVS(); }
+    void testORR() { m_test.testORR(); }
+    void testORR2() { m_test.testORR2(); }
+    void testORR3() { m_test.testORR3(); }
+    void testORR4() { m_test.testORR4(); }
+    void testLDR() { m_test.testLDR(); }
+    void testSTR() { m_test.testSTR(); }
+    void testPUSH() { m_test.testPUSH(); }
+    void testPUSHPOP() { m_test.testPUSHPOP(); }
+    void testADD3() { m_test.testADD3(); }
+    void testADDS() { m_test.testADDS(); }
+    void testADD4() { m_test.testADD4(); }
+    void testADD5() { m_test.testADD5(); }
+    void testADD6() { m_test.testADD6(); }
+    void testLDRB() { m_test.testLDRB(); }
+    void testLDRB2() { m_test.testLDRB2(); }
+    void testLDRB3() { m_test.testLDRB3(); }
+    void testLDRB4() { m_test.testLDRB4(); }
+    void testLDRB5() { m_test.testLDRB5(); }
+    void testLDR2() { m_test.testLDR2(); }
+    void testMUL1() { m_test.testMUL1(); }
+    void testMLA() { m_test.testMLA(); }
+    void testMLA2() { m_test.testMLA2(); }
+    void testMLA3() { m_test.testMLA3(); }
+    void testMLA4() { m_test.testMLA4(); }
+    void testMLA5() { m_test.testMLA5(); }
+    void testLDR3() { m_test.testLDR3(); }
+    void testLDR4() { m_test.testLDR4(); }
+    void testLDR5() { m_test.testLDR5(); }
+    void testLDR6() { m_test.testLDR6(); }
+    void testLDR7() { m_test.testLDR7(); }
+    void testLDR8() { m_test.testLDR8(); }
+    void testLDR9() { m_test.testLDR9(); }
+    void testLDR10() { m_test.testLDR10(); }
+    void testLDR11() { m_test.testLDR11(); }
+    void testLDR12() { m_test.testLDR12(); }
+    void testLDR13() { m_test.testLDR13(); }
+    void testLDR14() { m_test.testLDR14(); }
+    void testLDR15() { m_test.testLDR15(); }
+    void testLDMFD() { m_test.testLDMFD(); }
+    void testLDMFA() { m_test.testLDMFA(); }
+    void testSTMFA() { m_test.testSTMFA(); }
+    void testSTMED() { m_test.testSTMED(); }
+    void testSTMEA() { m_test.testSTMEA(); }
+    void testSTMFA2() { m_test.testSTMFA2(); }
+    void testSTMFA3() { m_test.testSTMFA3(); }
+    void testSTMFA4() { m_test.testSTMFA4(); }
+    void testSTR2() { m_test.testSTR2(); }
+    void testSTM1() { m_test.testSTM1(); }
+    void testSTM2() { m_test.testSTM2(); }
+    void testCONDPM() { m_test.testCONDPM(); }
+    void testCONDVC() { m_test.testCONDVC(); }
+    void testCONDCC() { m_test.testCONDCC(); }
+    void testHALF() { m_test.testHALF(); }
+    void testHALF2() { m_test.testHALF2(); }
+    void testHALF3() { m_test.testHALF3(); }
+    void testSTRH() { m_test.testSTRH(); }
+    void testSTRH2() { m_test.testSTRH2(); }
+    void testSTRH3() { m_test.testSTRH3(); }
+    void testSTRH4() { m_test.testSTRH4(); }
+    void testSTRH5() { m_test.testSTRH5(); }
+    void testSTRH6() { m_test.testSTRH6(); }
+    void testLDRH1() { m_test.testLDRH1(); }
+    void testLDRH2() { m_test.testLDRH2(); }
+    void testSTRB() { m_test.testSTRB(); }
+    void testSTRB2() { m_test.testSTRB2(); }
+    void testSTRB3() { m_test.testSTRB3(); }
+    void testSTRB4() { m_test.testSTRB4(); }
+    void testADCS() { m_test.testADCS(); }
+    void testANDS() { m_test.testANDS(); }
+    void testTEQ() { m_test.testTEQ(); }
+    void testTEST() { m_test.testTEST(); }
+    void testRSC() { m_test.testRSC(); }
+    void testUMULL() { m_test.testUMULL(); }
+    void testSMULL() { m_test.testSMULL(); }
+    void testSMULL2() { m_test.testSMULL2(); }
+    void testRSBS() { m_test.testRSBS(); }
+    void testTEST2() { m_test.testTEST2(); }
+    void testR15() { m_test.testR15(); }
+    void testSWP_1() { m_test.testSWP_1(); }
+    void testSWPB_1() { m_test.testSWPB_1(); }
+};
+
+class TestAluInstructionProtected : public QObject {
+    Q_OBJECT
+  private:
+
+    TestAluInstruction<MemoryProtected> m_test;
+
+  public:
+    TestAluInstructionProtected() {
+
+    }
+    virtual ~TestAluInstructionProtected() = default;
+
+  private slots:
+
+    void testMOV() { m_test.testMOV(); }
+    void testADD() { m_test.testADD(); }
+    void testADD2() { m_test.testADD2(); }
+    void testSUBS() { m_test.testSUBS(); }
+    void testSUBS2() { m_test.testSUBS2(); }
+    void testSUBS3() { m_test.testSUBS3(); }
+    void testLSLS() { m_test.testLSLS(); }
+    void testLSLS2() { m_test.testLSLS2(); }
+    void testLSRS() { m_test.testLSRS(); }
+    void testASRS() { m_test.testASRS(); }
+    void testASRS2() { m_test.testASRS2(); }
+    void testASRS3() { m_test.testASRS3(); }
+    void testASRS4() { m_test.testASRS4(); }
+    void testASRS5() { m_test.testASRS5(); }
+    void testASRS6() { m_test.testASRS6(); }
+    void testASRS7() { m_test.testASRS7(); }
+    void testRORS() { m_test.testRORS(); }
+    void testRORS2() { m_test.testRORS2(); }
+    void testRORS3() { m_test.testRORS3(); }
+    void testRRXS() { m_test.testRRXS(); }
+    void testRRXS2() { m_test.testRRXS2(); }
+    void testRORS4() { m_test.testRORS4(); }
+    void testRORS5() { m_test.testRORS5(); }
+    void testMOVS() { m_test.testMOVS(); }
+    void testORR() { m_test.testORR(); }
+    void testORR2() { m_test.testORR2(); }
+    void testORR3() { m_test.testORR3(); }
+    void testORR4() { m_test.testORR4(); }
+    void testLDR() { m_test.testLDR(); }
+    void testSTR() { m_test.testSTR(); }
+    void testPUSH() { m_test.testPUSH(); }
+    void testPUSHPOP() { m_test.testPUSHPOP(); }
+    void testADD3() { m_test.testADD3(); }
+    void testADDS() { m_test.testADDS(); }
+    void testADD4() { m_test.testADD4(); }
+    void testADD5() { m_test.testADD5(); }
+    void testADD6() { m_test.testADD6(); }
+    void testLDRB() { m_test.testLDRB(); }
+    void testLDRB2() { m_test.testLDRB2(); }
+    void testLDRB3() { m_test.testLDRB3(); }
+    void testLDRB4() { m_test.testLDRB4(); }
+    void testLDRB5() { m_test.testLDRB5(); }
+    void testLDR2() { m_test.testLDR2(); }
+    void testMUL1() { m_test.testMUL1(); }
+    void testMLA() { m_test.testMLA(); }
+    void testMLA2() { m_test.testMLA2(); }
+    void testMLA3() { m_test.testMLA3(); }
+    void testMLA4() { m_test.testMLA4(); }
+    void testMLA5() { m_test.testMLA5(); }
+    void testLDR3() { m_test.testLDR3(); }
+    void testLDR4() { m_test.testLDR4(); }
+    void testLDR5() { m_test.testLDR5(); }
+    void testLDR6() { m_test.testLDR6(); }
+    void testLDR7() { m_test.testLDR7(); }
+    void testLDR8() { m_test.testLDR8(); }
+    void testLDR9() { m_test.testLDR9(); }
+    void testLDR10() { m_test.testLDR10(); }
+    void testLDR11() { m_test.testLDR11(); }
+    void testLDR12() { m_test.testLDR12(); }
+    void testLDR13() { m_test.testLDR13(); }
+    void testLDR14() { m_test.testLDR14(); }
+    void testLDR15() { m_test.testLDR15(); }
+    void testLDMFD() { m_test.testLDMFD(); }
+    void testLDMFA() { m_test.testLDMFA(); }
+    void testSTMFA() { m_test.testSTMFA(); }
+    void testSTMED() { m_test.testSTMED(); }
+    void testSTMEA() { m_test.testSTMEA(); }
+    void testSTMFA2() { m_test.testSTMFA2(); }
+    void testSTMFA3() { m_test.testSTMFA3(); }
+    void testSTMFA4() { m_test.testSTMFA4(); }
+    void testSTR2() { m_test.testSTR2(); }
+    void testSTM1() { m_test.testSTM1(); }
+    void testSTM2() { m_test.testSTM2(); }
+    void testCONDPM() { m_test.testCONDPM(); }
+    void testCONDVC() { m_test.testCONDVC(); }
+    void testCONDCC() { m_test.testCONDCC(); }
+    void testHALF() { m_test.testHALF(); }
+    void testHALF2() { m_test.testHALF2(); }
+    void testHALF3() { m_test.testHALF3(); }
+    void testSTRH() { m_test.testSTRH(); }
+    void testSTRH2() { m_test.testSTRH2(); }
+    void testSTRH3() { m_test.testSTRH3(); }
+    void testSTRH4() { m_test.testSTRH4(); }
+    void testSTRH5() { m_test.testSTRH5(); }
+    void testSTRH6() { m_test.testSTRH6(); }
+    void testLDRH1() { m_test.testLDRH1(); }
+    void testLDRH2() { m_test.testLDRH2(); }
+    void testSTRB() { m_test.testSTRB(); }
+    void testSTRB2() { m_test.testSTRB2(); }
+    void testSTRB3() { m_test.testSTRB3(); }
+    void testSTRB4() { m_test.testSTRB4(); }
+    void testADCS() { m_test.testADCS(); }
+    void testANDS() { m_test.testANDS(); }
+    void testTEQ() { m_test.testTEQ(); }
+    void testTEST() { m_test.testTEST(); }
+    void testRSC() { m_test.testRSC(); }
+    void testUMULL() { m_test.testUMULL(); }
+    void testSMULL() { m_test.testSMULL(); }
+    void testSMULL2() { m_test.testSMULL2(); }
+    void testRSBS() { m_test.testRSBS(); }
+    void testTEST2() { m_test.testTEST2(); }
+    void testR15() { m_test.testR15(); }
+    void testSWP_1() { m_test.testSWP_1(); }
+    void testSWPB_1() { m_test.testSWPB_1(); }
+};
+
+template<typename T>
+class TestAluProgram {
+
+  private:
+    using ProtectedVfp = Vfpv2<T>;
+    using ProtectedAlu = Alu<T, ProtectedVfp>;
+
+    std::unique_ptr<T> m_mem;
     std::unique_ptr<ProtectedAlu> m_alu;
 
   public:
@@ -2045,7 +2285,7 @@ class TestAluProgram : public QObject {
     }
     virtual ~TestAluProgram() = default;
 
-  private slots:
+  public:
 
     void testProgramHello() {
 
@@ -2060,7 +2300,7 @@ class TestAluProgram : public QObject {
         std::byte *uart    = nullptr;
         bool           running = true;
 
-        std::unique_ptr<Vm> vm = buildVm(vmProperties);
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         if(vm->load()) {
 
@@ -2100,7 +2340,7 @@ class TestAluProgram : public QObject {
         bool     running       = true;
 
         //VirtualMachineUnprotected vm(&vmProperties);
-        std::unique_ptr<Vm> vm = buildVm(vmProperties);
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
 
@@ -2140,7 +2380,7 @@ class TestAluProgram : public QObject {
                //VirtualMachineUnprotected vm(&vmProperties);
                //registerCoprocessor<MemoryRaw, Vfpv2>("vfpv2");
 
-        std::unique_ptr<Vm> vm = buildVm(vmProperties);
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
 
@@ -2186,7 +2426,7 @@ class TestAluProgram : public QObject {
         bool     running       = true;
         QString data;
 
-        std::unique_ptr<Vm> vm = buildVm(vmProperties);
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
 
@@ -2227,7 +2467,7 @@ class TestAluProgram : public QObject {
 
                //VirtualMachineUnprotected vm(&vmProperties);
 
-        std::unique_ptr<Vm> vm = buildVm(vmProperties);
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         vm->reset();
 
         if (vm->load()) {
@@ -2267,7 +2507,7 @@ class TestAluProgram : public QObject {
         QString data;
 
                //VirtualMachineUnprotected vm(&vmProperties);
-         std::unique_ptr<Vm> vm = buildVm(vmProperties);
+         std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
 
@@ -2297,4 +2537,45 @@ class TestAluProgram : public QObject {
         QVERIFY(data == "4 11337 64624 74501 98671 149983 166011 167964 230031 276464 290271 343718 353417 378247 433098 443959 447113 449806 456279");
     }
 };
+
+class TestAluProgramFlat : public QObject {
+    Q_OBJECT
+  private:
+
+    TestAluProgram<MemoryRaw> m_test;
+
+  public:
+    TestAluProgramFlat() { }
+    virtual ~TestAluProgramFlat() = default;
+
+  public slots:
+
+    void testProgramHello() { m_test.testProgramHello(); }
+    void testProgramPrimeN() { m_test.testProgramPrimeN(); }
+    void testProgramFloat() {  m_test.testProgramFloat();  }
+    void testProgramPrintf() { m_test.testProgramPrintf(); }
+    void testProgramModulo() {  m_test.testProgramModulo(); }
+    void testProgramBench() { m_test.testProgramBench(); }
+};
+
+class TestAluProgramProtected : public QObject {
+    Q_OBJECT
+  private:
+
+    TestAluProgram<MemoryProtected> m_test;
+
+  public:
+    TestAluProgramProtected() { }
+    virtual ~TestAluProgramProtected() = default;
+
+  public slots:
+
+    void testProgramHello() { m_test.testProgramHello(); }
+    void testProgramPrimeN() { m_test.testProgramPrimeN(); }
+    void testProgramFloat() {  m_test.testProgramFloat();  }
+    void testProgramPrintf() { m_test.testProgramPrintf(); }
+    void testProgramModulo() {  m_test.testProgramModulo(); }
+    void testProgramBench() { m_test.testProgramBench(); }
+};
+
 } // namespace armv4vm

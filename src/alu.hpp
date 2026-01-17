@@ -41,6 +41,7 @@
 namespace armv4vm {
 
 class TestMem;
+template<typename T>
 class TestAluInstruction;
 class TestVfp;
 
@@ -77,7 +78,7 @@ class Alu final : public AluBase {
 
   public:
     friend TestMem;
-    friend TestAluInstruction;
+    friend TestAluInstruction<MemoryHandler>;
     friend TestVfp;
 
     Alu(struct AluProperties & properties) :

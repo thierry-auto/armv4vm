@@ -15,19 +15,50 @@ int main(int argc, char** argv)
 {
     int status = 0;
 
+    // Flat
     {
-        armv4vm::TestMem tc;
-        status |= QTest::qExec(&tc, argc, argv);
+        {
+            armv4vm::TestMem tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
+
+        {
+            armv4vm::TestAluInstructionFlat tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
+
+        {
+            armv4vm::TestAluProgramFlat tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
+
+        {
+            armv4vm::TestVfp tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
     }
 
+    // Protected
     {
-        armv4vm::TestAluInstruction tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
+        {
+            armv4vm::TestMem tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
-    {
-        armv4vm::TestVfp tc;
-        status |= QTest::qExec(&tc, argc, argv);
+        {
+            armv4vm::TestAluInstructionProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
+
+        {
+            armv4vm::TestAluProgramProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
+
+        {
+            armv4vm::TestVfp tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
     }
 
     return status;

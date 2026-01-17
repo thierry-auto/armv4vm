@@ -31,6 +31,7 @@
 namespace armv4vm {
 
 class TestMem;
+template<typename T>
 class TestAluInstruction;
 class TestVfp;
 
@@ -149,7 +150,7 @@ class MemoryRaw : public MemoryInterface<MemoryRaw> {
 
   public:
     friend TestMem;
-    friend TestAluInstruction;
+    friend TestAluInstruction<MemoryRaw>;
     friend TestVfp;
 
   public:
@@ -226,7 +227,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
 
   public:
     friend TestMem;
-    friend TestAluInstruction;
+    friend TestAluInstruction<MemoryProtected>;
     friend TestVfp;
 
   public:
@@ -281,7 +282,7 @@ class MemoryProtected : public MemoryInterface<MemoryProtected> {
     MemoryRef<T> writePointerImpl(const uint32_t address, const T& value) {
         static_assert(std::is_trivially_copyable_v<T>, "MemoryProtected::writePointerImpl requires trivially copyable T");
         isAccessible(address, sizeof(T), AccessPermission::WRITE);
-        std::memcpy(m_ram.get()->data()[address], &value, sizeof(T));
+        std::memcpy(m_ram.get()->data() + address, &value, sizeof(T));
         return MemoryRef<T>(m_ram.get()->data(), address);
     }
 

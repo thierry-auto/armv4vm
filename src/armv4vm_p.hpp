@@ -22,6 +22,9 @@
 #include <cassert>
 
 // todo : traiter les overflow
+constexpr std::uint64_t operator""_kb(const unsigned long long value) {
+    return value * 1024ULL;
+}
 constexpr std::uint64_t operator""_mb(const unsigned long long value) {
     return value * 1024ULL * 1024ULL;
 }
@@ -35,6 +38,8 @@ constexpr std::uint64_t operator""_gb(const unsigned long long value) {
         std::cerr << __FUNCTION__ << " " << __FILE__ << " " << __LINE__ << std::endl;   \
         assert(0);                                                                      \
 }
+
+#define MY_LIBRARY_STATIC_LIB (!MY_LIBRARY_HEADER_ONLY)
 
 namespace armv4vm {
 

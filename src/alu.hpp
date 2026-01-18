@@ -254,7 +254,7 @@ std::byte* Alu<MemoryHandler, CoproHandler>::reset() {
            //m_coprocessor = std::make_unique<CoprocessorBase<MemoryType>>(/*this->m_mem*/);
            //m_coprocessor = createCoprocessor<MemoryType>(m_vmProperties.m_coproModel);
 
-    return m_mem->getAdressZero();
+    return m_mem->getAddressZero();
 }
 
 #if 0

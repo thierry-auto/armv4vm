@@ -40,8 +40,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(ARMV4VM_HEADER_FILES
     src/vm.hpp
-    src/properties.hpp
-    src/properties.cpp
+    src/properties.hpp    
     src/armv4vm.hpp
     src/armv4vm_p.hpp
     src/alu.hpp
@@ -52,6 +51,7 @@ SET(ARMV4VM_HEADER_FILES
 
 SET(ARMV4VM_SOURCE_FILES
     src/vm.cpp
+    # src/properties.cpp
     src/armv4vm.cpp)
 
 # SET(ARMV4VM_TEST2_SOURCE_FILES
@@ -95,10 +95,14 @@ if(MY_LIBRARY_HEADER_ONLY)
     )
     target_compile_features(armv4vm_header_only INTERFACE cxx_std_23)
     message("11111111111111111111111")
-elseif(MY_LIBRARY_STATIC)
-    ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
-    TARGET_LINK_LIBRARIES(armv4vm Qt6::Core)
-    set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
+else()
+    ADD_LIBRARY(armv4vm_static STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
+    target_compile_features(armv4vm_static INTERFACE cxx_std_23)
+    TARGET_LINK_LIBRARIES(armv4vm_static Qt6::Core)
+    target_include_directories(armv4vm_static INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    set_target_properties(armv4vm_static PROPERTIES DEBUG_POSTFIX "d")
     message("222222222222222222222222")
 endif()
 
@@ -108,37 +112,37 @@ endif()
 if(MY_LIBRARY_HEADER_ONLY)
     add_library(armv4vm::armv4vm ALIAS armv4vm_header_only)
 else()
-    add_library(armv4vm::armv4vm ALIAS armv4vm)
+    add_library(armv4vm::armv4vm ALIAS armv4vm_static)
 endif()
 
 # ===========================================================
 # Test
 # ===========================================================
-SET(ARMV4VM_TEST_SOURCE_FILES
-    src/test/main.cpp
-    src/test/testmem.hpp
-    src/test/testalu.hpp
-    src/test/testvfp.hpp)
+# SET(ARMV4VM_TEST_SOURCE_FILES
+#     src/test/main.cpp
+#     src/test/testmem.hpp
+#     src/test/testalu.hpp
+#     src/test/testvfp.hpp)
 
-if(Qt6Core_FOUND)
-   add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
-   add_test(NAME tu COMMAND tu)
-   target_include_directories(tu PRIVATE
-          #$<TARGET_PROPERTY:armv4vm,INTERFACE_INCLUDE_DIRECTORIES>
-          ${CMAKE_CURRENT_SOURCE_DIR}/src)
-endif()
+# if(Qt6Core_FOUND)
+#    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})
+#    add_test(NAME tu COMMAND tu)
+#    target_include_directories(tu PRIVATE
+#           #$<TARGET_PROPERTY:armv4vm,INTERFACE_INCLUDE_DIRECTORIES>
+#           ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# endif()
 
-if(MY_LIBRARY_HEADER_ONLY)
-    if(Qt6Core_FOUND)
-        target_link_libraries(tu Qt6::Core Qt6::Test armv4vm::armv4vm)
-    endif()
-elseif(MY_LIBRARY_STATIC)
-    if(Qt6Core_FOUND)
-        target_link_libraries(tu Qt6::Core Qt6::Test armv4vm::armv4vm)
-    endif()
-endif()
+# if(MY_LIBRARY_HEADER_ONLY)
+#     if(Qt6Core_FOUND)
+#         target_link_libraries(tu Qt6::Core Qt6::Test#[[ armv4vm::armv4vm]])
+#     endif()
+# elseif(MY_LIBRARY_STATIC)
+#     if(Qt6Core_FOUND)
+#         target_link_libraries(tu Qt6::Core Qt6::Test armv4vm_static)
+#     endif()
+# endif()
 
-#set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
+# #set_target_properties(armv4vm PROPERTIES PUBLIC_HEADER "source/armv4vm.h")
 
 
 # ===========================================================

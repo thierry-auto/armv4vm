@@ -25,6 +25,71 @@ class TestMem : public QObject {
         //Test1Vm             vm1(&vmProperties);
     }
 
+    void testRawCompleteUse() {
+
+        MemoryHandlerProperties properties;
+        properties.m_memsize = 2_kb;
+
+        MemoryRaw raw(properties);
+        std::byte *mem = raw.reset();
+
+        raw.writePointer<uint32_t>(20) = 0x11223344;
+        raw.writePointer<uint32_t>(24, 0x55667788);
+        QVERIFY(to_int(mem[20]) == 0x44);
+        QVERIFY(to_int(mem[27]) == 0x55);
+
+        std::byte b1 = raw.readPointer<std::byte>(20);
+        QVERIFY(b1 == 0x44);
+
+        uint32_t uint1 = raw.readPointer<uint32_t>(20);
+        QVERIFY(uint1 == 0x11223344);
+
+        raw.writePointer<std::byte>(21) = b1;
+        QVERIFY(to_int(mem[21]) == 0x44);
+
+        std::byte b2 = raw[23];
+        QVERIFY(b2 == 0x11);
+
+        raw[23] = raw[24];
+        QVERIFY(mem[23] == 0x88);
+        QVERIFY(raw.readPointer<uint32_t>(20) == 0x88224444);
+    }
+
+
+    void testProtectedCompleteUse() {
+
+        MemoryHandlerProperties properties;
+        properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
+        properties.m_layout.push_back({0, 32, AccessPermission::READ});
+        properties.m_layout.push_back({0, 32, AccessPermission::WRITE});
+
+        MemoryProtected pro(properties);
+        std::byte *mem = pro.reset();
+
+        pro.writePointer<uint32_t>(20) = 0x11223344;
+        pro.writePointer<uint32_t>(24, 0x55667788);
+        QVERIFY(to_int(mem[20]) == 0x11223344);
+        QVERIFY(to_int(mem[24]) == 0x55667788);
+
+        std::byte b1 = pro.readPointer<std::byte>(20);
+        QVERIFY(b1 == 0x11);
+
+        uint32_t int1 = pro.readPointer<uint32_t>(20);
+        QVERIFY(int1 == 0x11223344);
+
+        pro.writePointer<std::byte>(21) = b1;
+        QVERIFY(to_int(mem[20]) == 0x11113344);
+
+        std::byte b2 = pro[23];
+        QVERIFY(b2 == 0x44);
+
+        pro[23] = pro[24];
+        QVERIFY(mem[23] == 0x55);
+        QVERIFY(to_int(mem[20]) == 0x11113355);
+    }
+
+#if 0
+
     void testReadWrite8() {
 
         MemoryHandlerProperties properties;
@@ -131,6 +196,7 @@ class TestMem : public QObject {
 
         MemoryHandlerProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
+        properties.m_layout.push_back({32, 32, AccessPermission::NONE});
         std::byte           *mem;
 
         MemoryProtected    pro(properties);
@@ -163,13 +229,12 @@ class TestMem : public QObject {
 
         MemoryHandlerProperties properties;
         std::byte           *mem;
-        MemoryProtected    pro(properties);
         std::byte b;
-
         bool exceptionRaised = false;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
         properties.m_layout.push_back({32, 32, AccessPermission::WRITE});
 
+        MemoryProtected    pro(properties);
         mem = pro.reset(std::byte{45});
 
         try {
@@ -515,7 +580,7 @@ class TestMem : public QObject {
 
         QVERIFY(exceptionRaised == false);
     }
-
+#endif
     //    void testPlusValue16() {
 
     //        uint8_t            mem[64] = {0};

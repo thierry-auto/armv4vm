@@ -24,9 +24,21 @@
 #include "alu.hpp"              // IWYU pragma: export
 #include "vm.hpp"               // IWYU pragma: export
 
-//extern template class armv4vm::Alu<armv4vm::MemoryRaw, armv4vm::Vfpv2>;
-//extern template class armv4vm::Alu<armv4vm::MemoryProtected, armv4vm::Vfpv2>;
 
-//using VirtualMachineUnprotected = armv4vm::Alu<armv4vm::MemoryRaw>;
-//using VirtualMachineProtected   = armv4vm::Alu<armv4vm::MemoryProtected, armv4vm::Vfpv2>;
+using Vfpv2Unsafe = armv4vm::Vfpv2<armv4vm::MemoryRaw>;
+using Vfpv2Safe = armv4vm::Vfpv2<armv4vm::MemoryProtected>;
+using VirtualMachineUnsafe = armv4vm::Alu<armv4vm::MemoryRaw, Vfpv2Unsafe>;
+using VirtualMachineSafe   = armv4vm::Alu<armv4vm::MemoryProtected, Vfpv2Safe>;
 
+#ifdef MY_LIBRARY_STATIC_LIB
+
+// Ne genere pas les constructions suivantes quand ce header est appelé.
+// Elles seront construites une seule fois explicitement dans armv4vm.cpp
+
+extern template class armv4vm::Vfpv2<armv4vm::MemoryRaw>;
+extern template class armv4vm::Vfpv2<armv4vm::MemoryProtected>;
+
+extern template class armv4vm::Alu<armv4vm::MemoryRaw, Vfpv2Unsafe>;
+extern template class armv4vm::Alu<armv4vm::MemoryProtected, Vfpv2Safe>;
+
+#endif

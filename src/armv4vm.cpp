@@ -20,7 +20,15 @@
 namespace armv4vm {
 
 // instanciations des templates explicites
-// template class Alu<MemoryRaw, Vfpv2>;
-// template class Alu<MemoryProtected, Vfpv2>;
+
+template class Vfpv2<MemoryRaw>;
+template class Vfpv2<MemoryProtected>;
+
+template class Alu<MemoryRaw, Vfpv2Unsafe>;
+template class Alu<MemoryProtected, Vfpv2Safe>;
 
 } // namespace armv4vm
+
+
+commiter !
+supprimer vm.cpp

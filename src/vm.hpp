@@ -106,7 +106,7 @@ class VmImplementation final : public Vm {
             program.seekg(0, std::ios::beg);
 
                    //program.read((char *)(uint8_t *)m_mem, programSize);
-            program.read((char*) m_mem->getAdressZero(), programSize);
+            program.read((char*) m_mem->getAddressZero(), programSize);
             program.close();
         } else {
 
@@ -140,10 +140,10 @@ using VmProtected = VmImplementation<MemoryProtected, Vfpv2Protected>;
 #ifdef MY_LIBRARY_STATIC
 // Ne genere pas les constructions suivantes quand ce header est appelé.
 // Elles seront construites une seule fois explicitement dans vm.cpp
-extern template class Vfpv2<MemoryRaw>;
-extern template class Vfpv2<MemoryProtected>;
-extern template class Vm<MemoryRaw, Vfpv2Unprotected>;
-extern template class Vm<MemoryProtected, Vfpv2Protected>;
+// extern template class Vfpv2<MemoryRaw>;
+// extern template class Vfpv2<MemoryProtected>;
+// extern template class Vm<MemoryRaw, Vfpv2Unprotected>;
+// extern template class Vm<MemoryProtected, Vfpv2Protected>;
 #endif
 
 inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
@@ -154,7 +154,7 @@ inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
     // C'est une incohérence de configuration. On ne sait donc pas quel type de mémoire il faut créer.
     if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memsize) {
 
-        throw VmException();
+        throw VmException(VmConfigurationIssue);
     }
 
     // Quand des permissions sont renseignées,

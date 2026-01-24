@@ -30,5 +30,3 @@ template class Alu<MemoryProtected, Vfpv2Safe>;
 } // namespace armv4vm
 
 
-commiter !
-supprimer vm.cpp

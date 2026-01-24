@@ -60,16 +60,19 @@ class TestMem : public QObject {
 
         MemoryHandlerProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
-        properties.m_layout.push_back({0, 32, AccessPermission::READ});
-        properties.m_layout.push_back({0, 32, AccessPermission::WRITE});
+        properties.m_layout.push_back({32, 32, AccessPermission::READ});
+        properties.m_layout.push_back({64, 32, AccessPermission::WRITE});
 
         MemoryProtected pro(properties);
         std::byte *mem = pro.reset();
+        bool exceptionRaised = false;
+        int i = 0;
+        char c = 0;
 
         pro.writePointer<uint32_t>(20) = 0x11223344;
         pro.writePointer<uint32_t>(24, 0x55667788);
-        QVERIFY(to_int(mem[20]) == 0x11223344);
-        QVERIFY(to_int(mem[24]) == 0x55667788);
+        QVERIFY(read<uint32_t>(mem[20]) == 0x11223344);
+        QVERIFY(read<uint32_t>(mem[24]) == 0x55667788);
 
         std::byte b1 = pro.readPointer<std::byte>(20);
         QVERIFY(b1 == 0x11);
@@ -86,6 +89,43 @@ class TestMem : public QObject {
         pro[23] = pro[24];
         QVERIFY(mem[23] == 0x55);
         QVERIFY(to_int(mem[20]) == 0x11113355);
+
+        mem[36] = std::byte(0x77);
+
+        try {
+            b2 = pro[36];
+
+        } catch (std::exception &) {
+            exceptionRaised = true;
+        }
+        QVERIFY(exceptionRaised == false);
+        QVERIFY(b2 == std::byte(0x77));
+
+        try {
+            pro[36] = std::byte(0x44);
+
+        } catch (std::exception &) {
+            exceptionRaised = true;
+        }
+        QVERIFY(exceptionRaised == true);
+        QVERIFY(mem[36] == std::byte(0x77));
+        exceptionRaised = false;
+
+        try {
+            c = pro.readPointer<char>(62);
+
+        } catch (std::exception &) {
+            exceptionRaised = true;
+        }
+        QVERIFY(exceptionRaised == false);
+
+        try {
+            i = pro.readPointer<int>(62);
+
+        } catch (std::exception &) {
+            exceptionRaised = true;
+        }
+        QVERIFY(exceptionRaised == false);
     }
 
 #if 0

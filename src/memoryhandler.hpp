@@ -25,8 +25,10 @@
 #include <memory>
 #include <vector>
 #include <cstring>
-#include <ranges>
+//#include <ranges>
 #include <numeric>
+#include <stdexcept>
+#include <span>
 
 namespace armv4vm {
 
@@ -439,5 +441,27 @@ inline bool operator == (const std::byte &left, const int &right) {
 // bool operator == (const U right, const MemoryRef<std::byte> &left) {
 //     return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
 // }
+
+template<typename T>
+concept MemorySerializable =
+    std::is_trivially_copyable_v<T> &&
+    std::is_standard_layout_v<T>;
+
+template<MemorySerializable T>
+T read(const std::byte* ptr)
+{
+    T value;
+    std::memcpy(&value, ptr, sizeof(T));
+    return value;
+}
+
+template<MemorySerializable T>
+void write(std::span<std::byte> buffer, std::size_t offset, const T& value)
+{
+    if (offset + sizeof(T) > buffer.size())
+        throw std::out_of_range("write: buffer overflow");
+
+    std::memcpy(buffer.data() + offset, &value, sizeof(T));
+}
 
 } // namespace armv4vm

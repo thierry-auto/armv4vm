@@ -32,11 +32,36 @@ template <typename T>
 class TestAluInstruction;
 class TestVfp;
 
+enum class VmError {
+    ConfigurationIncoherence,
+    InvalidMemoryLayout,
+    UnsupportedArchitecture
+};
+
 
 class VmException : public std::exception {
   public:
-    VmException() = default;
-    ~VmException() = default;
+    explicit VmException(VmError error) noexcept
+        : m_error(error) {}
+
+    const char* what() const noexcept override {
+        switch (m_error) {
+        case VmError::ConfigurationIncoherence:
+            return "Configuration incohérente de la mémoire";
+        case VmError::InvalidMemoryLayout:
+            return "Layout mémoire invalide";
+        case VmError::UnsupportedArchitecture:
+            return "Architecture non supportée";
+        }
+        return "Erreur VM inconnue";
+    }
+
+    VmError error() const noexcept {
+        return m_error;
+    }
+
+  private:
+    VmError m_error;
 };
 
 
@@ -146,6 +171,9 @@ using VmProtected = VmImplementation<MemoryProtected, Vfpv2Protected>;
 // extern template class Vm<MemoryProtected, Vfpv2Protected>;
 #endif
 
+
+
+
 inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
 
     std::unique_ptr<Vm> vm = nullptr;
@@ -154,7 +182,7 @@ inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
     // C'est une incohérence de configuration. On ne sait donc pas quel type de mémoire il faut créer.
     if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memsize) {
 
-        throw VmException(VmConfigurationIssue);
+        throw VmException(VmError::ConfigurationIncoherence);
     }
 
     // Quand des permissions sont renseignées,

@@ -92,6 +92,7 @@ class MemoryRefSafe {
 
     operator T() const {
         static_assert(std::is_trivially_copyable_v<T>);
+        isAccessible(m_address, sizeof(T), AccessPermission::READ);
         T value;
         std::memcpy(&value, m_base + m_address, sizeof(T));
         return value;
@@ -99,6 +100,7 @@ class MemoryRefSafe {
 
     MemoryRefSafe& operator=(const T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
+        isAccessible(m_address, sizeof(T), AccessPermission::WRITE);
         std::memcpy(m_base + m_address, &value, sizeof(T));
         return *this;
     }
@@ -106,6 +108,8 @@ class MemoryRefSafe {
     MemoryRefSafe<T> & operator = (const MemoryRefSafe<T> &other) {
 
         // Ilfaudra vérifier les accés
+        isAccessible(other.m_address, sizeof(T), AccessPermission::READ);
+        isAccessible(m_address, sizeof(T), AccessPermission::WRITE);
         std::memcpy(m_base + m_address, other.m_base + other.m_address, sizeof(T));
         return *this;
     }
@@ -115,12 +119,25 @@ class MemoryRefSafe {
     template <typename U>
     friend bool operator == (const U right, const MemoryRefSafe<T> &left);
 
+  private:
+    void isAccessible(const uint32_t address, const std::size_t dataSize, const AccessPermission& permission) const;
+
   protected:
     std::byte*  m_base;
     std::size_t m_address;
     // AccessPermission m_permission;
     MemoryProtected* m_memoryProtected;
 };
+
+template <typename U>
+bool operator == (const U left, const MemoryRefSafe<std::byte> &right) {
+    return left == std::to_integer<int>(*(right.m_base + right.m_address));
+}
+
+template <typename U>
+bool operator == (const MemoryRefSafe<std::byte> &left, const U right) {
+    return std::to_integer<int>(*(left.m_base + left.m_address)) == std::to_integer<int>(right);
+}
 
 // template <typename T>
 // class MemoryRefProtectedBase : public MemoryRef<T> {
@@ -210,13 +227,15 @@ class MemoryRaw /*: public MemoryInterface<MemoryRaw>*/ {
     using byte = std::byte;
 
     MemoryRaw(struct MemoryHandlerProperties & properties) /*: MemoryInterface(properties)*/ {
-        m_ram  = std::make_unique<byte[]>(m_properties.m_memsize);
+        //m_properties = properties;
+        m_size = properties.m_memsize;
+        m_ram  = std::make_unique<byte[]>(m_size);
     }
     ~MemoryRaw() = default;
 
     byte* reset(const std::byte fillingValue = std::byte{0}) {
         //m_size = static_cast<uint32_t>(m_properties.m_memsize);
-        std::memset(m_ram.get(), static_cast<char>(fillingValue), m_properties.m_memsize);
+        std::memset(m_ram.get(), static_cast<char>(fillingValue), m_size);
         return m_ram.get();
     }
 
@@ -275,8 +294,8 @@ class MemoryRaw /*: public MemoryInterface<MemoryRaw>*/ {
 
   private:
     std::unique_ptr<byte[]> m_ram;
-    uint32_t                m_size = 0;
-    struct MemoryHandlerProperties m_properties;
+    size_t             m_size = 0;
+    //struct MemoryHandlerProperties m_properties;
 };
 
 class MemoryProtected /*: public MemoryInterface<MemoryProtected>*/ {
@@ -391,13 +410,33 @@ class MemoryProtected /*: public MemoryInterface<MemoryProtected>*/ {
 
   public:
     // Limiter le friend à la spécialisation std::byte ?
-    template<typename T> friend class MemoryRefProtectedBase;
+    //template<typename T> friend class MemoryRefProtectedBase;
+    template<typename T> friend class MemoryRefSafe;
 
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<MemoryLayout>           m_memoryLayout;
     struct MemoryHandlerProperties m_properties;
 };
+
+template <typename T>
+void MemoryRefSafe<T>::isAccessible(const uint32_t address,
+                  const std::size_t dataSize,
+                  const AccessPermission& permission) const
+{
+    auto test = [&](const MemoryLayout& range) {
+        return  (range.permission & permission) &&
+               (address >= range.start) &&
+               ((address + dataSize) <= (range.start + range.size));
+    };
+
+    const bool allowed = std::any_of(m_memoryProtected->m_memoryLayout.begin(), m_memoryProtected->m_memoryLayout.end(), test);
+
+    if (!allowed) {
+        throw std::runtime_error("segmentation fault");
+    }
+}
+
 
 // Defini ici car m_memoryProtected est enfin connu
 // template<typename T>
@@ -442,26 +481,26 @@ inline bool operator == (const std::byte &left, const int &right) {
 //     return std::to_integer<int>(*(left.m_base + left.m_address)) == right;
 // }
 
-template<typename T>
-concept MemorySerializable =
-    std::is_trivially_copyable_v<T> &&
-    std::is_standard_layout_v<T>;
+// template<typename T>
+// concept MemorySerializable =
+//     std::is_trivially_copyable_v<T> &&
+//     std::is_standard_layout_v<T>;
 
-template<MemorySerializable T>
-T read(const std::byte* ptr)
-{
-    T value;
-    std::memcpy(&value, ptr, sizeof(T));
-    return value;
-}
+// template<MemorySerializable T>
+// T read(const std::byte* ptr)
+// {
+//     T value;
+//     std::memcpy(&value, ptr, sizeof(T));
+//     return value;
+// }
 
-template<MemorySerializable T>
-void write(std::span<std::byte> buffer, std::size_t offset, const T& value)
-{
-    if (offset + sizeof(T) > buffer.size())
-        throw std::out_of_range("write: buffer overflow");
+// template<MemorySerializable T>
+// void write(std::span<std::byte> buffer, std::size_t offset, const T& value)
+// {
+//     if (offset + sizeof(T) > buffer.size())
+//         throw std::out_of_range("write: buffer overflow");
 
-    std::memcpy(buffer.data() + offset, &value, sizeof(T));
-}
+//     std::memcpy(buffer.data() + offset, &value, sizeof(T));
+// }
 
 } // namespace armv4vm

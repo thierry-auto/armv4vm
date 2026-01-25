@@ -83,8 +83,8 @@ class TestMem : public QObject {
         MemoryProtected pro(properties);
         std::byte *mem = pro.reset();
         bool exceptionRaised = false;
-        int i = 0;
-        char c = 0;
+        [[maybe_unused]] int i = 0;
+        [[maybe_unused]] char c = 0;
 
         pro.writePointer<uint32_t>(20) = 0x11223344;
         pro.writePointer<uint32_t>(24, 0x55667788);

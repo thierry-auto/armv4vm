@@ -112,12 +112,12 @@ class MemoryRefSafe {
 
 template <typename U>
 bool operator == (const U left, const MemoryRefSafe<std::byte> &right) {
-    return left == std::to_integer<int>(*(right.m_base + right.m_address));
+    return std::byte(left) == *(right.m_base + right.m_address);
 }
 
 template <typename U>
 bool operator == (const MemoryRefSafe<std::byte> &left, const U right) {
-    return std::to_integer<int>(*(left.m_base + left.m_address)) == std::to_integer<int>(right);
+    return *(left.m_base + left.m_address) == std::byte(right);
 }
 
 class MemoryRaw  {
@@ -332,13 +332,13 @@ MemoryRefSafe<T>& MemoryRefSafe<T>::operator = (const MemoryRefSafe<T> &other) {
     return *this;
 }
 
-template <typename T>
-inline T readPointer(const std::byte* mem) {
-    static_assert(std::is_trivially_copyable_v<T>);
-    T value;
-    std::memcpy(&value, mem, sizeof(T));
-    return value;
-}
+// template <typename T>
+// inline T readPointer(const std::byte* mem) {
+//     static_assert(std::is_trivially_copyable_v<T>);
+//     T value;
+//     std::memcpy(&value, mem, sizeof(T));
+//     return value;
+// }
 
 inline bool operator == (const std::byte &left, const int &right) {
     return std::to_integer<int>(left) == right;

@@ -27,10 +27,6 @@
 
 namespace armv4vm {
 
-
-
-// On verra plus tard que finalement, CRTP ne sera peut-être pas nécessaire because tout est header.
-// et par conséquent, on peut faire peut-être du polymorphisme classique..le compilo saura le dégager en -O2
 template<typename Derived>
 class CoprocessorBase {
   public:

@@ -43,7 +43,8 @@ namespace armv4vm {
 class TestMem;
 template<typename T>
 class TestAluInstruction;
-class TestVfp;
+template<typename T>
+class TestVfpInstruction;
 
 template<typename Derived>
 class CoprocessorBase;
@@ -77,9 +78,9 @@ template <typename MemoryHandler, typename CoproHandler> // Remettre les concept
 class Alu final : public AluBase {
 
   public:
-    friend TestMem;
-    friend TestAluInstruction<MemoryHandler>;
-    friend TestVfp;
+    friend class TestMem;
+    friend class TestAluInstruction<MemoryHandler>;
+    friend class TestVfpInstruction<MemoryHandler>;
 
     Alu(struct AluProperties & properties) :
         m_sp(m_registers[13]),
@@ -214,31 +215,6 @@ class AluException : public std::exception {
 #pragma warning(pop)
 #endif
 
-//#include "alu.tpp"
-
-//    Copyright (c) 2020, thierry vic
-//
-//    This file is part of armv4vm.
-//
-//    armv4vm is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    armv4vm is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with armv4vm.  If not, see <http://www.gnu.org/licenses/>.
-
-//#include "src/alu.hpp"
-//#include <cstdint>
-//#include <cstring>
-
-//namespace armv4vm {
-
 static inline uint32_t getSigned24(const uint32_t i) { return ((i & 0x00800000) ? i | 0xFF000000 : i & 0x00FFFFFF); }
 static inline uint32_t getSigned16(const uint32_t i) { return ((i & 0x00008000) ? i | 0xFFFF0000 : i & 0x0000FFFF); }
 static inline uint32_t getSigned8(const uint32_t i) { return ((i & 0x00000080) ? i | 0xFFFFFF00 : i & 0x000000FF); }
@@ -256,50 +232,6 @@ std::byte* Alu<MemoryHandler, CoproHandler>::reset() {
 
     return m_mem->getAddressZero();
 }
-
-#if 0
-#ifdef BUILD_WITH_QT
-uint64_t Alu<MemoryHandler, CoproHandler>::load() {
-
-    QFile    program(m_vmProperties.m_bin);
-    uint64_t programSize = 0;
-
-    if (program.open(QIODevice::ReadOnly)) {
-
-        QDataStream ds(&program);
-        programSize = ds.readRawData(reinterpret_cast<char *>(m_mem), program.size());
-    } else {
-
-        m_error = E_LOAD_FAILED;
-    }
-
-    return programSize;
-}
-#else
-template <typename MemoryHandler, typename CoproHandler> uint64_t Alu<MemoryHandler, CoproHandler>::load() {
-
-    std::fstream program;
-    std::streampos programSize = 0;
-
-    program.open(m_vmProperties.m_bin, std::ios::in | std::ios::binary | std::ios::ate);
-    if (program.is_open()) {
-
-        programSize = program.tellg();
-        program.seekg(0, std::ios::beg);
-
-               //program.read((char *)(uint8_t *)m_mem, programSize);
-        program.read((char*) m_mem->getAdressZero(), programSize);
-        program.close();
-    } else {
-
-        m_error     = E_LOAD_FAILED;
-        programSize = -1;
-    }
-
-    return programSize > 0;
-}
-#endif
-#endif
 
 template <typename MemoryHandler, typename CoproHandler>
 Interrupt Alu<MemoryHandler, CoproHandler>::run(const uint32_t nbMaxIteration) {

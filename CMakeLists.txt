@@ -122,7 +122,14 @@ SET(ARMV4VM_TEST_SOURCE_FILES
     src/test/main.cpp
     src/test/testmem.hpp
     src/test/testalu.hpp
-    src/test/testvfp.hpp)
+    src/test/testaluinstructionraw.hpp
+    src/test/testaluinstructionprotected.hpp
+    src/test/testaluprogramraw.hpp
+    src/test/testaluprogramprotected.hpp
+    src/test/testvfp.hpp
+    src/test/testvfpinstructionraw.hpp
+    src/test/testvfpinstructionprotected.hpp
+    )
 
 if(Qt6Core_FOUND)
    add_executable(tu ${ARMV4VM_TEST_SOURCE_FILES} ${ARMV4VM_HEADER_FILES})

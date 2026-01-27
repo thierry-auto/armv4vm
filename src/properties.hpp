@@ -17,27 +17,27 @@ struct AluProperties {
 struct MemoryHandlerProperties {
 
     enum Type {
-        UNDEFINED,
-        FLAT,
+        UNDEFINED, // peut-être à dégager..
+        RAW,
         PROTECTED,
     };
 
     Type                        m_type;
-    uint32_t m_memsize;
+    std::size_t m_memorySizeBytes;
     std::vector<armv4vm::MemoryLayout> m_layout;
 
-    MemoryHandlerProperties() : m_type(Type::UNDEFINED), m_memsize(0) { m_layout.clear(); }
+    MemoryHandlerProperties() : m_type(Type::UNDEFINED), m_memorySizeBytes(0) { m_layout.clear(); }
     MemoryHandlerProperties(const MemoryHandlerProperties &other) {
 
         m_type = other.m_type;
-        m_memsize = other.m_memsize;
+        m_memorySizeBytes = other.m_memorySizeBytes;
         m_layout = other.m_layout;
     }
 
     MemoryHandlerProperties operator=(const MemoryHandlerProperties &other) {
 
         m_type = other.m_type;
-        m_memsize = other.m_memsize;
+        m_memorySizeBytes = other.m_memorySizeBytes;
         m_layout = other.m_layout;
         return *this;
     }

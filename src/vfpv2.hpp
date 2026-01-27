@@ -27,7 +27,7 @@ namespace armv4vm {
 
 class TestMem;
 template<typename T>
-class TestAluInstruction;
+class TestVfpInstruction;
 class TestVfp;
 
 template<typename T>
@@ -52,11 +52,14 @@ template <typename MemoryHandler>
 class Vfpv2 final : public CoprocessorBase<Vfpv2<MemoryHandler>> {
 
   public:
-    friend TestMem;
+    friend class TestMem;
     friend TestAluInstruction<MemoryHandler>;
-    friend TestVfp;
+    friend TestVfpInstruction<MemoryHandler>;
 
   public:
+    friend TestVfpInstruction<MemoryHandler>;
+    friend TestVfp;
+
     Vfpv2(struct CoproProperties & properties) : CoprocessorBase<Vfpv2<MemoryHandler>>(properties), m_fpscr(0), m_fpexc(0) {
 
         m_sRegisters.fill(0.0f);

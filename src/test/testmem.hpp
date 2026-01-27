@@ -1,3 +1,4 @@
+#pragma once
 
 #include <QObject>
 #include <QTest>
@@ -45,7 +46,7 @@ class TestMem : public QObject {
     void testRawCompleteUse() {
 
         MemoryHandlerProperties properties;
-        properties.m_memsize = 2_kb;
+        properties.m_memorySizeBytes = 2_kb;
 
         MemoryRaw raw(properties);
         std::byte *mem = raw.reset();
@@ -172,8 +173,6 @@ class TestMem : public QObject {
         QVERIFY(exceptionRaised == true);
         exceptionRaised = false;
     }
-
-
 
     void testReadWrite8() {
 
@@ -662,118 +661,7 @@ class TestMem : public QObject {
 
         QVERIFY(exceptionRaised == false);
     }
-#if 0
-#endif
-    //    void testPlusValue16() {
 
-      //        uint8_t            mem[64] = {0};
-      //
-      //        MemoryProtected    pro(properties);
-      //        uint16_t           v1              = 0x1122;
-      //        uint16_t           v2              = 0;
-      //        uint16_t           v3              = 0;
-      //        bool               exceptionRaised = false;
-      //        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
-      //        pro.init(mem, 64, ranges);
-
-           //        try {
-           //            mem[10] = v1;
-           //            pro[20] = v1;
-
-           //            QVERIFY(mem[20] == 0x22);
-           //            QVERIFY(mem[21] == 0x0);
-
-           //            *reinterpret_cast<uint16_t *>(&mem[24]) = v1;
-           //            *reinterpret_cast<uint16_t *>(&pro[28]) = v1;
-
-           //            QVERIFY(mem[24] == 0x22);
-           //            QVERIFY(mem[25] == 0x11);
-
-           //            QVERIFY(pro[28] == 0x22);
-           //            QVERIFY(pro[29] == 0x11);
-
-           //            v2 = *toPointerU16(&mem[24]);
-           //            v3 = *toPointerU16(&pro[28]);
-
-           //            QVERIFY(v2 == v3);
-
-           //        } catch (std::exception &) {
-           //            exceptionRaised = true;
-           //        }
-
-           //        QVERIFY(exceptionRaised == false);
-           //    }
-
-           //    void testPlusValue32() {
-
-      //        uint8_t            mem[64] = {0};
-      //
-      //        MemoryProtected    pro(properties);
-      //        uint32_t           v1              = 0x11223344;
-      //        uint32_t           v2              = 0;
-      //        uint32_t           v3              = 0;
-      //        bool               exceptionRaised = false;
-      //        pro.addAccessRangeImpl({0, 64, AccessPermission::READ_WRITE});
-      //        pro.init(mem, 64, ranges);
-
-           //        try {
-           //            mem[10] = v1;
-           //            pro[20] = v1;
-
-           //            QVERIFY(mem[20] == 0x44);
-           //            QVERIFY(mem[21] == 0x0);
-           //            QVERIFY(mem[22] == 0x0);
-           //            QVERIFY(mem[23] == 0x0);
-
-           //            *toPointerU32(&mem[24]) = v1;
-           //            *toPointerU32(&pro[28]) = v1;
-
-           //            QVERIFY(mem[24] == 0x44);
-           //            QVERIFY(mem[25] == 0x33);
-           //            QVERIFY(mem[26] == 0x22);
-           //            QVERIFY(mem[27] == 0x11);
-
-           //            QVERIFY(pro[28] == 0x44);
-           //            QVERIFY(pro[29] == 0x33);
-           //            QVERIFY(pro[30] == 0x22);
-           //            QVERIFY(pro[31] == 0x11);
-
-           //            v2 = *reinterpret_cast<uint32_t *>(&mem[24]);
-           //            v3 = *reinterpret_cast<const uint32_t *>(&pro[28]);
-
-           //            QVERIFY(v2 == v3);
-
-           //        } catch (std::exception &) {
-           //            exceptionRaised = true;
-           //        }
-
-           //        QVERIFY(exceptionRaised == false);
-           //    }
-
-           //    void testErrorBound() {
-
-      //        uint8_t            mem[64] = {0};
-      //
-      //        MemoryProtected    pro(properties);
-      //        uint8_t            v1              = 0x11;
-      //        bool               exceptionRaised = false;
-
-           //        ranges.push_back({32, 32});
-           //        pro.init(mem, 64, ranges);
-
-           //        try {
-           //            *reinterpret_cast<uint32_t *>(&pro[38]) = v1;
-           //        } catch (std::exception &) {
-           //            exceptionRaised = true;
-           //        }
-           //        QVERIFY(mem[30] == 0);
-           //        QVERIFY(mem[31] == 0);
-           //        QVERIFY(mem[32] == 0);
-           //        QVERIFY(mem[33] == 0);
-           //        QVERIFY(exceptionRaised == true);
-           //    }
 };
 
 } // namespace armv4vm
-//QTEST_MAIN(armv4vm::TestMem)
-//#include "testmem.moc"

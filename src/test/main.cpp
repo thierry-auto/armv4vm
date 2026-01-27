@@ -8,8 +8,13 @@ template class armv4vm::VmImplementation<armv4vm::MemoryProtected, armv4vm::Vfpv
 #endif
 
 #include "testmem.hpp"
-#include "testalu.hpp"
 #include "testvfp.hpp"
+#include "testaluinstructionraw.hpp"
+#include "testaluinstructionprotected.hpp"
+#include "testaluprogramraw.hpp"
+#include "testaluprogramprotected.hpp"
+#include "testvfpinstructionraw.hpp"
+#include "testvfpinstructionprotected.hpp"
 
 int main(int argc, char** argv)
 {
@@ -19,41 +24,42 @@ int main(int argc, char** argv)
         armv4vm::TestMem tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
-    // Flat
+
+    // Raw
     {
 
-        // {
-        //     armv4vm::TestAluInstructionFlat tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
+        {
+            armv4vm::TestAluInstructionRaw tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
-        // {
-        //     armv4vm::TestAluProgramFlat tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
+        {
+            armv4vm::TestAluInstructionRaw tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
-        // {
-        //     armv4vm::TestVfp tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
+        {
+            armv4vm::TestVfpInstructionRaw tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
     }
 
     // Protected
     {
-    //     {
-    //         armv4vm::TestAluInstructionProtected tc;
-    //         status |= QTest::qExec(&tc, argc, argv);
-    //     }
+        {
+            armv4vm::TestAluInstructionProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
-    //     {
-    //         armv4vm::TestAluProgramProtected tc;
-    //         status |= QTest::qExec(&tc, argc, argv);
-    //     }
+        {
+            armv4vm::TestAluProgramProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
-    //     {
-    //         armv4vm::TestVfp tc;
-    //         status |= QTest::qExec(&tc, argc, argv);
-    //     }
+        {
+            armv4vm::TestVfpInstructionProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
     }
 
     return status;

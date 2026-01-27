@@ -38,11 +38,15 @@ template<typename T>
 class TestAluInstruction
 {
   private:
-    using ProtectedVfp = Vfpv2<T>;
-    using ProtectedAlu = Alu<T, ProtectedVfp>;
+    //using ProtectedVfp = Vfpv2<T>;
+    //using ProtectedAlu = Alu<T, ProtectedVfp>;
 
     std::unique_ptr<T> m_mem;
-    std::unique_ptr<ProtectedAlu> m_alu;
+    //std::unique_ptr<ProtectedAlu> m_alu;
+
+    using Copro = Vfpv2<T>;
+
+    std::unique_ptr<Alu<T, Copro>> m_alu;
     VmProperties m_vmProperties;
 
 
@@ -50,13 +54,12 @@ class TestAluInstruction
     TestAluInstruction()
     {
         m_vmProperties.m_memoryHandlerProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
+        m_vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 1_kb;
 
         m_mem = std::make_unique<T>(m_vmProperties.m_memoryHandlerProperties);
-        m_alu = std::make_unique<ProtectedAlu>(m_vmProperties.m_aluProperties);
+        m_alu = std::make_unique<Alu<T, Copro>>(m_vmProperties.m_aluProperties);
 
         m_mem->reset();
-        m_mem->addAccessRangeImpl({0, 512, AccessPermission::READ_WRITE});
-
         m_alu->attach(m_mem.get());
     }
 
@@ -72,7 +75,7 @@ class TestAluInstruction
     }
 
     void testADD() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
@@ -88,7 +91,7 @@ class TestAluInstruction
 
     void testADD2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0900001; // add r0, r0, r1
@@ -104,7 +107,7 @@ class TestAluInstruction
 
     void testSUBS() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs r0, r1, r2
@@ -120,7 +123,7 @@ class TestAluInstruction
     }
 
     void testSUBS2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
@@ -136,7 +139,7 @@ class TestAluInstruction
     }
 
     void testSUBS3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0510002; // subs    r0, r1, r2
@@ -151,7 +154,7 @@ class TestAluInstruction
     }
 
     void testLSLS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00211;
@@ -166,7 +169,7 @@ class TestAluInstruction
     }
 
     void testLSLS2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001;
@@ -180,7 +183,7 @@ class TestAluInstruction
     }
 
     void testLSRS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00231; // lsrs r0, r1, r2
@@ -195,7 +198,7 @@ class TestAluInstruction
     }
 
     void testASRS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
@@ -212,7 +215,7 @@ class TestAluInstruction
 
     void testASRS2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
@@ -228,7 +231,7 @@ class TestAluInstruction
     }
 
     void testASRS3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
@@ -243,7 +246,7 @@ class TestAluInstruction
     }
 
     void testASRS4() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
@@ -259,7 +262,7 @@ class TestAluInstruction
     }
 
     void testASRS5() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, r2
@@ -275,7 +278,7 @@ class TestAluInstruction
     }
 
     void testASRS6() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00251; // asrs r0, r1, #0
@@ -290,7 +293,7 @@ class TestAluInstruction
     }
 
     void testASRS7() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001; // asrs r0, r1, #0
@@ -304,7 +307,7 @@ class TestAluInstruction
     }
 
     void testRORS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
@@ -320,7 +323,7 @@ class TestAluInstruction
     }
 
     void testRORS2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00271; // rors r0, r1, r2
@@ -336,7 +339,7 @@ class TestAluInstruction
     }
 
     void testRORS3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00001; // rors r0, r1, #0
@@ -352,7 +355,7 @@ class TestAluInstruction
     }
 
     void testRRXS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
@@ -368,7 +371,7 @@ class TestAluInstruction
     }
 
     void testRRXS2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00061; // rrxs r0, r1
@@ -384,7 +387,7 @@ class TestAluInstruction
     }
 
     void testRORS4() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00170; // rors r0, r0, r1
@@ -399,7 +402,7 @@ class TestAluInstruction
     }
 
     void testRORS5() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00260; // rors r0, #4
@@ -412,7 +415,7 @@ class TestAluInstruction
     }
 
     void testMOVS() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe1b00221; // movs r0, r1, lsr #4
@@ -427,7 +430,7 @@ class TestAluInstruction
     }
 
     void testORR() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800d7d; // ORR r0, r0, #8000
@@ -440,7 +443,7 @@ class TestAluInstruction
     }
 
     void testORR2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
@@ -453,7 +456,7 @@ class TestAluInstruction
     }
 
     void testORR3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3800002; // ORR r0, r0, #2 ; 0x2
@@ -467,7 +470,7 @@ class TestAluInstruction
     }
 
     void testORR4() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe3810602; // ORR r0, r1, #2097152
@@ -481,7 +484,7 @@ class TestAluInstruction
     }
 
     void testLDR() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5910004; // ldr  r0, [r1, #4]
@@ -497,7 +500,7 @@ class TestAluInstruction
 
     void testSTR() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5810004; // str     r0, [r1, #4]
@@ -516,7 +519,7 @@ class TestAluInstruction
     void testPUSH() {
         // uint8_t ram[128] = {0};
 
-               //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d0007; // push     {r0, r1, r2}
@@ -535,7 +538,7 @@ class TestAluInstruction
     }
 
     void testPUSHPOP() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d001f; // push {r0, r1, r2, r3, r4}
@@ -578,7 +581,7 @@ class TestAluInstruction
 
     void testADD3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
@@ -595,7 +598,7 @@ class TestAluInstruction
 
     void testADDS() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // adds r0, r1, r2
@@ -612,7 +615,7 @@ class TestAluInstruction
 
     void testADD4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
@@ -629,7 +632,7 @@ class TestAluInstruction
 
     void testADD5() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0810002; // add r0, r1, r2
@@ -646,7 +649,7 @@ class TestAluInstruction
 
     void testADD6() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0910002; // add r0, r1, r2
@@ -663,7 +666,7 @@ class TestAluInstruction
 
     void testLDRB() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10002;     // ldrb r0, [r1, #2]!
@@ -688,7 +691,7 @@ class TestAluInstruction
 
     void testLDRB2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10001;     // ldrb r0, [r1, #1]!
@@ -712,7 +715,7 @@ class TestAluInstruction
     }
 
     void testLDRB3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5d10000; // ldrb r0, [r1]
@@ -739,7 +742,7 @@ class TestAluInstruction
 
     void testLDRB4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5f10003;     // ldrb r0, [r1, #3]!
@@ -764,7 +767,7 @@ class TestAluInstruction
 
     void testLDRB5() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4110004;     // ldr r0, [r1], #-4
@@ -789,7 +792,7 @@ class TestAluInstruction
     }
 
     void testLDR2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5910000; // ldr r0, [r1]
@@ -802,7 +805,7 @@ class TestAluInstruction
     }
 
     void testMUL1() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0020190; // mul r2,r0,r1
@@ -815,7 +818,7 @@ class TestAluInstruction
 
     void testMLA() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
@@ -833,7 +836,7 @@ class TestAluInstruction
 
     void testMLA2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0203291; // mla r0,r1,r2,r3
@@ -851,7 +854,7 @@ class TestAluInstruction
 
     void testMLA3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
@@ -870,7 +873,7 @@ class TestAluInstruction
 
     void testMLA4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
@@ -889,7 +892,7 @@ class TestAluInstruction
 
     void testMLA5() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0303291; // mlas r0,r1,r2,r3
@@ -909,7 +912,7 @@ class TestAluInstruction
 
     void testLDR3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5b10000;     // ldr r0, [r1, #0]!
@@ -935,7 +938,7 @@ class TestAluInstruction
 
     void testLDR4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5310004;     // ldr r0, [r1, #-4]!
@@ -961,7 +964,7 @@ class TestAluInstruction
 
     void testLDR5() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4910004;     // ldr r0, [r1], #4
@@ -987,7 +990,7 @@ class TestAluInstruction
 
     void testLDR6() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe4910000;     // ldr r0, [r1], #0
@@ -1014,7 +1017,7 @@ class TestAluInstruction
 
     void testLDR7() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe491f000; // ldr r15, [r1], #0
@@ -1034,7 +1037,7 @@ class TestAluInstruction
 
     void testLDR8() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe6910002; // ldr r0, [r1], r2
@@ -1055,7 +1058,7 @@ class TestAluInstruction
 
     void testLDR9() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7b10002; // ldr r0, [r1, r2]!
@@ -1076,7 +1079,7 @@ class TestAluInstruction
 
     void testLDR10() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1, r2]!
@@ -1097,7 +1100,7 @@ class TestAluInstruction
 
     void testLDR11() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7e10002; // strb r0, [r1, r2]!
@@ -1119,7 +1122,7 @@ class TestAluInstruction
 
     void testLDR12() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe58f0000; // str r0, [r15]
@@ -1135,7 +1138,7 @@ class TestAluInstruction
 
     void testLDR13() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5cf0000; // strb r0, [r15]
@@ -1152,7 +1155,7 @@ class TestAluInstruction
 
     void testLDR14() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5c10000; // strb r0, [r1]
@@ -1173,7 +1176,7 @@ class TestAluInstruction
 
     void testLDR15() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe7f10002; // ldrb r0, [r1]
@@ -1191,7 +1194,7 @@ class TestAluInstruction
     }
 
     void testLDMFD() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8bd000f; // LDMFD r13!, {r0-r3}
@@ -1215,7 +1218,7 @@ class TestAluInstruction
     }
 
     void testLDMFA() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe83d000f; // LDMFA r13!, {r0-r3}
@@ -1240,7 +1243,7 @@ class TestAluInstruction
     }
 
     void testSTMFA() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe92d000f; // STMFA r13!, {r0-r3}
@@ -1260,7 +1263,7 @@ class TestAluInstruction
     }
 
     void testSTMED() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe82d000f; // STMED r13!, {r0-r3}
@@ -1283,7 +1286,7 @@ class TestAluInstruction
 
     void testSTMEA() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8ad000f; // STMEA r13!, {r0-r3}
@@ -1303,7 +1306,7 @@ class TestAluInstruction
     }
 
     void testSTMFA2() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe9ad000f; // STMFA r13!, {r0-r3}
@@ -1323,7 +1326,7 @@ class TestAluInstruction
     }
 
     void testSTMFA3() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30038; // STM r3!, {r3-r5}
@@ -1351,7 +1354,7 @@ class TestAluInstruction
     }
 
     void testSTMFA4() {
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30030; // STM r3!, {r4-r5}
@@ -1379,7 +1382,7 @@ class TestAluInstruction
 
     void testSTR2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe5a10004; // str r0, [r1, #4]!
@@ -1394,7 +1397,7 @@ class TestAluInstruction
 
     void testSTM1() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30034; // stm	r3!,{r2,r4,r5}
@@ -1419,7 +1422,7 @@ class TestAluInstruction
 
     void testSTM2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe8a30038; // stm	r3!,{r3,r4,r5}
@@ -1444,7 +1447,7 @@ class TestAluInstruction
 
     void testCONDPM() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
@@ -1466,7 +1469,7 @@ class TestAluInstruction
 
     void testCONDVC() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0) = 0xe0902001;     // adds r2, r0, r1
@@ -1488,7 +1491,7 @@ class TestAluInstruction
 
     void testCONDCC() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1540002);  // cmp   r4,r2
@@ -1523,7 +1526,7 @@ class TestAluInstruction
 
     void testHALF() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d030f2);  // ldrsh   r3, [r0, #2]
@@ -1548,7 +1551,7 @@ class TestAluInstruction
 
     void testHALF2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d330fe);  // ldrsh   r3, [r3, #14]
@@ -1572,7 +1575,7 @@ class TestAluInstruction
 
     void testHALF3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1d120de);  // ldrsb   r2, [r1, #14]
@@ -1592,7 +1595,7 @@ class TestAluInstruction
 
     void testSTRH() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
@@ -1614,7 +1617,7 @@ class TestAluInstruction
 
     void testSTRH2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c330be);  // strh   r3, [r3, #14]
@@ -1631,7 +1634,7 @@ class TestAluInstruction
 
     void testSTRH3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
@@ -1648,7 +1651,7 @@ class TestAluInstruction
 
     void testSTRH4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1c320be);  // strh r2, [r3, #14]
@@ -1665,7 +1668,7 @@ class TestAluInstruction
 
     void testSTRH5() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c320b2);  // strh r2, [r3], #2
@@ -1682,7 +1685,7 @@ class TestAluInstruction
 
     void testSTRH6() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c320b3);  // strh r2, [r3], #3
@@ -1699,7 +1702,7 @@ class TestAluInstruction
 
     void testLDRH1() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0d320b2);  // ldrh r2, [r3], #2
@@ -1716,7 +1719,7 @@ class TestAluInstruction
 
     void testLDRH2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0d320b3);  // ldrh r2, [r3], #3
@@ -1733,7 +1736,7 @@ class TestAluInstruction
 
     void testSTRB() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10000);  // strb r0, [r1]
@@ -1750,7 +1753,7 @@ class TestAluInstruction
 
     void testSTRB2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10002);  // strb r0, [r1, #2]
@@ -1767,7 +1770,7 @@ class TestAluInstruction
 
     void testSTRB3() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10003);  // strb r0, [r1, #3]
@@ -1784,7 +1787,7 @@ class TestAluInstruction
 
     void testSTRB4() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe5c10001);  // strb r0, [r1, #1]
@@ -1801,7 +1804,7 @@ class TestAluInstruction
 
     void testADCS() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0b11553);  // adcs    r1, r1, r3, asr r5
@@ -1819,7 +1822,7 @@ class TestAluInstruction
 
     void testANDS() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2100003);  // ands r0, r0, #3
@@ -1834,7 +1837,7 @@ class TestAluInstruction
 
     void testTEQ() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1340005);  // teq r4, r5
@@ -1851,7 +1854,7 @@ class TestAluInstruction
 
     void testTEST() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe3110102);  // tst     r1, #-2147483648        ; 0x80000000
@@ -1866,7 +1869,7 @@ class TestAluInstruction
 
     void testRSC() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2e33000);  // rsc r3, r3, #0
@@ -1881,7 +1884,7 @@ class TestAluInstruction
 
     void testUMULL() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe08ec290);  // umull   ip, lr, r0, r2
@@ -1902,7 +1905,7 @@ class TestAluInstruction
 
     void testSMULL() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe0c23290); // smull   r3, r2, r0, r2
@@ -1921,7 +1924,7 @@ class TestAluInstruction
 
     void testSMULL2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
 
         m_alu->reset();
 
@@ -1943,7 +1946,7 @@ class TestAluInstruction
 
     void testRSBS() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe2722000);  // rsbs r2,r2,#0
@@ -1958,7 +1961,7 @@ class TestAluInstruction
 
     void testTEST2() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe3110601);  // tst     r1, #1048576    ; 0x100000
@@ -1973,7 +1976,7 @@ class TestAluInstruction
 
     void testR15() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe320f000); // nop
@@ -1989,7 +1992,7 @@ class TestAluInstruction
 
     void testSWP_1() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1020091); // SWP R0, R1, [R2]
@@ -2010,7 +2013,7 @@ class TestAluInstruction
 
     void testSWPB_1() {
 
-          //VirtualMachineUnprotected vm(&vmProperties);
+
         m_alu->reset();
 
         m_alu->m_mem->template writePointer<uint32_t>(0, 0xe1420091); // SWPB R0, R1, [R2]
@@ -2028,246 +2031,6 @@ class TestAluInstruction
         QVERIFY(m_alu->m_registers[2] == 0x00000010);
         QVERIFY(m_alu->m_cpsr == 0x60000000);
     }
-};
-
-class TestAluInstructionFlat : public QObject {
-    Q_OBJECT
-  private:
-
-    TestAluInstruction<MemoryRaw> m_test;
-
-  public:
-    TestAluInstructionFlat() {
-
-    }
-    virtual ~TestAluInstructionFlat() = default;
-
-  private slots:
-
-    void testMOV() { m_test.testMOV(); }
-    void testADD() { m_test.testADD(); }
-    void testADD2() { m_test.testADD2(); }
-    void testSUBS() { m_test.testSUBS(); }
-    void testSUBS2() { m_test.testSUBS2(); }
-    void testSUBS3() { m_test.testSUBS3(); }
-    void testLSLS() { m_test.testLSLS(); }
-    void testLSLS2() { m_test.testLSLS2(); }
-    void testLSRS() { m_test.testLSRS(); }
-    void testASRS() { m_test.testASRS(); }
-    void testASRS2() { m_test.testASRS2(); }
-    void testASRS3() { m_test.testASRS3(); }
-    void testASRS4() { m_test.testASRS4(); }
-    void testASRS5() { m_test.testASRS5(); }
-    void testASRS6() { m_test.testASRS6(); }
-    void testASRS7() { m_test.testASRS7(); }
-    void testRORS() { m_test.testRORS(); }
-    void testRORS2() { m_test.testRORS2(); }
-    void testRORS3() { m_test.testRORS3(); }
-    void testRRXS() { m_test.testRRXS(); }
-    void testRRXS2() { m_test.testRRXS2(); }
-    void testRORS4() { m_test.testRORS4(); }
-    void testRORS5() { m_test.testRORS5(); }
-    void testMOVS() { m_test.testMOVS(); }
-    void testORR() { m_test.testORR(); }
-    void testORR2() { m_test.testORR2(); }
-    void testORR3() { m_test.testORR3(); }
-    void testORR4() { m_test.testORR4(); }
-    void testLDR() { m_test.testLDR(); }
-    void testSTR() { m_test.testSTR(); }
-    void testPUSH() { m_test.testPUSH(); }
-    void testPUSHPOP() { m_test.testPUSHPOP(); }
-    void testADD3() { m_test.testADD3(); }
-    void testADDS() { m_test.testADDS(); }
-    void testADD4() { m_test.testADD4(); }
-    void testADD5() { m_test.testADD5(); }
-    void testADD6() { m_test.testADD6(); }
-    void testLDRB() { m_test.testLDRB(); }
-    void testLDRB2() { m_test.testLDRB2(); }
-    void testLDRB3() { m_test.testLDRB3(); }
-    void testLDRB4() { m_test.testLDRB4(); }
-    void testLDRB5() { m_test.testLDRB5(); }
-    void testLDR2() { m_test.testLDR2(); }
-    void testMUL1() { m_test.testMUL1(); }
-    void testMLA() { m_test.testMLA(); }
-    void testMLA2() { m_test.testMLA2(); }
-    void testMLA3() { m_test.testMLA3(); }
-    void testMLA4() { m_test.testMLA4(); }
-    void testMLA5() { m_test.testMLA5(); }
-    void testLDR3() { m_test.testLDR3(); }
-    void testLDR4() { m_test.testLDR4(); }
-    void testLDR5() { m_test.testLDR5(); }
-    void testLDR6() { m_test.testLDR6(); }
-    void testLDR7() { m_test.testLDR7(); }
-    void testLDR8() { m_test.testLDR8(); }
-    void testLDR9() { m_test.testLDR9(); }
-    void testLDR10() { m_test.testLDR10(); }
-    void testLDR11() { m_test.testLDR11(); }
-    void testLDR12() { m_test.testLDR12(); }
-    void testLDR13() { m_test.testLDR13(); }
-    void testLDR14() { m_test.testLDR14(); }
-    void testLDR15() { m_test.testLDR15(); }
-    void testLDMFD() { m_test.testLDMFD(); }
-    void testLDMFA() { m_test.testLDMFA(); }
-    void testSTMFA() { m_test.testSTMFA(); }
-    void testSTMED() { m_test.testSTMED(); }
-    void testSTMEA() { m_test.testSTMEA(); }
-    void testSTMFA2() { m_test.testSTMFA2(); }
-    void testSTMFA3() { m_test.testSTMFA3(); }
-    void testSTMFA4() { m_test.testSTMFA4(); }
-    void testSTR2() { m_test.testSTR2(); }
-    void testSTM1() { m_test.testSTM1(); }
-    void testSTM2() { m_test.testSTM2(); }
-    void testCONDPM() { m_test.testCONDPM(); }
-    void testCONDVC() { m_test.testCONDVC(); }
-    void testCONDCC() { m_test.testCONDCC(); }
-    void testHALF() { m_test.testHALF(); }
-    void testHALF2() { m_test.testHALF2(); }
-    void testHALF3() { m_test.testHALF3(); }
-    void testSTRH() { m_test.testSTRH(); }
-    void testSTRH2() { m_test.testSTRH2(); }
-    void testSTRH3() { m_test.testSTRH3(); }
-    void testSTRH4() { m_test.testSTRH4(); }
-    void testSTRH5() { m_test.testSTRH5(); }
-    void testSTRH6() { m_test.testSTRH6(); }
-    void testLDRH1() { m_test.testLDRH1(); }
-    void testLDRH2() { m_test.testLDRH2(); }
-    void testSTRB() { m_test.testSTRB(); }
-    void testSTRB2() { m_test.testSTRB2(); }
-    void testSTRB3() { m_test.testSTRB3(); }
-    void testSTRB4() { m_test.testSTRB4(); }
-    void testADCS() { m_test.testADCS(); }
-    void testANDS() { m_test.testANDS(); }
-    void testTEQ() { m_test.testTEQ(); }
-    void testTEST() { m_test.testTEST(); }
-    void testRSC() { m_test.testRSC(); }
-    void testUMULL() { m_test.testUMULL(); }
-    void testSMULL() { m_test.testSMULL(); }
-    void testSMULL2() { m_test.testSMULL2(); }
-    void testRSBS() { m_test.testRSBS(); }
-    void testTEST2() { m_test.testTEST2(); }
-    void testR15() { m_test.testR15(); }
-    void testSWP_1() { m_test.testSWP_1(); }
-    void testSWPB_1() { m_test.testSWPB_1(); }
-};
-
-class TestAluInstructionProtected : public QObject {
-    Q_OBJECT
-  private:
-
-    TestAluInstruction<MemoryProtected> m_test;
-
-  public:
-    TestAluInstructionProtected() {
-
-    }
-    virtual ~TestAluInstructionProtected() = default;
-
-  private slots:
-
-    void testMOV() { m_test.testMOV(); }
-    void testADD() { m_test.testADD(); }
-    void testADD2() { m_test.testADD2(); }
-    void testSUBS() { m_test.testSUBS(); }
-    void testSUBS2() { m_test.testSUBS2(); }
-    void testSUBS3() { m_test.testSUBS3(); }
-    void testLSLS() { m_test.testLSLS(); }
-    void testLSLS2() { m_test.testLSLS2(); }
-    void testLSRS() { m_test.testLSRS(); }
-    void testASRS() { m_test.testASRS(); }
-    void testASRS2() { m_test.testASRS2(); }
-    void testASRS3() { m_test.testASRS3(); }
-    void testASRS4() { m_test.testASRS4(); }
-    void testASRS5() { m_test.testASRS5(); }
-    void testASRS6() { m_test.testASRS6(); }
-    void testASRS7() { m_test.testASRS7(); }
-    void testRORS() { m_test.testRORS(); }
-    void testRORS2() { m_test.testRORS2(); }
-    void testRORS3() { m_test.testRORS3(); }
-    void testRRXS() { m_test.testRRXS(); }
-    void testRRXS2() { m_test.testRRXS2(); }
-    void testRORS4() { m_test.testRORS4(); }
-    void testRORS5() { m_test.testRORS5(); }
-    void testMOVS() { m_test.testMOVS(); }
-    void testORR() { m_test.testORR(); }
-    void testORR2() { m_test.testORR2(); }
-    void testORR3() { m_test.testORR3(); }
-    void testORR4() { m_test.testORR4(); }
-    void testLDR() { m_test.testLDR(); }
-    void testSTR() { m_test.testSTR(); }
-    void testPUSH() { m_test.testPUSH(); }
-    void testPUSHPOP() { m_test.testPUSHPOP(); }
-    void testADD3() { m_test.testADD3(); }
-    void testADDS() { m_test.testADDS(); }
-    void testADD4() { m_test.testADD4(); }
-    void testADD5() { m_test.testADD5(); }
-    void testADD6() { m_test.testADD6(); }
-    void testLDRB() { m_test.testLDRB(); }
-    void testLDRB2() { m_test.testLDRB2(); }
-    void testLDRB3() { m_test.testLDRB3(); }
-    void testLDRB4() { m_test.testLDRB4(); }
-    void testLDRB5() { m_test.testLDRB5(); }
-    void testLDR2() { m_test.testLDR2(); }
-    void testMUL1() { m_test.testMUL1(); }
-    void testMLA() { m_test.testMLA(); }
-    void testMLA2() { m_test.testMLA2(); }
-    void testMLA3() { m_test.testMLA3(); }
-    void testMLA4() { m_test.testMLA4(); }
-    void testMLA5() { m_test.testMLA5(); }
-    void testLDR3() { m_test.testLDR3(); }
-    void testLDR4() { m_test.testLDR4(); }
-    void testLDR5() { m_test.testLDR5(); }
-    void testLDR6() { m_test.testLDR6(); }
-    void testLDR7() { m_test.testLDR7(); }
-    void testLDR8() { m_test.testLDR8(); }
-    void testLDR9() { m_test.testLDR9(); }
-    void testLDR10() { m_test.testLDR10(); }
-    void testLDR11() { m_test.testLDR11(); }
-    void testLDR12() { m_test.testLDR12(); }
-    void testLDR13() { m_test.testLDR13(); }
-    void testLDR14() { m_test.testLDR14(); }
-    void testLDR15() { m_test.testLDR15(); }
-    void testLDMFD() { m_test.testLDMFD(); }
-    void testLDMFA() { m_test.testLDMFA(); }
-    void testSTMFA() { m_test.testSTMFA(); }
-    void testSTMED() { m_test.testSTMED(); }
-    void testSTMEA() { m_test.testSTMEA(); }
-    void testSTMFA2() { m_test.testSTMFA2(); }
-    void testSTMFA3() { m_test.testSTMFA3(); }
-    void testSTMFA4() { m_test.testSTMFA4(); }
-    void testSTR2() { m_test.testSTR2(); }
-    void testSTM1() { m_test.testSTM1(); }
-    void testSTM2() { m_test.testSTM2(); }
-    void testCONDPM() { m_test.testCONDPM(); }
-    void testCONDVC() { m_test.testCONDVC(); }
-    void testCONDCC() { m_test.testCONDCC(); }
-    void testHALF() { m_test.testHALF(); }
-    void testHALF2() { m_test.testHALF2(); }
-    void testHALF3() { m_test.testHALF3(); }
-    void testSTRH() { m_test.testSTRH(); }
-    void testSTRH2() { m_test.testSTRH2(); }
-    void testSTRH3() { m_test.testSTRH3(); }
-    void testSTRH4() { m_test.testSTRH4(); }
-    void testSTRH5() { m_test.testSTRH5(); }
-    void testSTRH6() { m_test.testSTRH6(); }
-    void testLDRH1() { m_test.testLDRH1(); }
-    void testLDRH2() { m_test.testLDRH2(); }
-    void testSTRB() { m_test.testSTRB(); }
-    void testSTRB2() { m_test.testSTRB2(); }
-    void testSTRB3() { m_test.testSTRB3(); }
-    void testSTRB4() { m_test.testSTRB4(); }
-    void testADCS() { m_test.testADCS(); }
-    void testANDS() { m_test.testANDS(); }
-    void testTEQ() { m_test.testTEQ(); }
-    void testTEST() { m_test.testTEST(); }
-    void testRSC() { m_test.testRSC(); }
-    void testUMULL() { m_test.testUMULL(); }
-    void testSMULL() { m_test.testSMULL(); }
-    void testSMULL2() { m_test.testSMULL2(); }
-    void testRSBS() { m_test.testRSBS(); }
-    void testTEST2() { m_test.testTEST2(); }
-    void testR15() { m_test.testR15(); }
-    void testSWP_1() { m_test.testSWP_1(); }
-    void testSWPB_1() { m_test.testSWPB_1(); }
 };
 
 template<typename T>
@@ -2293,7 +2056,7 @@ class TestAluProgram {
         std::string binPath(getBinPath());
         std::string data;
 
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/hello.bin";
 
         std::byte *mem     = nullptr;
@@ -2333,13 +2096,13 @@ class TestAluProgram {
         VmProperties vmProperties;
 
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/primen.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
         bool     running       = true;
 
-        //VirtualMachineUnprotected vm(&vmProperties);
+
         std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
@@ -2371,14 +2134,14 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/float.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
         bool     running       = true;
 
-               //VirtualMachineUnprotected vm(&vmProperties);
-               //registerCoprocessor<MemoryRaw, Vfpv2>("vfpv2");
+
+        //registerCoprocessor<MemoryRaw, Vfpv2>("vfpv2");
 
         std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
@@ -2419,7 +2182,7 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/printf.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
@@ -2461,11 +2224,11 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/modulo.bin";
         bool     running       = true;
 
-               //VirtualMachineUnprotected vm(&vmProperties);
+
 
         std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         vm->reset();
@@ -2492,22 +2255,22 @@ class TestAluProgram {
             }
         }
 
-        //QVERIFY(m_alu->m_registers[0] == 0);
+               //QVERIFY(m_alu->m_registers[0] == 0);
     }
 
     void testProgramBench() {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memsize = 20_mb;
+        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/bench.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
         bool     running       = true;
         QString data;
 
-               //VirtualMachineUnprotected vm(&vmProperties);
-         std::unique_ptr<Vm> vm = Vm::build(vmProperties);
+
+        std::unique_ptr<Vm> vm = Vm::build(vmProperties);
         mem = vm->reset();
         uart = mem + UARTPOS;
 
@@ -2538,44 +2301,7 @@ class TestAluProgram {
     }
 };
 
-class TestAluProgramFlat : public QObject {
-    Q_OBJECT
-  private:
 
-    TestAluProgram<MemoryRaw> m_test;
 
-  public:
-    TestAluProgramFlat() { }
-    virtual ~TestAluProgramFlat() = default;
-
-  public slots:
-
-    void testProgramHello() { m_test.testProgramHello(); }
-    void testProgramPrimeN() { m_test.testProgramPrimeN(); }
-    void testProgramFloat() {  m_test.testProgramFloat();  }
-    void testProgramPrintf() { m_test.testProgramPrintf(); }
-    void testProgramModulo() {  m_test.testProgramModulo(); }
-    void testProgramBench() { m_test.testProgramBench(); }
-};
-
-class TestAluProgramProtected : public QObject {
-    Q_OBJECT
-  private:
-
-    TestAluProgram<MemoryProtected> m_test;
-
-  public:
-    TestAluProgramProtected() { }
-    virtual ~TestAluProgramProtected() = default;
-
-  public slots:
-
-    void testProgramHello() { m_test.testProgramHello(); }
-    void testProgramPrimeN() { m_test.testProgramPrimeN(); }
-    void testProgramFloat() {  m_test.testProgramFloat();  }
-    void testProgramPrintf() { m_test.testProgramPrintf(); }
-    void testProgramModulo() {  m_test.testProgramModulo(); }
-    void testProgramBench() { m_test.testProgramBench(); }
-};
 
 } // namespace armv4vm

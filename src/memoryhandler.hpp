@@ -65,10 +65,10 @@ class MemoryRefUnsafe {
         return *this;
     }
 
-    template <typename U>
-    friend bool operator == (const MemoryRefUnsafe<T> &left, const U right);
-    template <typename U>
-    friend bool operator == (const U right, const MemoryRefUnsafe<T> &left);
+    // template <typename U>
+    // friend bool operator == (const MemoryRefUnsafe<T> &left, const U right);
+    // template <typename U>
+    // friend bool operator == (const U right, const MemoryRefUnsafe<T> &left);
 
     MemoryRefUnsafe<T> & operator = (const MemoryRefUnsafe<T> &other) {
 
@@ -101,9 +101,6 @@ class MemoryRefSafe {
 
     friend class MemoryProtected;
 
-  private:
-    //void isAccessible(const uint32_t address, const std::size_t dataSize, const AccessPermission& permission) const;
-
   protected:
     std::byte*  m_base;
     std::size_t m_address;
@@ -131,13 +128,13 @@ class MemoryRaw  {
     using byte = std::byte;
 
     MemoryRaw(struct MemoryHandlerProperties & properties) {
-        m_size = properties.m_memsize;
+        m_size = properties.m_memorySizeBytes;
         m_ram  = std::make_unique<byte[]>(m_size);
     }
     ~MemoryRaw() = default;
 
     byte* reset(const std::byte fillingValue = std::byte{0}) {
-        //m_size = static_cast<uint32_t>(m_properties.m_memsize);
+
         std::memset(m_ram.get(), static_cast<char>(fillingValue), m_size);
         return m_ram.get();
     }
@@ -182,10 +179,6 @@ class MemoryRaw  {
         return MemoryRefUnsafe<std::byte>(m_ram.get(), index);
     }
 
-           // void setByte(std::size_t index, byte value) {
-           //     m_ram[index] = value;
-           // }
-
     void addAccessRangeImpl(const MemoryLayout& accessRange) {
         (void)accessRange;
     }
@@ -205,7 +198,7 @@ class MemoryProtected {
   public:
     using byte = std::byte;
 
-    MemoryProtected(struct MemoryHandlerProperties & properties) /*: MemoryInterface(properties)*/ {
+    MemoryProtected(struct MemoryHandlerProperties & properties) {
 
         m_memoryLayout = properties.m_layout;
 
@@ -267,13 +260,10 @@ class MemoryProtected {
 
     MemoryRefSafe<std::byte> operator[](const std::size_t index) {
 
-        // On ne peut pas faire de controle d'accés. On n'en connait pas l'utilisation. read ? write ?
+        // On ne peut pas faire de controle d'accés.
+        // On n'en connait pas encore l'utilisation. read ? write ?
         return MemoryRefSafe<std::byte>(m_ram.get()->data(), index, this);
     }
-
-           // void setByte(uint32_t offset, byte value) {
-           //     (*m_ram)[offset] = value;
-           // }
 
     void addAccessRangeImpl(const MemoryLayout& accessRange) {
         m_memoryLayout.push_back(accessRange);
@@ -297,8 +287,6 @@ class MemoryProtected {
     }
 
   public:
-    // Limiter le friend à la spécialisation std::byte ?
-    //template<typename T> friend class MemoryRefProtectedBase;
     template<typename T> friend class MemoryRefSafe;
 
   private:
@@ -331,14 +319,6 @@ MemoryRefSafe<T>& MemoryRefSafe<T>::operator = (const MemoryRefSafe<T> &other) {
     std::memcpy(m_base + m_address, other.m_base + other.m_address, sizeof(T));
     return *this;
 }
-
-// template <typename T>
-// inline T readPointer(const std::byte* mem) {
-//     static_assert(std::is_trivially_copyable_v<T>);
-//     T value;
-//     std::memcpy(&value, mem, sizeof(T));
-//     return value;
-// }
 
 inline bool operator == (const std::byte &left, const int &right) {
     return std::to_integer<int>(left) == right;

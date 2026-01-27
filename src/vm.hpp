@@ -180,7 +180,7 @@ inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
 
     // Une mémoire ne peut pas avoir de taille et des layout en même temps.
     // C'est une incohérence de configuration. On ne sait donc pas quel type de mémoire il faut créer.
-    if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memsize) {
+    if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memorySizeBytes) {
 
         throw VmException(VmError::ConfigurationIncoherence);
     }

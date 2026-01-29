@@ -2040,8 +2040,8 @@ class TestAluProgram {
     using ProtectedVfp = Vfpv2<T>;
     using ProtectedAlu = Alu<T, ProtectedVfp>;
 
-    std::unique_ptr<T> m_mem;
-    std::unique_ptr<ProtectedAlu> m_alu;
+    //std::unique_ptr<T> m_mem;
+    //std::unique_ptr<ProtectedAlu> m_alu;
 
   public:
     TestAluProgram() {
@@ -2151,7 +2151,7 @@ class TestAluProgram {
 
             while (running) {
 
-                switch (m_alu->run()) {
+                switch (vm->run()) {
 
                 case Interrupt::Resume:
                     break;
@@ -2197,7 +2197,7 @@ class TestAluProgram {
 
             while (running) {
 
-                switch (m_alu->run()) {
+                switch (vm->run()) {
 
                 case Interrupt::Resume:
                     break;

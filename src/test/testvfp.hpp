@@ -33,9 +33,10 @@ class TestVfpInstruction  {
         m_vfp->attach(m_mem.get());
         m_vfp->attach(m_alu.get());
         m_alu->attach(m_mem.get());
+        m_alu->attach(m_vfp.get());
     }
 
-  public slots:
+  public:
 
     void testFMSR() {
 

@@ -15,7 +15,7 @@ class TestVfpInstructionRaw : public QObject {
     TestVfpInstructionRaw() { }
     virtual ~TestVfpInstructionRaw() = default;
 
-  public slots:
+  private slots:
 
     void testFMSR() { m_test.testFMSR(); }
     void testFMRS() { m_test.testFMRS(); }

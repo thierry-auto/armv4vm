@@ -15,7 +15,7 @@ class TestAluProgramProtected : public QObject {
     TestAluProgramProtected() { }
     virtual ~TestAluProgramProtected() = default;
 
-  public slots:
+  private slots:
 
     void testProgramHello() { m_test.testProgramHello(); }
     void testProgramPrimeN() { m_test.testProgramPrimeN(); }

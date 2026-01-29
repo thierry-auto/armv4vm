@@ -13,7 +13,7 @@ class TestVfpInstructionProtected : public QObject {
     TestVfpInstructionProtected() { }
     virtual ~TestVfpInstructionProtected() = default;
 
-  public slots:
+  private slots:
 
     void testFMSR() { m_test.testFMSR(); }
     void testFMRS() { m_test.testFMRS(); }

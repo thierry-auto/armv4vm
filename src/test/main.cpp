@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         }
 
         {
-            armv4vm::TestAluInstructionRaw tc;
+            armv4vm::TestAluProgramRaw tc;
             status |= QTest::qExec(&tc, argc, argv);
         }
 

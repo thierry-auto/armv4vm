@@ -15,7 +15,7 @@ class TestAluProgramRaw : public QObject {
     TestAluProgramRaw() { }
     virtual ~TestAluProgramRaw() = default;
 
-  public slots:
+  private slots:
 
     void testProgramHello() { m_test.testProgramHello(); }
     void testProgramPrimeN() { m_test.testProgramPrimeN(); }

@@ -183,6 +183,10 @@ class MemoryRaw  {
         (void)accessRange;
     }
 
+    void memcpy(const uint32_t address, const void * source, const size_t size) {
+        std::memcpy(m_ram.get() + address, source, size);
+    }
+
   private:
     std::unique_ptr<byte[]> m_ram;
     size_t             m_size = 0;
@@ -267,6 +271,11 @@ class MemoryProtected {
 
     void addAccessRangeImpl(const MemoryLayout& accessRange) {
         m_memoryLayout.push_back(accessRange);
+    }
+
+    void memcpy(const uint32_t address, const void * source, const size_t size) {
+        isAccessible(address, size, AccessPermission::WRITE);
+        std::memcpy(m_ram.get()->data() + address, source, size);
     }
 
     void isAccessible(uint32_t address,

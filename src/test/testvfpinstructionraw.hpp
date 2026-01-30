@@ -29,7 +29,8 @@ class TestVfpInstructionRaw : public QObject {
     void testFMRRS() {  m_test.testFMRRS();  }
     void testFMDRR() { m_test.testFMDRR(); }
     void testFMRRD() {  m_test.testFMRRD(); }
-    void testFSTMS() { m_test.testFSTMS(); }
+    void testFSTMSU() { m_test.testFSTMSU(); }
+    void testFSTMDU() { m_test.testFSTMDU(); }
 };
 
 } // namespace armv4vm

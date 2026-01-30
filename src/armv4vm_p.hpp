@@ -44,10 +44,11 @@ constexpr std::uint64_t operator""_gb(const unsigned long long value) {
 namespace armv4vm {
 
 template<typename T>
-inline constexpr T BITS(T x, unsigned int l, unsigned int h) {
+inline constexpr T BITS(T x, unsigned int l, unsigned int h) noexcept {
     return (x >> l) & ((T{1} << ((h - l) + 1)) - 1);
 }
 
+// TODO : memcpy, encore mieux, à supprimer
 template <typename T>
 static inline T cast(uint32_t instruction) {
     return *reinterpret_cast<T *>(&instruction);

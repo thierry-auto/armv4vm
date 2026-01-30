@@ -216,7 +216,7 @@ class TestVfpInstruction  {
         QVERIFY(m_alu->m_registers[2] == 0xFFEEDDCC);
     }
 
-    void testFSTMS() {
+    void testFSTMSU() {
 
         m_alu->reset();
 
@@ -230,8 +230,51 @@ class TestVfpInstruction  {
         m_alu->run(1);
 
         QVERIFY(m_mem->template readPointer<uint32_t>(0x16) == 0x11223344);
+        QVERIFY(m_mem->template readPointer<uint32_t>(0x1a) == 0x55667788);
+        QVERIFY(m_mem->template readPointer<uint32_t>(0x1e) == 0x9900AABB);
     }
 
+    void testFSTMDU() {
+
+        m_alu->reset();
+
+        m_mem->template writePointer<uint32_t>(0, 0xec832b08); // VSTM R3, {D2-D5}
+        m_alu->m_registers[3] = 0x00000080;
+        m_vfp->template setDoubleRegister<uint64_t>(1, 0xCCDDEEFF11223344);
+        m_vfp->template setDoubleRegister<uint64_t>(2, 0x538912F7DAE73F23);
+        m_vfp->template setDoubleRegister<uint64_t>(3, 0xABDF756EB21B12BD);
+        m_vfp->template setDoubleRegister<uint64_t>(4, 0x9637BDE8273FCA22);
+        m_vfp->template setDoubleRegister<uint64_t>(5, 0x124FFAB762399441);
+
+        m_alu->run(1);
+
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x80) == 0x538912F7DAE73F23);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x88) == 0xABDF756EB21B12BD);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x90) == 0x9637BDE8273FCA22);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x98) == 0x124FFAB762399441);
+    }
+
+    // A partir de ce test je commence à travailler avec les nouvelles instructions
+    // VSTM par exemple
+    void testVSTMIA() {
+
+        m_alu->reset();
+
+        m_mem->template writePointer<uint32_t>(0, 0xec832b08); // VSTM R3, {D2-D5}
+        m_alu->m_registers[3] = 0x00000080;
+        m_vfp->template setDoubleRegister<uint64_t>(1, 0xCCDDEEFF11223344);
+        m_vfp->template setDoubleRegister<uint64_t>(2, 0x538912F7DAE73F23);
+        m_vfp->template setDoubleRegister<uint64_t>(3, 0xABDF756EB21B12BD);
+        m_vfp->template setDoubleRegister<uint64_t>(4, 0x9637BDE8273FCA22);
+        m_vfp->template setDoubleRegister<uint64_t>(5, 0x124FFAB762399441);
+
+        m_alu->run(1);
+
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x80) == 0x538912F7DAE73F23);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x88) == 0xABDF756EB21B12BD);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x90) == 0x9637BDE8273FCA22);
+        QVERIFY(m_mem->template readPointer<uint64_t>(0x98) == 0x124FFAB762399441);
+    }
 };
 
 } // namespace armv4vm

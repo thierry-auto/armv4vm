@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <array>
 #include <cmath>
+#include <ranges>
+#include <algorithm>
 
 namespace armv4vm {
 
@@ -180,6 +182,7 @@ inline void Vfpv2<MemoryHandler>::coprocessorDataTransfersImpl(const uint32_t wo
     uint32_t offset;
     uint32_t Rn;
     uint32_t Fm;
+    size_t   size;
 
     auto decodeFmSingle = [](const uint32_t instruction) {
         return (BITS(instruction, 0, 3) << 1) | BITS(instruction, 5, 5);
@@ -232,15 +235,19 @@ inline void Vfpv2<MemoryHandler>::coprocessorDataTransfersImpl(const uint32_t wo
 
     case OP_FSTMSU:
         Fd = decodeFdSingle(workingInstruction);
-        offset = BITS(workingInstruction, 0, 7);
+        offset = BITS(workingInstruction, 0, 7); // Attention c'est une taille et non un offset §C3.2
         Rn = BITS(workingInstruction, 16, 19);
-        //void * d = m_alu->m_ram;
+        m_mem->memcpy(m_alu->getRegisters()[Rn], m_sRegisters.data() + Fd, offset * sizeof(float));
         break;
 
     case OP_FDLMSU:
         break;
 
     case OP_FSTMDU:
+        Fd = decodeFdSingle(workingInstruction);
+        offset = BITS(workingInstruction, 0, 7); // Attention c'est une taille et non un offset §C3.2
+        Rn = BITS(workingInstruction, 16, 19);
+        m_mem->memcpy(m_alu->getRegisters()[Rn], m_sRegisters.data() + Fd, offset * sizeof(double));
         break;
 
     case OP_FLDMDU:

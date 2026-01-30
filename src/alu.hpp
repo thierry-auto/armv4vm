@@ -674,7 +674,8 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::multiplyEval() {
 
     // clang-format off
-    struct Multiply {
+
+    struct /*__attribute__(packed)*/ Multiply {
 
         uint32_t rm        : 4;
         uint32_t           : 4;
@@ -688,6 +689,8 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
 
     } instruction;
     // clang-format on
+
+    static_assert(sizeof(Multiply) == sizeof(uint32_t));
 
     if (false == testCondition(m_workingInstruction))
         return;
@@ -1009,28 +1012,36 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
         // § 4.4.1
         m_lr = m_pc;
     }
-
            // Signed + Signed = Signed, Unsigned + Signed = Unsigned..
     m_pc += getSigned24((instruction.offset) << 2) + 4;
 }
 
 template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler, CoproHandler>::blockDataTransferEval() {
 
-    static struct BlockDatatransfer {
+    union BlockDatatransfer {
+        struct __attribute__((packed)) {
+            // clang-format off
+            uint32_t registerList : 16;
+            uint32_t rn           :  4;
+            uint32_t l            :  1;
+            uint32_t w            :  1;
+            uint32_t s            :  1;
+            uint32_t u            :  1;
+            uint32_t p            :  1;
+            uint32_t              :  3;
+            uint32_t condition    :  4;
+            // clang-format on
+        } ;
+        uint32_t value;
 
-        // clang-format off
-        uint32_t registerList : 16;
-        uint32_t rn           :  4;
-        uint32_t l            :  1;
-        uint32_t w            :  1;
-        uint32_t s            :  1;
-        uint32_t u            :  1;
-        uint32_t p            :  1;
-        uint32_t              :  3;
-        uint32_t condition    :  4;
-        // clang-format on
+        //static_assert(sizeof(zz) == sizeof(uint32_t));
 
-    } instruction;
+    } instruction = { .value = m_workingInstruction };
+
+    //std::cout << "thierry1 " << instruction.registerList << " " << instruction.value << std::endl;
+
+    //instruction =  *reinterpret_cast<BlockDatatransfer *>(&m_workingInstruction); //memcpy
+    //std::cout << "thierry2 " << instruction.registerList << " " << instruction.value << std::endl;
 
     static uint32_t offset = 0;
     static std::array<uint32_t, 16>::size_type i = 0;
@@ -1039,7 +1050,6 @@ template <typename MemoryHandler, typename CoproHandler> void Alu<MemoryHandler,
     if (false == testCondition(m_workingInstruction))
         return;
 
-    instruction = cast<BlockDatatransfer>(m_workingInstruction);
 
     offset = m_registers[instruction.rn];
 

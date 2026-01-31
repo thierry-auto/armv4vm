@@ -22,7 +22,7 @@
 
 #include "armv4vm_p.hpp"
 #include "properties.hpp"
-#include "vfpv2.hpp"
+#include "nullcopro.hpp"
 #include "alu.hpp"
 
 namespace armv4vm {
@@ -84,7 +84,7 @@ template <typename MemoryHandler, typename CoproHandler>
 class VmImplementation final : public Vm {
   private:
     using PrivateAlu = Alu<MemoryHandler, CoproHandler>;
-    using PrivateVfpv2 = Vfpv2<MemoryHandler>;
+    using PrivateVfpv2 = NullCopro<MemoryHandler>;
 
     VmImplementation(const struct VmProperties &vmProperties) {
 
@@ -156,8 +156,8 @@ class VmImplementation final : public Vm {
     std::unique_ptr<PrivateVfpv2> m_vfp;
 };
 
-using Vfpv2Unprotected = Vfpv2<MemoryRaw>;
-using Vfpv2Protected = Vfpv2<MemoryProtected>;
+using Vfpv2Unprotected = NullCopro<MemoryRaw>;
+using Vfpv2Protected = NullCopro<MemoryProtected>;
 
 using VmUnprotected = VmImplementation<MemoryRaw, Vfpv2Unprotected>;
 using VmProtected = VmImplementation<MemoryProtected, Vfpv2Protected>;

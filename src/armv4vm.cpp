@@ -21,11 +21,11 @@ namespace armv4vm {
 
 // instanciations des templates explicites
 
-template class Vfpv2<MemoryRaw>;
-template class Vfpv2<MemoryProtected>;
+template class NullCopro<MemoryRaw>;
+template class NullCopro<MemoryProtected>;
 
-template class Alu<MemoryRaw, Vfpv2Unsafe>;
-template class Alu<MemoryProtected, Vfpv2Safe>;
+template class Alu<MemoryRaw, NullCoproUnsafe>;
+template class Alu<MemoryProtected, NullCoproSafe>;
 
 } // namespace armv4vm
 

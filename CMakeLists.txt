@@ -45,17 +45,12 @@ SET(ARMV4VM_HEADER_FILES
     src/armv4vm_p.hpp
     src/alu.hpp
     src/memoryhandler.hpp
-    src/vfpv2.hpp
+    src/nullcopro.hpp
     src/coprocessor.hpp
-    #[[src/assertcopro.hpp]])
+)
 
 SET(ARMV4VM_SOURCE_FILES
-    #src/vm.cpp
-    # src/properties.cpp
     src/armv4vm.cpp)
-
-# SET(ARMV4VM_TEST2_SOURCE_FILES
-#     src/tu_memoryprotect.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -94,7 +89,6 @@ if(MY_LIBRARY_HEADER_ONLY)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_compile_features(armv4vm_header_only INTERFACE cxx_std_23)
-    message("11111111111111111111111")
 else()
     ADD_LIBRARY(armv4vm STATIC ${ARMV4VM_HEADER_FILES} ${ARMV4VM_SOURCE_FILES})
     target_compile_features(armv4vm INTERFACE cxx_std_23)
@@ -103,17 +97,7 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     set_target_properties(armv4vm PROPERTIES DEBUG_POSTFIX "d")
-    message("222222222222222222222222")
 endif()
-
-# ===========================================================
-# Alias
-# ===========================================================
-# if(MY_LIBRARY_HEADER_ONLY)
-#     add_library(armv4vm::armv4vm ALIAS armv4vm_header_only)
-# else()
-#     add_library(armv4vm::armv4vm ALIAS armv4vm_static)
-# endif()
 
 # ===========================================================
 # Test
@@ -126,9 +110,6 @@ SET(ARMV4VM_TEST_SOURCE_FILES
     src/test/testaluinstructionprotected.hpp
     src/test/testaluprogramraw.hpp
     src/test/testaluprogramprotected.hpp
-    src/test/testvfp.hpp
-    src/test/testvfpinstructionraw.hpp
-    src/test/testvfpinstructionprotected.hpp
     )
 
 if(Qt6Core_FOUND)

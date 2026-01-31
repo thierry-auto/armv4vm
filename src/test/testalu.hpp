@@ -44,7 +44,7 @@ class TestAluInstruction
     std::unique_ptr<T> m_mem;
     //std::unique_ptr<ProtectedAlu> m_alu;
 
-    using Copro = Vfpv2<T>;
+    using Copro = NullCopro<T>;
 
     std::unique_ptr<Alu<T, Copro>> m_alu;
     VmProperties m_vmProperties;
@@ -2037,7 +2037,7 @@ template<typename T>
 class TestAluProgram {
 
   private:
-    using ProtectedVfp = Vfpv2<T>;
+    using ProtectedVfp = NullCopro<T>;
     using ProtectedAlu = Alu<T, ProtectedVfp>;
 
     //std::unique_ptr<T> m_mem;

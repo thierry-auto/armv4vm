@@ -28,41 +28,29 @@ int main(int argc, char** argv)
     // Raw
     {
 
-        // {
-        //     armv4vm::TestAluInstructionRaw tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
-
-        // {
-        //     armv4vm::TestAluProgramRaw tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
+        {
+            armv4vm::TestAluInstructionRaw tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
         {
-            armv4vm::TestVfpInstructionRaw tc;
+            armv4vm::TestAluProgramRaw tc;
             status |= QTest::qExec(&tc, argc, argv);
         }
     }
 
     // Protected
     {
-        // {
-        //     armv4vm::TestAluInstructionProtected tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
-
-        // {
-        //     armv4vm::TestAluProgramProtected tc;
-        //     status |= QTest::qExec(&tc, argc, argv);
-        // }
+        {
+            armv4vm::TestAluInstructionProtected tc;
+            status |= QTest::qExec(&tc, argc, argv);
+        }
 
         {
-            armv4vm::TestVfpInstructionProtected tc;
+            armv4vm::TestAluProgramProtected tc;
             status |= QTest::qExec(&tc, argc, argv);
         }
     }
 
     return status;
 }
-
-//#include "main.moc"

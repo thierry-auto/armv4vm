@@ -119,11 +119,11 @@ Guest programs must be compiled with GCC using at least the following flags:
 - Implement single/double-precision floating-point support (currently stubbed). Consider evolving toward ARMv5TE compatibility.
 - Debugging the guest program through gdb.
 - Write computational tests and establish reference benchmarks to guide future development
-- Clarification of reposotory.
+- Clarification of repository.
 
 ## Nota bene
 
-The CMakeLists.txt file contains traces of providing the library in both header-only or static build. Currently, only the static build is possible and will remain so in future versions. In other words, do not attempt to implement header-only functionality. header only install will probably and definitivly removed.
+The CMakeLists.txt file contains traces of providing the library in both header-only or static build. Currently, only the static build is possible and will remain so in future versions. In other words, do not attempt to implement header-only functionality. Header only install will probably and definitivly removed.
 
 ## Reference
 

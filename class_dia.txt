@@ -1,4 +1,0 @@
-@startuml
-Interface01 <|-- Class02
-
-@enduml

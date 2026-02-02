@@ -45,7 +45,7 @@ class TestMem : public QObject {
 
     void testRawCompleteUse() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_memorySizeBytes = 2_kb;
 
         MemoryRaw raw(properties);
@@ -76,7 +76,7 @@ class TestMem : public QObject {
 
     void testProtectedCompleteUse() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
         properties.m_layout.push_back({32, 32, AccessPermission::READ});
         properties.m_layout.push_back({64, 32, AccessPermission::WRITE});
@@ -176,7 +176,7 @@ class TestMem : public QObject {
 
     void testReadWrite8() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
 
         std::byte           *mem = nullptr;
@@ -222,7 +222,7 @@ class TestMem : public QObject {
 
     void testReadWrite16() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
 
         std::byte           *mem = nullptr;
@@ -278,7 +278,7 @@ class TestMem : public QObject {
 
     void testOutOfRange8() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
         properties.m_layout.push_back({32, 32, AccessPermission::NONE});
         std::byte           *mem;
@@ -311,7 +311,7 @@ class TestMem : public QObject {
 
     void testReading() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         [[maybe_unused]] std::byte b;
         bool exceptionRaised = false;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
@@ -348,7 +348,7 @@ class TestMem : public QObject {
 
     void testOutOfRange16() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::READ_WRITE});
         std::byte           *mem;
 
@@ -378,7 +378,7 @@ class TestMem : public QObject {
 
     void testOutOfRange32() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::NONE});
         properties.m_layout.push_back({32, 32, AccessPermission::READ_WRITE});
         std::byte           *mem;
@@ -419,7 +419,7 @@ class TestMem : public QObject {
 
     void testOutOfRange32_2() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 4, AccessPermission::NONE});
         properties.m_layout.push_back({4, 4, AccessPermission::READ_WRITE});
         std::byte           *mem;
@@ -467,7 +467,7 @@ class TestMem : public QObject {
 
     void testMinus() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::NONE});
         properties.m_layout.push_back({64, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
@@ -487,7 +487,7 @@ class TestMem : public QObject {
 
     void testMinus2() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::NONE});
         properties.m_layout.push_back({64, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
@@ -507,7 +507,7 @@ class TestMem : public QObject {
 
     void testMinus3() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
         const uint32_t     v1 = 0x11223344;
@@ -526,7 +526,7 @@ class TestMem : public QObject {
 
     void testMinus4() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
         const uint32_t     v1 = 0x11223344;
@@ -545,7 +545,7 @@ class TestMem : public QObject {
 
     void testPlus4() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
         const uint32_t     v1 = 0x11223344;
@@ -566,7 +566,7 @@ class TestMem : public QObject {
 
     void testReadSucced() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 32, AccessPermission::NONE});
         properties.m_layout.push_back({32, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
@@ -591,7 +591,7 @@ class TestMem : public QObject {
 
     void testReadSucced2() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
 
         uint32_t     v1 = 0;
         bool exceptionRaised = false;
@@ -616,7 +616,7 @@ class TestMem : public QObject {
 
     void testReadFailed() {
 
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);
         uint32_t     v1 = 0;
@@ -638,7 +638,7 @@ class TestMem : public QObject {
     void testMinusPlus() {
 
         std::byte           *mem;
-        MemoryHandlerProperties properties;
+        MemoryProperties properties;
         properties.m_layout.push_back({0, 64, AccessPermission::NONE});
         properties.m_layout.push_back({64, 64, AccessPermission::READ_WRITE});
         MemoryProtected    pro(properties);

@@ -14,7 +14,7 @@ struct AluProperties {
 
 };
 
-struct MemoryHandlerProperties {
+struct MemoryProperties {
 
     enum Type {
         UNDEFINED, // peut-être à dégager..
@@ -26,15 +26,15 @@ struct MemoryHandlerProperties {
     std::size_t m_memorySizeBytes;
     std::vector<armv4vm::MemoryLayout> m_layout;
 
-    MemoryHandlerProperties() : m_type(Type::UNDEFINED), m_memorySizeBytes(0) { m_layout.clear(); }
-    MemoryHandlerProperties(const MemoryHandlerProperties &other) {
+    MemoryProperties() : m_type(Type::UNDEFINED), m_memorySizeBytes(0) { m_layout.clear(); }
+    MemoryProperties(const MemoryProperties &other) {
 
         m_type = other.m_type;
         m_memorySizeBytes = other.m_memorySizeBytes;
         m_layout = other.m_layout;
     }
 
-    MemoryHandlerProperties operator=(const MemoryHandlerProperties &other) {
+    MemoryProperties operator=(const MemoryProperties &other) {
 
         m_type = other.m_type;
         m_memorySizeBytes = other.m_memorySizeBytes;
@@ -59,14 +59,14 @@ struct VmProperties {
 
         m_bin = other.m_bin;
         m_debug = other.m_debug;
-        m_memoryHandlerProperties = other.m_memoryHandlerProperties;
+        m_memoryProperties = other.m_memoryProperties;
     }
 
     VmProperties operator=(const VmProperties &other) {
 
         m_bin      = other.m_bin;
         m_debug    = other.m_debug;
-        m_memoryHandlerProperties = other.m_memoryHandlerProperties;
+        m_memoryProperties = other.m_memoryProperties;
 
         return *this;
     }
@@ -74,7 +74,7 @@ struct VmProperties {
     bool m_debug;
     std::string m_bin;
     AluProperties m_aluProperties;
-    MemoryHandlerProperties m_memoryHandlerProperties;
+    MemoryProperties m_memoryProperties;
     CoproProperties m_coproProperties;
 
     void clear() {

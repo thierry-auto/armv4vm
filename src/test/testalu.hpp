@@ -53,10 +53,10 @@ class TestAluInstruction
   public:
     TestAluInstruction()
     {
-        m_vmProperties.m_memoryHandlerProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
-        m_vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 1_kb;
+        m_vmProperties.m_memoryProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
+        m_vmProperties.m_memoryProperties.m_memorySizeBytes = 1_kb;
 
-        m_mem = std::make_unique<T>(m_vmProperties.m_memoryHandlerProperties);
+        m_mem = std::make_unique<T>(m_vmProperties.m_memoryProperties);
         m_alu = std::make_unique<Alu<T, Copro>>(m_vmProperties.m_aluProperties);
 
         m_mem->reset();
@@ -2056,7 +2056,7 @@ class TestAluProgram {
         std::string binPath(getBinPath());
         std::string data;
 
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/hello.bin";
 
         std::byte *mem     = nullptr;
@@ -2096,7 +2096,7 @@ class TestAluProgram {
         VmProperties vmProperties;
 
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/primen.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
@@ -2134,7 +2134,7 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/float.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
@@ -2182,7 +2182,7 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/printf.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;
@@ -2224,7 +2224,7 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/modulo.bin";
         bool     running       = true;
 
@@ -2262,7 +2262,7 @@ class TestAluProgram {
 
         VmProperties vmProperties;
         std::string binPath(getBinPath());
-        vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 20_mb;
+        vmProperties.m_memoryProperties.m_memorySizeBytes = 20_mb;
         vmProperties.m_bin     = binPath + "/src/test_compile/bench.bin";
         std::byte *mem           = nullptr;
         std::byte *uart          = nullptr;

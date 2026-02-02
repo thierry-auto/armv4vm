@@ -127,7 +127,7 @@ class MemoryRaw  {
   public:
     using byte = std::byte;
 
-    MemoryRaw(struct MemoryHandlerProperties & properties) {
+    MemoryRaw(struct MemoryProperties & properties) {
         m_size = properties.m_memorySizeBytes;
         m_ram  = std::make_unique<byte[]>(m_size);
     }
@@ -202,7 +202,7 @@ class MemoryProtected {
   public:
     using byte = std::byte;
 
-    MemoryProtected(struct MemoryHandlerProperties & properties) {
+    MemoryProtected(struct MemoryProperties & properties) {
 
         m_memoryLayout = properties.m_layout;
 
@@ -301,7 +301,7 @@ class MemoryProtected {
   private:
     std::unique_ptr<std::vector<byte>> m_ram;
     std::vector<MemoryLayout>           m_memoryLayout;
-    struct MemoryHandlerProperties m_properties;
+    struct MemoryProperties m_properties;
 };
 
 template <typename T>

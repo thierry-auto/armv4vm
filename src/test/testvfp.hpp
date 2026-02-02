@@ -22,10 +22,10 @@ class TestVfpInstruction  {
   public:
     TestVfpInstruction() {
 
-        m_vmProperties.m_memoryHandlerProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
-        m_vmProperties.m_memoryHandlerProperties.m_memorySizeBytes = 1_kb;
+        m_vmProperties.m_memoryProperties.m_layout.push_back({0, 512, AccessPermission::READ_WRITE});
+        m_vmProperties.m_memoryProperties.m_memorySizeBytes = 1_kb;
 
-        m_mem = std::make_unique<T>(m_vmProperties.m_memoryHandlerProperties);
+        m_mem = std::make_unique<T>(m_vmProperties.m_memoryProperties);
         m_vfp = std::make_unique<NullCopro<T>>(m_vmProperties.m_coproProperties);
         m_alu = std::make_unique<Alu<T, NullCopro<T>>>(m_vmProperties.m_aluProperties);
 

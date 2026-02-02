@@ -108,7 +108,7 @@ class VmImplementation final : public Vm {
 
     std::byte* reset() {
 
-        m_mem = std::make_unique<MemoryHandler>(m_vmProperties.m_memoryHandlerProperties);
+        m_mem = std::make_unique<MemoryHandler>(m_vmProperties.m_memoryProperties);
         m_alu = std::make_unique<PrivateAlu>(m_vmProperties.m_aluProperties);
         m_vfp = std::make_unique<PrivateVfpv2>(m_vmProperties.m_coproProperties);
 
@@ -180,14 +180,14 @@ inline std::unique_ptr<Vm> Vm::build(const struct VmProperties &vmProperties) {
 
     // Une mémoire ne peut pas avoir de taille et des layout en même temps.
     // C'est une incohérence de configuration. On ne sait donc pas quel type de mémoire il faut créer.
-    if(vmProperties.m_memoryHandlerProperties.m_layout.size() && vmProperties.m_memoryHandlerProperties.m_memorySizeBytes) {
+    if(vmProperties.m_memoryProperties.m_layout.size() && vmProperties.m_memoryProperties.m_memorySizeBytes) {
 
         throw VmException(VmError::ConfigurationIncoherence);
     }
 
     // Quand des permissions sont renseignées,
     // une mémoire de type protegée est créée.
-    if(vmProperties.m_memoryHandlerProperties.m_layout.empty()) {
+    if(vmProperties.m_memoryProperties.m_layout.empty()) {
 
         vm = std::unique_ptr<Vm>(new VmUnprotected(vmProperties));
     }
